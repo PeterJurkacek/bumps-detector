@@ -6,7 +6,6 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
-        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -23,11 +22,11 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vHF-eV-Bfz" customClass="MGLMapView">
-                                <rect key="frame" x="16" y="20" width="343" height="420"/>
+                                <rect key="frame" x="0.0" y="20" width="375" height="420"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Zej-e7-HdK">
-                                <rect key="frame" x="16" y="440" width="343" height="227"/>
+                                <rect key="frame" x="0.0" y="440" width="375" height="227"/>
                                 <state key="normal" title="Create bump"/>
                                 <connections>
                                     <action selector="createBump:" destination="BYZ-38-t0r" eventType="touchUpInside" id="WL7-s1-Kta"/>
@@ -36,15 +35,15 @@
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="vHF-eV-Bfz" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="0y8-0A-w8c"/>
                             <constraint firstItem="Zej-e7-HdK" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="7Pi-0E-VLP"/>
                             <constraint firstItem="Zej-e7-HdK" firstAttribute="top" secondItem="vHF-eV-Bfz" secondAttribute="bottom" id="CVg-E9-nZT"/>
                             <constraint firstItem="vHF-eV-Bfz" firstAttribute="leading" secondItem="Zej-e7-HdK" secondAttribute="leading" id="DYt-q5-yaE"/>
-                            <constraint firstAttribute="trailingMargin" secondItem="vHF-eV-Bfz" secondAttribute="trailing" id="GgQ-Gt-6me"/>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Zej-e7-HdK" secondAttribute="bottom" id="MkE-06-fWB"/>
                             <constraint firstItem="vHF-eV-Bfz" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="O3o-aF-Ig6"/>
                             <constraint firstItem="Zej-e7-HdK" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="420" id="RWx-Bf-wYA"/>
                             <constraint firstItem="Zej-e7-HdK" firstAttribute="centerX" secondItem="vHF-eV-Bfz" secondAttribute="centerX" id="Z6i-CG-uv0"/>
-                            <constraint firstItem="vHF-eV-Bfz" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leadingMargin" id="rYz-Ll-HeX"/>
+                            <constraint firstAttribute="trailing" secondItem="vHF-eV-Bfz" secondAttribute="trailing" id="tKj-42-UNz"/>
                             <constraint firstItem="vHF-eV-Bfz" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="vNx-5e-zbG"/>
                         </constraints>
                     </view>

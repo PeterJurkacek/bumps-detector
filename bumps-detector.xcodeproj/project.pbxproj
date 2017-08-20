@@ -14,6 +14,7 @@
 		EFCB247D1F49AC6A00AAEA14 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */; };
 		EFCB24851F49DAB500AAEA14 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFCB24841F49DAB500AAEA14 /* Mapbox.framework */; };
 		EFCB24861F49DAB500AAEA14 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EFCB24841F49DAB500AAEA14 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24881F49E8D400AAEA14 /* Bump.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -39,6 +40,7 @@
 		EFCB247C1F49AC6A00AAEA14 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		EFCB247E1F49AC6A00AAEA14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EFCB24841F49DAB500AAEA14 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
+		EFCB24881F49E8D400AAEA14 /* Bump.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bump.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +81,7 @@
 				EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */,
 				EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */,
 				EFCB247E1F49AC6A00AAEA14 /* Info.plist */,
+				EFCB24881F49E8D400AAEA14 /* Bump.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -156,6 +159,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
 				EFCB24751F49AC6A00AAEA14 /* ViewController.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,
 			);
