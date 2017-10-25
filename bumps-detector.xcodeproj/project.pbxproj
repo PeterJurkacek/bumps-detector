@@ -7,31 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EF51F9501F9F271000D9C32F /* Accelerometer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* Accelerometer.swift */; };
 		EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */; };
 		EFCB24751F49AC6A00AAEA14 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24741F49AC6A00AAEA14 /* ViewController.swift */; };
 		EFCB24781F49AC6A00AAEA14 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB24761F49AC6A00AAEA14 /* Main.storyboard */; };
 		EFCB247A1F49AC6A00AAEA14 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */; };
 		EFCB247D1F49AC6A00AAEA14 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */; };
-		EFCB24851F49DAB500AAEA14 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EFCB24841F49DAB500AAEA14 /* Mapbox.framework */; };
-		EFCB24861F49DAB500AAEA14 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EFCB24841F49DAB500AAEA14 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24881F49E8D400AAEA14 /* Bump.swift */; };
+		EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */; };
+		EFD53E551F7B8BA700B5C4A1 /* CurrentLocationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD53E541F7B8BA700B5C4A1 /* CurrentLocationViewController.swift */; };
+		EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */; };
+		EFE06C421F4A67CD00740875 /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE06C411F4A67CD00740875 /* HomeModel.swift */; };
+		F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		EFCB24871F49DAB500AAEA14 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				EFCB24861F49DAB500AAEA14 /* Mapbox.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bumps_detector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
+		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
+		EF51F94F1F9F271000D9C32F /* Accelerometer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accelerometer.swift; sourceTree = "<group>"; };
 		EFCB246F1F49AC6A00AAEA14 /* bumps-detector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "bumps-detector.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EFCB24741F49AC6A00AAEA14 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -39,8 +33,11 @@
 		EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EFCB247C1F49AC6A00AAEA14 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		EFCB247E1F49AC6A00AAEA14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		EFCB24841F49DAB500AAEA14 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
 		EFCB24881F49E8D400AAEA14 /* Bump.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bump.swift; sourceTree = "<group>"; };
+		EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
+		EFD53E541F7B8BA700B5C4A1 /* CurrentLocationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrentLocationViewController.swift; sourceTree = "<group>"; };
+		EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		EFE06C411F4A67CD00740875 /* HomeModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,19 +45,37 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EFCB24851F49DAB500AAEA14 /* Mapbox.framework in Frameworks */,
+				F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0DAA4C1C1AFD860E3BA1EC87 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */,
+				D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		986193510746942B83F8D696 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		EFCB24661F49AC6A00AAEA14 = {
 			isa = PBXGroup;
 			children = (
-				EFCB24841F49DAB500AAEA14 /* Mapbox.framework */,
 				EFCB24711F49AC6A00AAEA14 /* bumps-detector */,
 				EFCB24701F49AC6A00AAEA14 /* Products */,
+				0DAA4C1C1AFD860E3BA1EC87 /* Pods */,
+				986193510746942B83F8D696 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -77,11 +92,16 @@
 			children = (
 				EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */,
 				EFCB24741F49AC6A00AAEA14 /* ViewController.swift */,
+				EFD53E541F7B8BA700B5C4A1 /* CurrentLocationViewController.swift */,
 				EFCB24761F49AC6A00AAEA14 /* Main.storyboard */,
 				EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */,
 				EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */,
 				EFCB247E1F49AC6A00AAEA14 /* Info.plist */,
 				EFCB24881F49E8D400AAEA14 /* Bump.swift */,
+				EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */,
+				EFE06C411F4A67CD00740875 /* HomeModel.swift */,
+				EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */,
+				EF51F94F1F9F271000D9C32F /* Accelerometer.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -93,10 +113,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = EFCB24811F49AC6A00AAEA14 /* Build configuration list for PBXNativeTarget "bumps-detector" */;
 			buildPhases = (
+				741750AB2D4389CB16A007CF /* [CP] Check Pods Manifest.lock */,
 				EFCB246B1F49AC6A00AAEA14 /* Sources */,
 				EFCB246C1F49AC6A00AAEA14 /* Frameworks */,
 				EFCB246D1F49AC6A00AAEA14 /* Resources */,
-				EFCB24871F49DAB500AAEA14 /* Embed Frameworks */,
+				EE26819537B51096DF53DFFE /* [CP] Embed Pods Frameworks */,
+				5D8E954ED6CF4C58633423F4 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -119,7 +141,13 @@
 				TargetAttributes = {
 					EFCB246E1F49AC6A00AAEA14 = {
 						CreatedOnToolsVersion = 8.3.3;
+						DevelopmentTeam = D6923NELKJ;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -154,13 +182,96 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5D8E954ED6CF4C58633423F4 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		741750AB2D4389CB16A007CF /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-bumps-detector-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EE26819537B51096DF53DFFE /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/AWSCore/AWSCore.framework",
+				"${BUILT_PRODUCTS_DIR}/AWSPolly/AWSPolly.framework",
+				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework",
+				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework.dSYM",
+				"${BUILT_PRODUCTS_DIR}/MapboxCoreNavigation/MapboxCoreNavigation.framework",
+				"${BUILT_PRODUCTS_DIR}/MapboxDirections.swift/MapboxDirections.framework",
+				"${BUILT_PRODUCTS_DIR}/MapboxMobileEvents/MapboxMobileEvents.framework",
+				"${BUILT_PRODUCTS_DIR}/MapboxNavigation/MapboxNavigation.framework",
+				"${BUILT_PRODUCTS_DIR}/OSRMTextInstructions/OSRMTextInstructions.framework",
+				"${BUILT_PRODUCTS_DIR}/Polyline/Polyline.framework",
+				"${BUILT_PRODUCTS_DIR}/Pulley/Pulley.framework",
+				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
+				"${BUILT_PRODUCTS_DIR}/Solar/Solar.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AWSCore.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AWSPolly.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mapbox.framework",
+				"${DWARF_DSYM_FOLDER_PATH}/Mapbox.framework.dSYM",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxCoreNavigation.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxDirections.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxMobileEvents.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxNavigation.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OSRMTextInstructions.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Polyline.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Pulley.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Solar.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		EFCB246B1F49AC6A00AAEA14 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
+				EF51F9501F9F271000D9C32F /* Accelerometer.swift in Sources */,
+				EFD53E551F7B8BA700B5C4A1 /* CurrentLocationViewController.swift in Sources */,
+				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,
+				EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */,
 				EFCB24751F49AC6A00AAEA14 /* ViewController.swift in Sources */,
+				EFE06C421F4A67CD00740875 /* HomeModel.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -282,13 +393,16 @@
 		};
 		EFCB24821F49AC6A00AAEA14 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = D6923NELKJ;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "bumps-detector/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.bumps-detector";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -298,13 +412,16 @@
 		};
 		EFCB24831F49AC6A00AAEA14 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = D6923NELKJ;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "bumps-detector/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.example.bumps-detector";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -331,6 +448,7 @@
 				EFCB24831F49AC6A00AAEA14 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

@@ -1,52 +1,51 @@
 //
 //  Bump.swift
-//  bumps-detector
+//  accelerometer
 //
-//  Created by Peter Jurkacek on 20.8.17.
+//  Created by Peter Jurkacek on 15.10.17.
 //  Copyright © 2017 Peter Jurkacek. All rights reserved.
 //
 
 import Foundation
-enum SerializationError: Error {
-    case missing(String)
-}
-public class Bump {
+import CoreLocation
+
+class Bump: NSObject {
     
-    // MARK: - Properties
-    public let latitude:    String
-    public let longitude:   String
-    public let intensity:   String
-    public let rank:        String
+    //properties
+    var intensity: Double?
+    //var location: Location?
+    var latitude: Double?
+    var longitude: Double?
+    var rating: Int?
+    var manual: Int?
+    var type: Int?
+    var text: String?
+    let TAG = "Bump"
+    var androidId: String?
     
-    // MARK: - Initializers
-    public init?(latitude: Double, longitude: Double, intensity: Double){
-        self.latitude   = String(format:"%f", latitude)
-        self.longitude  = String(format:"%f", longitude)
-        self.intensity  = String(format:"%f", intensity)
-        if intensity < 0.6 {
-            self.rank  = "1"
-        }
-        else{
-            self.rank  = "0"
-        }
+    //empty constructor
+    
+    override init()
+    {
         
     }
-    public init?(json: [String: Any]) throws{
-        guard let latitude  = json["latitude"]  as? String  else {
-            throw SerializationError.missing("latitude")
-        }
-        guard let longitude = json["longitude"] as? String  else {
-            throw SerializationError.missing("longitude")
-        }
-        guard let intensity = json["intensity"] as? String  else {
-            throw SerializationError.missing("intensity")
-        }
-        guard let rank      = json["rank"]      as? String  else {
-            throw SerializationError.missing("rank")
-        }
-        self.latitude   = latitude
-        self.longitude  = longitude
-        self.intensity  = intensity
-        self.rank       = rank
+    
+    //construct with @name, @address, @latitude, and @longitude parameters
+    
+    init(latitude: Double, longitude: Double) {
+        
+        self.latitude = latitude
+        self.longitude = longitude
     }
+    
+    
+    //prints object's current state
+    
+    override var description: String {
+        return "\(String(self.latitude!)), \(String(self.longitude!))"
+        
+    }
+    
+    
 }
+
