@@ -9,26 +9,29 @@
 import Foundation
 import UIKit
 import CoreMotion
+import simd
 
 class Accelerometer{
+    
     //MARK: Fields
     let logger: CMLogItem?
     var motionManager: CMMotionManager?
-    var lastFewItems = [CMAcceleration]()
+    var lastFewItems = [double3]()
     var priorityX :Double = 0.0
     var priorityY :Double = 0.0
     var priorityZ :Double = 0.0
     let ms = 9.81
     var needCalibrate = true
-    let THRESHOLD = 0.08
+    let THRESHOLD = 5.0
     let lastFewItemsCount = 60
     let ItemsFreqiency = 60.0
-    let THRESHOLD_USERMOVEMENTS = 0.8
-    var initialAttitude: CMAttitude?
+    let THRESHOLD_USERMOVEMENTS = 1.0
+    var initialRotation: CMRotationRate?
     var timer: Timer?
     var queue: OperationQueue
     var queueRecognizeBump = DispatchQueue(label: "recognizeBumpsQueue", qos : .userInteractive)
-    //Initializers
+    
+    //MARK: Initializers
     init(){
         motionManager = CMMotionManager()
         logger = CMLogItem()
@@ -36,7 +39,12 @@ class Accelerometer{
     }
     
     //MARK: Calibration Methods
-    func calibrate(for accItem: CMAcceleration){
+    func get_g_Unit(for accData: CMAcceleration) -> double3 {
+        let changedData: double3 = [(accData.x * ms), (accData.y * ms), (accData.z * ms)]
+        return changedData
+    }
+    
+    func calibrate(for accItem: double3){
         let xms = (accItem.x)
         let yms = (accItem.y)
         let zms = (accItem.z)
@@ -45,34 +53,28 @@ class Accelerometer{
         let priorityX = abs(xms / sum)
         let priorityY = abs(yms / sum)
         let priorityZ = abs(zms / sum)
-        //NSLog("Sum: \(sum), priorityX \(priorityX), priorityY \(priorityY), priorityZ \(priorityZ)")
+
         //normalizacia
         sum = priorityX + priorityY + priorityZ
         self.priorityX = priorityX / sum;
         self.priorityY = priorityY / sum;
         self.priorityZ = priorityZ / sum;
         lastFewItems.removeAll()
-        //NSLog("Sum: \(sum), priorityX \(self.priorityX), priorityY \(self.priorityY), priorityZ \(self.priorityZ)")
     }
     
     func isDeviceStateChanging(state rotation :CMRotationRate) -> Bool {
-        let sum = abs(rotation.x) + abs(rotation.y) + abs(rotation.z)
-        //print("\(sum) = \(rotation.x) + \(rotation.y) + \(rotation.z)")
-        return (abs(sum) > THRESHOLD_USERMOVEMENTS ? true : false)
-    }
-    func isDeviceStateChanging(state attitude :CMAttitude) -> Bool {
-        if initialAttitude != nil {
-            let initMagnitude = magnitude(from: initialAttitude!)
-            let sum = abs(magnitude(from: attitude) - initMagnitude)
-            //NSLog("SUM \(sum)")
-            return sum > THRESHOLD_USERMOVEMENTS ? true: false
+        if initialRotation == nil {
+            self.initialRotation = rotation
         }
-        return false
+        let initMagnitude = magnitude(from: initialRotation!)
+        let sum = abs(magnitude(from: rotation) - initMagnitude)
+        //NSLog("DEVICE STATE \(sum)")
+        return (abs(sum) > THRESHOLD_USERMOVEMENTS ? true : false)
     }
 
     //MARK: Bump detection algorithms
-    func magnitude(from attitude: CMAttitude) -> Double {
-        return sqrt(pow(attitude.roll, 2) + pow(attitude.yaw, 2) + pow(attitude.pitch, 2))
+    func magnitude(from rotation: CMRotationRate) -> Double {
+        return sqrt(pow(rotation.x, 2) + pow(rotation.y, 2) + pow(rotation.z, 2))
     }
     
     func detectBump(forLocation location: String, with delta: Double){
@@ -80,32 +82,25 @@ class Accelerometer{
         //sleep(4)
     }
     
-    func recognizeBump(for lastAccData: CMAcceleration, lastUserAccel: CMAcceleration){
+    func recognizeBump(for data:double3){
         var delta = 0.0
-        //Prevod jednotiek
-        let xms = lastAccData.x
-        let yms = lastAccData.y
-        let zms = lastAccData.z
         
-        var max_diffrence = 0.0
+        let x = data.x
+        let y = data.y
+        let z = data.z
         
         for temp in self.lastFewItems {
-            //NSLog("\(lastAccData)")
-            //pre kazdu os X,Y,Z sa vypocita zmena zrychlenia
-            let deltaX = abs((temp.x ) - xms)
-            let deltaY = abs((temp.y ) - yms)
-            let deltaZ = abs((temp.z ) - zms)
             
-            NSLog("\(temp.x) \(temp.y) \(temp.z)")
-            NSLog("\(xms) \(yms) \(zms)")
+            let deltaX = abs((temp.x ) - x)
+            let deltaY = abs((temp.y ) - y)
+            let deltaZ = abs((temp.z ) - z)
+            
             //na zaklade priorit jednotlivych osi sa vypocita celkova zmena zrychlenia
             delta = self.priorityX * deltaX + self.priorityY * deltaY + self.priorityZ * deltaZ
-            //NSLog("\(self.priorityX) \(self.priorityY) \(self.priorityZ)")
-            //NSLog("DELTA: \(delta)")
+            
             //ak je zmena vacsia ako THRESHOLD potom spusti detekciu vytlku
             if (delta > THRESHOLD) {
                 NSLog("NASIEL SOM BUMP: \(delta)")
-                max_diffrence = delta
                 detectBump(forLocation: "location", with: delta)
                 //staci ak zmena zrychlenia prekrocila THRESHOLD raz, je to vytlk
                 break
@@ -114,83 +109,45 @@ class Accelerometer{
         if(lastFewItems.count >= lastFewItemsCount){
             lastFewItems.remove(at: 0)
         }
-        lastFewItems.append(lastAccData)
-        //NSLog("\(max_diffrence)")
+        lastFewItems.append(data)
     }
 
     //MARK: Sensor Methods
-    func startDeviceMotionSensor(){
-        guard let motionManager = self.motionManager, motionManager.isDeviceMotionAvailable else
+    func startAccelGyro(){
+        guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable, motionManager.isGyroAvailable else
         {
-            print("Zariadenie nepodporuje DeviceMotion")
+            print("Zariadenie neposkytuje Gyroscope alebo Accelerometer")
             return
         }
-        motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
-        motionManager.startDeviceMotionUpdates(to: queue){(deviceMotion, error) in
-            if let data = deviceMotion{
-                self.processMotionData(data)
+        motionManager.gyroUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+        motionManager.startGyroUpdates(to: queue){(gyroData, error) in
+            if let data = gyroData{
+                if (self.isDeviceStateChanging(state: data.rotationRate)) {
+                    //Ak sa meni stav zariadenia stopni akcelerometer
+                    if motionManager.isAccelerometerActive {
+                        motionManager.stopAccelerometerUpdates()
+                        self.needCalibrate = true
+                    }
+                }
+                else {
+                    if !motionManager.isAccelerometerActive {
+                        motionManager.accelerometerUpdateInterval = TimeInterval(1.0/self.ItemsFreqiency)
+                        motionManager.startAccelerometerUpdates(to: self.queue){(accelData, error) in
+                            if let data = accelData{
+                                if(self.needCalibrate){
+                                    self.calibrate(for: self.get_g_Unit(for: data.acceleration))
+                                    self.needCalibrate = false
+                                }
+                                else{
+                                    self.recognizeBump(for: self.get_g_Unit(for: data.acceleration))
+                                }
+                                //NSLog("ACCEL \(data.acceleration)")
+                            }
+                        }
+                    }
+                }
             }
         }
         print("Step Finish")
-    }
-    
-    func startAccelerometerSensor(){
-        guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable else
-        {
-            print("Zariadenie nepodporuje DeviceMotion")
-            return
-        }
-        motionManager.accelerometerUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
-        motionManager.startAccelerometerUpdates(to: queue){(deviceMotion, error) in
-            if let data = deviceMotion{
-                self.processAccelData(data)
-            }
-        }
-    }
-    
-    func processAccelData(_ deviceAccel: CMAccelerometerData!){
-        if let data = deviceAccel {
-            NSLog("\(data.acceleration.x * ms), \(data.acceleration.y * ms), \(data.acceleration.z * ms)")
-        }
-    }
-    
-    func processMotionData(_ deviceMotion: CMDeviceMotion!){
-        if let data = deviceMotion {
-            DispatchQueue.global().sync {
-                if self.initialAttitude == nil {
-                    self.initialAttitude = data.attitude
-                }
-                //NSLog("BEFORE MAGNITUDE: \(self.magnitude(from: data.attitude))")
-                //data.attitude.multiply(byInverseOf: self.initialAttitude!)
-                //NSLog("AFTER MAGNITUDE: \(self.magnitude(from: data.attitude))")
-                //NSLog("GRAVITY: \(data.gravity.x * self.ms), \(data.gravity.y * self.ms), \(data.gravity.z * self.ms)")
-                if (self.isDeviceStateChanging(state: data.attitude)) {
-                    NSLog("POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
-                    self.motionManager?.deviceMotionUpdateInterval = TimeInterval(2.0)
-                    self.initialAttitude = data.attitude
-                    self.needCalibrate = true
-                }
-                else{
-                    if(self.needCalibrate){
-                        //NSLog("CALIBRATION START...")
-                        self.calibrate(for: data.gravity)
-                        self.needCalibrate = false
-                        if self.initialAttitude != nil {
-                            self.initialAttitude = data.attitude
-                            //NSLog("OLD VALUE: \(self.magnitude(from: self.initialAttitude!))")
-                        }
-                        //NSLog("NEW VALUE: \(self.magnitude(from: self.initialAttitude!))")
-                        //NSLog("CALIBRATION FINISH...")
-                        self.motionManager?.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
-                    }
-                    else{
-                        //NSLog("ANALYZE START...")
-                        self.recognizeBump(for: data.gravity, lastUserAccel: data.userAcceleration)
-
-                        //NSLog("ANALYZE FINISH...")
-                    }
-                }
-            }
-        }
     }
 }

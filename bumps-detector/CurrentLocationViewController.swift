@@ -59,7 +59,7 @@ class CurrentLocationViewController: UIViewController, CLLocationManagerDelegate
         //configureGetButton()
         let queue = DispatchQueue(label: "sensor", qos: .userInteractive)
         queue.async{
-            self.accelerometer.startDeviceMotionSensor()
+            self.accelerometer.startAccelGyro()
         }
         
     }
