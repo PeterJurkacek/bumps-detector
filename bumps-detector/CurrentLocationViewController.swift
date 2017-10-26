@@ -57,7 +57,11 @@ class CurrentLocationViewController: UIViewController, CLLocationManagerDelegate
         super.viewDidLoad()
         //updateLabels()
         //configureGetButton()
-        accelerometer.startDeviceMotionSensor()
+        let queue = DispatchQueue(label: "sensor", qos: .userInteractive)
+        queue.async{
+            self.accelerometer.startDeviceMotionSensor()
+        }
+        
     }
 
     // MARK: - CLLocationManagerDelegate

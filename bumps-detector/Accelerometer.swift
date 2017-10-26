@@ -20,22 +20,26 @@ class Accelerometer{
     var priorityZ :Double = 0.0
     let ms = 9.81
     var needCalibrate = true
-    let THRESHOLD = 4.6
-    let lastFewItemsCount = 5
+    let THRESHOLD = 0.08
+    let lastFewItemsCount = 60
+    let ItemsFreqiency = 60.0
     let THRESHOLD_USERMOVEMENTS = 0.8
     var initialAttitude: CMAttitude?
     var timer: Timer?
+    var queue: OperationQueue
+    var queueRecognizeBump = DispatchQueue(label: "recognizeBumpsQueue", qos : .userInteractive)
     //Initializers
     init(){
         motionManager = CMMotionManager()
         logger = CMLogItem()
+        queue = OperationQueue()
     }
     
     //MARK: Calibration Methods
     func calibrate(for accItem: CMAcceleration){
-        let xms = accItem.x * ms
-        let yms = accItem.y * ms
-        let zms = accItem.z * ms
+        let xms = (accItem.x)
+        let yms = (accItem.y)
+        let zms = (accItem.z)
         
         var sum = xms + yms + zms
         let priorityX = abs(xms / sum)
@@ -47,6 +51,7 @@ class Accelerometer{
         self.priorityX = priorityX / sum;
         self.priorityY = priorityY / sum;
         self.priorityZ = priorityZ / sum;
+        lastFewItems.removeAll()
         //NSLog("Sum: \(sum), priorityX \(self.priorityX), priorityY \(self.priorityY), priorityZ \(self.priorityZ)")
     }
     
@@ -58,8 +63,8 @@ class Accelerometer{
     func isDeviceStateChanging(state attitude :CMAttitude) -> Bool {
         if initialAttitude != nil {
             let initMagnitude = magnitude(from: initialAttitude!)
-            
             let sum = abs(magnitude(from: attitude) - initMagnitude)
+            //NSLog("SUM \(sum)")
             return sum > THRESHOLD_USERMOVEMENTS ? true: false
         }
         return false
@@ -75,26 +80,32 @@ class Accelerometer{
         //sleep(4)
     }
     
-    func recognizeBump(for lastAccData: CMAcceleration){
+    func recognizeBump(for lastAccData: CMAcceleration, lastUserAccel: CMAcceleration){
         var delta = 0.0
         //Prevod jednotiek
-        let xms = lastAccData.x * ms
-        let yms = lastAccData.y * ms
-        let zms = lastAccData.z * ms
+        let xms = lastAccData.x
+        let yms = lastAccData.y
+        let zms = lastAccData.z
+        
+        var max_diffrence = 0.0
         
         for temp in self.lastFewItems {
+            //NSLog("\(lastAccData)")
             //pre kazdu os X,Y,Z sa vypocita zmena zrychlenia
-            let deltaX = abs((temp.x * ms) - xms)
-            let deltaY = abs((temp.y * ms) - yms)
-            let deltaZ = abs((temp.z * ms) - zms)
+            let deltaX = abs((temp.x ) - xms)
+            let deltaY = abs((temp.y ) - yms)
+            let deltaZ = abs((temp.z ) - zms)
             
-            
+            NSLog("\(temp.x) \(temp.y) \(temp.z)")
+            NSLog("\(xms) \(yms) \(zms)")
             //na zaklade priorit jednotlivych osi sa vypocita celkova zmena zrychlenia
             delta = self.priorityX * deltaX + self.priorityY * deltaY + self.priorityZ * deltaZ
+            //NSLog("\(self.priorityX) \(self.priorityY) \(self.priorityZ)")
             //NSLog("DELTA: \(delta)")
             //ak je zmena vacsia ako THRESHOLD potom spusti detekciu vytlku
             if (delta > THRESHOLD) {
                 NSLog("NASIEL SOM BUMP: \(delta)")
+                max_diffrence = delta
                 detectBump(forLocation: "location", with: delta)
                 //staci ak zmena zrychlenia prekrocila THRESHOLD raz, je to vytlk
                 break
@@ -103,8 +114,8 @@ class Accelerometer{
         if(lastFewItems.count >= lastFewItemsCount){
             lastFewItems.remove(at: 0)
         }
-        //NSLog("\(lastAccData)")
         lastFewItems.append(lastAccData)
+        //NSLog("\(max_diffrence)")
     }
 
     //MARK: Sensor Methods
@@ -114,69 +125,71 @@ class Accelerometer{
             print("Zariadenie nepodporuje DeviceMotion")
             return
         }
-        motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/5)
-        motionManager.startDeviceMotionUpdates()
-        // Configure a timer to fetch the motion data.
-        self.timer = Timer(fire: Date(), interval: (1.0/60.0), repeats: true,
-                           block: { (timer) in
-                            if let data = motionManager.deviceMotion {
-                                // Get the attitude relative to the magnetic north reference frame.
-                                self.processMotionData(data)
-                            }
-        })
-        // Add the timer to the current run loop.
-        RunLoop.current.add(self.timer!, forMode: .defaultRunLoopMode)
-//        motionManager.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main){(deviceMotion, error) in
-//            if let data = deviceMotion{
-//                print("ATTITUDE \(data.attitude.pitch), \(data.attitude.roll), \(data.attitude.yaw)")
-//                //NSLog("GRAVITY: \(data.gravity.x * self.ms), \(data.gravity.y * self.ms), \(data.gravity.z * self.ms)")
-//                if (self.isDeviceStateChanging(state: data.attitude)) {
-//                    NSLog("POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
-//                    self.needCalibrate = true
-//                }
-//                else{
-//                    if(self.needCalibrate){
-//                        self.calibrate(for: data.gravity)
-//                        self.needCalibrate = false
-//                        self.initialAttitude = data.attitude
-//                    }
-//                    else{
-//                        NSLog("ANALYZE BUMP")
-//                            //self.recognizeBump(for: data.gravity)
-//                        if(self.initialAttitude != nil){
-//                            NSLog("ATTITUDE magnitude \(self.magnitude(from: self.initialAttitude!))")
-//                            NSLog("ATTITUDE multiply \(data.attitude.multiply(byInverseOf: self.initialAttitude!))")
-//                        }
-//                    }
-//                //NSLog("rotaionRate: \(data.rotationRate.x + data.rotationRate.y + data.rotationRate.z)")
-//                }
-//            }
-//        }
+        motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+        motionManager.startDeviceMotionUpdates(to: queue){(deviceMotion, error) in
+            if let data = deviceMotion{
+                self.processMotionData(data)
+            }
+        }
+        print("Step Finish")
+    }
+    
+    func startAccelerometerSensor(){
+        guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable else
+        {
+            print("Zariadenie nepodporuje DeviceMotion")
+            return
+        }
+        motionManager.accelerometerUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+        motionManager.startAccelerometerUpdates(to: queue){(deviceMotion, error) in
+            if let data = deviceMotion{
+                self.processAccelData(data)
+            }
+        }
+    }
+    
+    func processAccelData(_ deviceAccel: CMAccelerometerData!){
+        if let data = deviceAccel {
+            NSLog("\(data.acceleration.x * ms), \(data.acceleration.y * ms), \(data.acceleration.z * ms)")
+        }
     }
     
     func processMotionData(_ deviceMotion: CMDeviceMotion!){
         if let data = deviceMotion {
-            print("ATTITUDE \(data.attitude.pitch), \(data.attitude.roll), \(data.attitude.yaw)")
-            //NSLog("GRAVITY: \(data.gravity.x * self.ms), \(data.gravity.y * self.ms), \(data.gravity.z * self.ms)")
-            if (self.isDeviceStateChanging(state: data.attitude)) {
-                NSLog("POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
-                self.needCalibrate = true
-            }
-            else{
-                if(self.needCalibrate){
-                    self.calibrate(for: data.gravity)
-                    self.needCalibrate = false
+            DispatchQueue.global().sync {
+                if self.initialAttitude == nil {
                     self.initialAttitude = data.attitude
                 }
+                //NSLog("BEFORE MAGNITUDE: \(self.magnitude(from: data.attitude))")
+                //data.attitude.multiply(byInverseOf: self.initialAttitude!)
+                //NSLog("AFTER MAGNITUDE: \(self.magnitude(from: data.attitude))")
+                //NSLog("GRAVITY: \(data.gravity.x * self.ms), \(data.gravity.y * self.ms), \(data.gravity.z * self.ms)")
+                if (self.isDeviceStateChanging(state: data.attitude)) {
+                    NSLog("POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
+                    self.motionManager?.deviceMotionUpdateInterval = TimeInterval(2.0)
+                    self.initialAttitude = data.attitude
+                    self.needCalibrate = true
+                }
                 else{
-                    NSLog("ANALYZE BUMP")
-                        //self.recognizeBump(for: data.gravity)
-                    if(self.initialAttitude != nil){
-                        NSLog("ATTITUDE magnitude \(self.magnitude(from: self.initialAttitude!))")
-                        NSLog("ATTITUDE multiply \(data.attitude.multiply(byInverseOf: self.initialAttitude!))")
+                    if(self.needCalibrate){
+                        //NSLog("CALIBRATION START...")
+                        self.calibrate(for: data.gravity)
+                        self.needCalibrate = false
+                        if self.initialAttitude != nil {
+                            self.initialAttitude = data.attitude
+                            //NSLog("OLD VALUE: \(self.magnitude(from: self.initialAttitude!))")
+                        }
+                        //NSLog("NEW VALUE: \(self.magnitude(from: self.initialAttitude!))")
+                        //NSLog("CALIBRATION FINISH...")
+                        self.motionManager?.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+                    }
+                    else{
+                        //NSLog("ANALYZE START...")
+                        self.recognizeBump(for: data.gravity, lastUserAccel: data.userAcceleration)
+
+                        //NSLog("ANALYZE FINISH...")
                     }
                 }
-            //NSLog("rotaionRate: \(data.rotationRate.x + data.rotationRate.y + data.rotationRate.z)")
             }
         }
     }
