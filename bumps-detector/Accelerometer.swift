@@ -13,7 +13,6 @@ import simd
 
 class Accelerometer{
     
-    //MARK: Fields
     let logger: CMLogItem?
     var motionManager: CMMotionManager?
     var lastFewItems = [double3]()
@@ -30,7 +29,8 @@ class Accelerometer{
     var timer: Timer?
     var queue: OperationQueue
     var queueRecognizeBump = DispatchQueue(label: "recognizeBumpsQueue", qos : .userInteractive)
-    
+    var zaznamy = [(Date, Double, Double, Double, Double)]()
+    var date: Date?
     //MARK: Initializers
     init(){
         motionManager = CMMotionManager()
@@ -82,13 +82,13 @@ class Accelerometer{
         //sleep(4)
     }
     
-    func recognizeBump(for data:double3){
+    func recognizeBump(for data:double3, _ date: Date){
         var delta = 0.0
-        
         let x = data.x
         let y = data.y
         let z = data.z
         
+        var bumpDetected = false
         for temp in self.lastFewItems {
             
             let deltaX = abs((temp.x ) - x)
@@ -101,7 +101,9 @@ class Accelerometer{
             //ak je zmena vacsia ako THRESHOLD potom spusti detekciu vytlku
             if (delta > THRESHOLD) {
                 NSLog("NASIEL SOM BUMP: \(delta)")
+                self.zaznamy.append((date, 20.0, data.x, data.y, data.z))
                 detectBump(forLocation: "location", with: delta)
+                bumpDetected = true
                 //staci ak zmena zrychlenia prekrocila THRESHOLD raz, je to vytlk
                 break
             }
@@ -110,6 +112,9 @@ class Accelerometer{
             lastFewItems.remove(at: 0)
         }
         lastFewItems.append(data)
+        if !bumpDetected {
+            self.zaznamy.append((date, 0.0, data.x, data.y, data.z))
+        }
     }
 
     //MARK: Sensor Methods
@@ -123,6 +128,7 @@ class Accelerometer{
         motionManager.startGyroUpdates(to: queue){(gyroData, error) in
             if let data = gyroData{
                 if (self.isDeviceStateChanging(state: data.rotationRate)) {
+                    self.zaznamy.append((Date(timeIntervalSince1970: data.timestamp), 0.0, 0.0, 0.0, 0.0))
                     //Ak sa meni stav zariadenia stopni akcelerometer
                     if motionManager.isAccelerometerActive {
                         motionManager.stopAccelerometerUpdates()
@@ -135,11 +141,12 @@ class Accelerometer{
                         motionManager.startAccelerometerUpdates(to: self.queue){(accelData, error) in
                             if let data = accelData{
                                 if(self.needCalibrate){
+                                    self.zaznamy.append((Date(timeIntervalSince1970: data.timestamp), -20.0, data.acceleration.x * self.ms, data.acceleration.y * self.ms, data.acceleration.z * self.ms))
                                     self.calibrate(for: self.get_g_Unit(for: data.acceleration))
                                     self.needCalibrate = false
                                 }
                                 else{
-                                    self.recognizeBump(for: self.get_g_Unit(for: data.acceleration))
+                                    self.recognizeBump(for: self.get_g_Unit(for: data.acceleration), Date(timeIntervalSince1970: data.timestamp))
                                 }
                                 //NSLog("ACCEL \(data.acceleration)")
                             }

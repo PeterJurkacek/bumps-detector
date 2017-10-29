@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		EF51F9501F9F271000D9C32F /* Accelerometer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* Accelerometer.swift */; };
+		EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA59F331FA2193C004A9939 /* FileUtils.swift */; };
 		EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */; };
 		EFCB24751F49AC6A00AAEA14 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24741F49AC6A00AAEA14 /* ViewController.swift */; };
 		EFCB24781F49AC6A00AAEA14 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB24761F49AC6A00AAEA14 /* Main.storyboard */; };
@@ -26,6 +27,7 @@
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* Accelerometer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accelerometer.swift; sourceTree = "<group>"; };
+		EFA59F331FA2193C004A9939 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
 		EFCB246F1F49AC6A00AAEA14 /* bumps-detector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "bumps-detector.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EFCB24741F49AC6A00AAEA14 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				EFE06C411F4A67CD00740875 /* HomeModel.swift */,
 				EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */,
 				EF51F94F1F9F271000D9C32F /* Accelerometer.swift */,
+				EFA59F331FA2193C004A9939 /* FileUtils.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -265,6 +268,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */,
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
 				EF51F9501F9F271000D9C32F /* Accelerometer.swift in Sources */,
 				EFD53E551F7B8BA700B5C4A1 /* CurrentLocationViewController.swift in Sources */,

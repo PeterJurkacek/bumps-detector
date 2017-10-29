@@ -28,6 +28,58 @@ class CurrentLocationViewController: UIViewController, CLLocationManagerDelegate
     var placemark: CLPlacemark?
     var performingReverseGeocoding = false
     var lastGeocodingError: Error?
+    var testNumber = 0
+    
+    @IBAction func export(sender: AnyObject) {
+        testNumber += 1
+        let fileName = "test\(testNumber).csv"
+        let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
+        
+        var csvText = "Timestamp,x,y,z,w\n"
+        
+        
+        let count = accelerometer.zaznamy.count
+        
+        if count > 0 {
+            
+            for data in accelerometer.zaznamy {
+                
+                let datum = "\(data.0)"
+                let proces = String(format: "%.1f", data.1)
+                let x = String(format: "%.1f", data.2)
+                let y = String(format: "%.1f", data.3)
+                let z = String(format: "%.1f", data.4)
+                
+                let newLine = "\(datum),\(proces), \(x), \(y), \(z)\n"
+                
+                csvText.append(newLine)
+            }
+            
+            do {
+                try csvText.write(to: path!, atomically: true, encoding: String.Encoding.utf8)
+                
+                let vc = UIActivityViewController(activityItems: [path!], applicationActivities: [])
+                vc.excludedActivityTypes = [
+                    UIActivityType.assignToContact,
+                    UIActivityType.saveToCameraRoll,
+                    UIActivityType.postToFlickr,
+                    UIActivityType.postToVimeo,
+                    UIActivityType.postToTencentWeibo,
+                    UIActivityType.postToTwitter,
+                    UIActivityType.postToFacebook,
+                    UIActivityType.openInIBooks
+                ]
+                present(vc, animated: true, completion: nil)
+                
+            } catch {
+                print("Failed to create file")
+                print("\(error)")
+            }
+            
+        } else {
+            print("Error with export file")
+        }
+    }
     
     @IBAction func getLocation() {
         let authStatus = CLLocationManager.authorizationStatus()
