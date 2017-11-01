@@ -35,22 +35,39 @@ class CurrentLocationViewController: UIViewController, CLLocationManagerDelegate
         let fileName = "test\(testNumber).csv"
         let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
         
-        var csvText = "Timestamp,x,y,z,w\n"
+        var csvText = "Date Cas Stotiny, posledny_s_kazdym, posledny_s_priemerom, x, y, z, Threshold\n"
         
         
-        let count = accelerometer.zaznamy.count
+        let count = accelerometer.zaznamyZAccelerometra.count
         
         if count > 0 {
             
-            for data in accelerometer.zaznamy {
+            for data in accelerometer.zaznamyZAccelerometra {
+                
+                let datum = "\(data.0)"
+                let proces = String(format: "%.1f", data.1)
+                let procesAverage = String(format: "%.1f", data.2)
+                let x = String(format: "%.1f", data.3)
+                let y = String(format: "%.1f", data.4)
+                let z = String(format: "%.1f", data.5)
+                let threshold = String(format: "%.1f", data.6)
+                
+                let newLine = "\(datum), \(proces), \(procesAverage), \(x), \(y), \(z), \(threshold)\n"
+                
+                csvText.append(newLine)
+            }
+            
+            csvText.append("Date Cas Stotiny, zmena_pohybu, x, y, z, Threshold\n")
+            for data in accelerometer.zaznamyGyroskopu {
                 
                 let datum = "\(data.0)"
                 let proces = String(format: "%.1f", data.1)
                 let x = String(format: "%.1f", data.2)
                 let y = String(format: "%.1f", data.3)
                 let z = String(format: "%.1f", data.4)
+                let threshold = String(format: "%.1f", data.5)
                 
-                let newLine = "\(datum),\(proces), \(x), \(y), \(z)\n"
+                let newLine = "\(datum), \(proces), \(x), \(y), \(z), \(threshold)\n"
                 
                 csvText.append(newLine)
             }
@@ -109,9 +126,13 @@ class CurrentLocationViewController: UIViewController, CLLocationManagerDelegate
         super.viewDidLoad()
         //updateLabels()
         //configureGetButton()
-        let queue = DispatchQueue(label: "sensor", qos: .userInteractive)
-        queue.async{
+        let movementQueue = DispatchQueue(label: "sensor", qos: .userInitiated)
+        movementQueue.async{
             self.accelerometer.startAccelGyro()
+        }
+        let locationQueue = DispatchQueue(label: "sensor", qos: .userInitiated)
+        locationQueue.async{
+            self.getLocation()
         }
         
     }
