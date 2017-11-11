@@ -34,7 +34,7 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
     var origin: CLLocationCoordinate2D?
     
     var downloadedItems: [Bump] = [Bump]()
-    var selectedLocation : Bump = Bump()
+    //var selectedLocation : Bump = Bump()
     @IBOutlet weak var mapView: MGLMapView!
     
     override func viewDidLoad() {
@@ -72,10 +72,20 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
                 }
                 
                 let responseString = String(data: data, encoding: .utf8)
-                if let jsonDictionary = self.parse(json: responseString!) {
-                    print("Dictionary \(jsonDictionary)")
-                    self.downloadedItems = self.parseDic(dictionary: jsonDictionary)
+                //SWIFT 4.0 parsing
+                do {
+                    let syncBump = try JSONDecoder().decode(SyncBump.self, from: data)
+                    print(syncBump.bumps)
+                }catch{
+                    
                 }
+                
+                
+                //SWIFT 3.2 parsing
+//                if let jsonDictionary = self.parse(json: responseString!) {
+//                    print("Dictionary \(jsonDictionary)")
+//                    self.downloadedItems = self.parseDic(dictionary: jsonDictionary)
+//                }
                 //print("responseString = \(responseString)")
             }
             task.resume()
@@ -106,7 +116,7 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
                     let longitude = bumpDict["longitude"] as? String {
                     print("latitude: \(latitude), longitude: \(longitude)")
                     
-                    bumps.append(Bump(latitude: Double(latitude)!, longitude: Double(longitude)!))
+                    //bumps.append(Bump(latitude: Double(latitude)!, longitude: Double(longitude)!))
                 }
             }
         }
@@ -248,7 +258,7 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
 //        homeModel.downloadItems()
         for bump in downloadedItems {
             let point = MGLPointAnnotation()
-            point.coordinate = CLLocationCoordinate2D(latitude: Double(bump.latitude!), longitude: Double(bump.longitude!))
+            //point.coordinate = CLLocationCoordinate2D(latitude: Double(bump.latitude!), longitude: Double(bump.longitude!))
             point.title = "Bump"
             //point.subtitle = "Intensity" + bump.intensity!
             

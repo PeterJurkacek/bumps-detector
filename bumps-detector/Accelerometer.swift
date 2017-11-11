@@ -15,7 +15,9 @@ class Accelerometer{
     
     let logger: CMLogItem?
     var motionManager: CMMotionManager?
-    var lastFewItems = [double3]()
+    var windowAllData = [double3]()
+    var windowCalmData = [double3]()
+    var gyroItems = [CMRotationRate]()
     var priorityX :Double = 0.0
     var priorityY :Double = 0.0
     var priorityZ :Double = 0.0
@@ -24,8 +26,8 @@ class Accelerometer{
     let THRESHOLD = 5.0
     let lastFewItemsCount = 60
     let ItemsFreqiency = 60.0
-    let THRESHOLD_USER_MOVEMENTS = 1.0
-    var initialRotation: CMRotationRate?
+    let THRESHOLD_USER_MOVEMENTS = 2.0
+    //var initialRotation: CMRotationRate?
     var timer: Timer?
     var queue: OperationQueue
     var queueRecognizeBump = DispatchQueue(label: "recognizeBumpsQueue", qos : .userInteractive)
@@ -57,23 +59,56 @@ class Accelerometer{
         self.priorityZ = zms / sum
 
         //print(self.priorityX + self.priorityY + self.priorityZ)
-        lastFewItems.removeAll()
+        windowAllData.removeAll()
     }
     
     func isDeviceStateChanging(state rotation :CMRotationRate, _ date: Date) -> Bool {
-        if initialRotation == nil {
-            self.initialRotation = rotation
+        
+        var deltaX = 0.0
+        var deltaY = 0.0
+        var deltaZ = 0.0
+        
+        for temp in self.gyroItems {
+            
+            deltaX = deltaX + (temp.x)
+            deltaY = deltaY + (temp.y)
+            deltaZ = deltaZ + (temp.z)
+            
         }
-        let initMagnitude = magnitude(from: initialRotation!)
-        let sum = abs(magnitude(from: rotation) - initMagnitude)
+        
+        if(gyroItems.count >= lastFewItemsCount){
+            gyroItems.remove(at: 0)
+        }
+        gyroItems.append(rotation)
+        
+        let gyroItemsDouble = Double(gyroItems.count)
+        
+        let averageData: double3 = [deltaX/gyroItemsDouble, deltaY/gyroItemsDouble, deltaZ/gyroItemsDouble]
+        
+        let sumX = abs(abs(averageData.x) - abs(rotation.x))
+        let sumY = abs(abs(averageData.y) - abs(rotation.y))
+        let sumZ = abs(abs(averageData.z) - abs(rotation.z))
+        
+        let opositePriorityX = 1.0 - priorityX
+        let opositePriorityY = 1.0 - priorityY
+        let opositePriorityZ = 1.0 - priorityZ
+        
+        let sum = sumX*opositePriorityX + sumY*opositePriorityY + sumZ*opositePriorityZ
+        
         self.zaznamyGyroskopu.append(date, sum, rotation.x, rotation.y, rotation.z, self.THRESHOLD_USER_MOVEMENTS)
         //NSLog("DEVICE STATE \(sum)")
-        return (abs(sum) > THRESHOLD_USER_MOVEMENTS ? true : false)
+        //print("\(sum)")
+        return (sum > THRESHOLD_USER_MOVEMENTS ? true : false)
     }
 
     //MARK: Bump detection algorithms
-    func magnitude(from rotation: CMRotationRate) -> Double {
-        return sqrt(pow(rotation.x, 2) + pow(rotation.y, 2) + pow(rotation.z, 2))
+    func magnitude(from rotation: double3) -> Double {
+        
+        let opositePriorityX = 1.0 - priorityX
+        let opositePriorityY = 1.0 - priorityY
+        let opositePriorityZ = 1.0 - priorityZ
+        
+        return sqrt(pow(rotation.x*opositePriorityX, 2) + pow(rotation.y*opositePriorityY, 2) + pow(rotation.z*opositePriorityZ, 2))
     }
     
     func detectBump(forLocation location: String, with delta: Double){
@@ -81,46 +116,61 @@ class Accelerometer{
         //sleep(4)
     }
     
-    func recognizeBump(for data:double3, _ date: Date){
-        var delta = 0.0
+    func getChangeBetween(lastData data: double3, window windowData: [double3]) -> Double{
         let x = data.x
         let y = data.y
         let z = data.z
         
-        var averageDelta = 0.0
-        var nasiel_som_deltu = 0.0
+        var deltaX = 0.0
+        var deltaY = 0.0
+        var deltaZ = 0.0
         
-        var bumpDetected = false
-        for temp in self.lastFewItems {
+        for temp in windowData {
             
-            let deltaX = abs((temp.x ) - x)
-            let deltaY = abs((temp.y ) - y)
-            let deltaZ = abs((temp.z ) - z)
+            deltaX = deltaX + (temp.x)
+            deltaY = deltaY + (temp.y)
+            deltaZ = deltaZ + (temp.z)
             
-            //na zaklade priorit jednotlivych osi sa vypocita celkova zmena zrychlenia
-            delta = self.priorityX * deltaX + self.priorityY * deltaY + self.priorityZ * deltaZ
-            averageDelta = averageDelta + delta
-            //ak je zmena vacsia ako THRESHOLD potom spusti detekciu vytlku
-            if (nasiel_som_deltu == 0.0 && delta > THRESHOLD) {
-                NSLog("NASIEL SOM BUMP: \(delta)")
-                detectBump(forLocation: "location", with: delta)
-                bumpDetected = true
-                nasiel_som_deltu += delta
-                //staci ak zmena zrychlenia prekrocila THRESHOLD raz, je to vytlk
+        }
+        
+        let windowCountDouble = Double(windowData.count)
+        
+        let averageData: double3 = [deltaX/windowCountDouble, deltaY/windowCountDouble, deltaZ/windowCountDouble]
+        
+        let sumX = abs(abs(averageData.x) - abs(x))
+        let sumY = abs(abs(averageData.y) - abs(y))
+        let sumZ = abs(abs(averageData.z) - abs(z))
+        
+        return  (self.priorityX * sumX + self.priorityY * sumY + self.priorityZ * sumZ)
+    }
+    
+    func recognizeBump(for data:double3, _ date: Date){
+        
+        //Window1 -> all data
+        var deltaAllData = 0.0
+        
+        if self.windowAllData.count >= lastFewItemsCount {
+            deltaAllData = getChangeBetween(lastData: data, window: self.windowAllData)
+            windowAllData.remove(at: 0)
+        }
+        windowAllData.append(data)
+        
+        
+        //Window2 -> only calm data
+        var deltaCalmData = 0.0
+        
+        if self.windowAllData.count >= lastFewItemsCount {
+            deltaCalmData = getChangeBetween(lastData: data, window: self.windowCalmData)
+            if(deltaCalmData < THRESHOLD) {
+                windowCalmData.remove(at: 0)
+                windowCalmData.append(data)
             }
-            
         }
-        if(lastFewItems.count >= lastFewItemsCount){
-            lastFewItems.remove(at: 0)
+        else{
+            windowCalmData.append(data)
         }
-        lastFewItems.append(data)
-        self.zaznamyZAccelerometra.append((date, nasiel_som_deltu, averageDelta/Double(self.lastFewItems.count), data.x, data.y, data.z, self.THRESHOLD))
-//        if !bumpDetected {
-//            self.zaznamy.append((date, 0.0, 0.0, data.x, data.y, data.z))
-//        }
-//        else{
-//           self.zaznamy.append((date, nasiel_som_deltu, averageDelta/Double(self.lastFewItems.count), data.x, data.y, data.z))
-//        }
+
+        self.zaznamyZAccelerometra.append((date, deltaCalmData, deltaAllData, data.x, data.y, data.z, self.THRESHOLD))
     }
 
     //MARK: Sensor Methods

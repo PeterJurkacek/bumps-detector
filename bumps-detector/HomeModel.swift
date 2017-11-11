@@ -60,7 +60,7 @@ class HomeModel: NSObject, URLSessionDataDelegate{
             
             jsonElement = jsonResult[i] as! NSDictionary
             
-            let bump = Bump()
+            //let bump = Bump()
             
             //the following insures none of the JsonElement values are nil through optional binding
 //            if let intensity = jsonElement["intensity"] as? String,
@@ -74,7 +74,7 @@ class HomeModel: NSObject, URLSessionDataDelegate{
 //                
 //            }
             
-            bumps.append(bump)
+           // bumps.append(bump)
             
         }
         

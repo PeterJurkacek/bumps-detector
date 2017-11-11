@@ -6,46 +6,19 @@
 //  Copyright © 2017 Peter Jurkacek. All rights reserved.
 //
 
-import Foundation
-import CoreLocation
-
-class Bump: NSObject {
+struct Bump: Decodable {
     
     //properties
-    var intensity: Double?
-    //var location: Location?
-    var latitude: Double?
-    var longitude: Double?
-    var rating: Int?
-    var manual: Int?
-    var type: Int?
-    var text: String?
-    let TAG = "Bump"
-    var androidId: String?
-    
-    //empty constructor
-    
-    override init()
-    {
-        
-    }
-    
-    //construct with @name, @address, @latitude, and @longitude parameters
-    
-    init(latitude: Double, longitude: Double) {
-        
-        self.latitude = latitude
-        self.longitude = longitude
-    }
-    
-    
-    //prints object's current state
-    
-    override var description: String {
-        return "\(String(self.latitude!)), \(String(self.longitude!))"
-        
-    }
-    
-    
+    let latitude: Double
+    let longitude: Double
+    let count: Int
+    let b_id:  Int
+    let rating: Int
+    let manual: Int
+    let type:   Int
+    let fix:    Int
+    let admin_fix: Int
+    let info: String
+    let last_modified: String
 }
 
