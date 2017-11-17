@@ -71,7 +71,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate{
             lastLocationError = nil
             location = newLocation
             // 5
-            if newLocation.horizontalAccuracy <= locationManager.desiredAccuracy{
+            if newLocation.horizontalAccuracy <= locationManager.desiredAccuracy {
                 print("*** We're done!")
                 stopLocationManager()
             }

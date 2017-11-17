@@ -8,5 +8,5 @@
 
 struct SyncBump: Decodable {
     let bumps: [Bump]
-    let succes: Int
+    let success: Int
 }

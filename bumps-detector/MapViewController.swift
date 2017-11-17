@@ -12,12 +12,9 @@ import MapboxCoreNavigation
 import MapboxDirections
 import MapboxNavigation
 import CoreLocation
+import simd
 
-class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, CLLocationManagerDelegate{
-    
-    func itemsDownloaded(items: [Bump]) {
-        downloadedItems = items
-    }
+class MapViewController: UIViewController, CLLocationManagerDelegate{
     
    
     let locationManager = CLLocationManager()
@@ -29,9 +26,13 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
     var placemark: CLPlacemark?
     var performingReverseGeocoding = false
     var lastGeocodingError: Error?
+    
+    var gpsAccuracy = CLLocationAccuracy()
 
     var directionsRoute: Route?
     var origin: CLLocationCoordinate2D?
+    var accelerometer: BumpAlgorithm?
+    
     
     var downloadedItems: [Bump] = [Bump]()
     //var selectedLocation : Bump = Bump()
@@ -46,102 +47,17 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
         // Allow the map view to display the user's location
         mapView.setUserTrackingMode(MGLUserTrackingMode.follow, animated: true)
         // Set the map view's delegate
-        mapView.delegate = self
-        sync_database()
-    }
-    
-    func sync_database(){
-        // 1
-        let queue = DispatchQueue.global()
-        // 2
-        queue.async {
-            var request = URLRequest(url: URL(string: "http://vytlky.fiit.stuba.sk//sync_bump.php")!)
-            request.httpMethod = "POST"
-            let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&net=1"
-            request.httpBody = postString.data(using: .utf8)
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                guard let data = data, error == nil else {                                                 // check for fundamental networking error
-                    print("error=\(error)")
-                    return
-                }
-                
-                if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {           // check for http errors
-                    print("statusCode should be 200, but is \(httpStatus.statusCode)")
-                    print("response = \(response)")
-                    
-                }
-                
-                let responseString = String(data: data, encoding: .utf8)
-                //SWIFT 4.0 parsing
-                do {
-                    let syncBump = try JSONDecoder().decode(SyncBump.self, from: data)
-                    print(syncBump.bumps)
-                }catch{
-                    
-                }
-                
-                
-                //SWIFT 3.2 parsing
-//                if let jsonDictionary = self.parse(json: responseString!) {
-//                    print("Dictionary \(jsonDictionary)")
-//                    self.downloadedItems = self.parseDic(dictionary: jsonDictionary)
-//                }
-                //print("responseString = \(responseString)")
-            }
-            task.resume()
+        //mapView.delegate = self
+        //sync_database()
+        accelerometer = BumpAlgorithm()
+        accelerometer?.bumpAlgorithmDelegate = self
+        let movementQueue = DispatchQueue(label: "sensor", qos: .userInitiated)
+        movementQueue.async{
+            self.accelerometer!.startAccelGyro()
         }
     }
     
-    func parseDic(dictionary: [String: Any]) -> [Bump]{
-        // 1.
-        //Firstthereisabitofdefensiveprogrammingtomakesurethedictionaryhasa key named results that contains an array.
-        //It probably will, but better safe than sorry.
-        guard let array = dictionary["bumps"] as? [Any] else {
-            print("Expected 'results' array")
-            return []
-        }
-        var bumps: [Bump] = []
-        // 2.
-        //Onceitissatisfiedthatarrayexists,themethodusesaforinlooptolookat each of the array’s elements in turn.
-        for bumpDict in array {
-            // 3.
-            //Eachoftheelementsfromthearrayisanotherdictionary.
-            //Asmallwrinkle:the type of resultDict isn’t Dictionary as we’d like it to be, but Any, because the contents of the array could in theory be anything.
-            //To make sure these objects really do represent dictionaries, you have to cast them to the right type first. You’re using the optional cast as? here as another defensive measure. In theory it’s possible resultDict doesn’t actually hold a [String: Any] dictionary and then you don’t want to continue.
-            if let bumpDict = bumpDict as? [String: Any] {
-                // 4.
-                //Foreachofthedictionaries,youprintoutthevalueofitswrapperTypeandkind fields.
-                //Indexing a dictionary always gives you an optional, which is why you’re using if let to unwrap these two values. And because the dictionary only contains values of type Any, you also cast to the more useful String.
-                if let latitude = bumpDict["latitude"] as? String,
-                    let longitude = bumpDict["longitude"] as? String {
-                    print("latitude: \(latitude), longitude: \(longitude)")
-                    
-                    //bumps.append(Bump(latitude: Double(latitude)!, longitude: Double(longitude)!))
-                }
-            }
-        }
-        return bumps
-    }
-    
-    func parse(json: String) -> [String: Any]? {
-        
-        //guard let works like if let, it unwraps the optionals for you. But if unwrapping fails, i.e. if json.data(...) returns nil, the guard’s else block is executed and you
-        guard let data = json.data(using: .utf8, allowLossyConversion: false)
-            else { return nil }
-        do {
-            //We are using the JSONSerialization object here to convert the JSON search results to a Dictionary.
-            //Just to be sure, you’re using the as? cast to check that the object returned by JSONSerialization is truly a Dictionary.
-            return try JSONSerialization.jsonObject(
-                with: data, options: []) as? [String: Any]
-        } catch {
-            //return nil to indicate that parse(json) failed. This “should” never happen in our app, but it’s good to be vigilant about this kind of thing. (Never say never!)
-            print("JSON Error: \(error)")
-            return nil
-        }
-        
-    }
-    
-    func didLongPress(_ sender: UILongPressGestureRecognizer) {
+    @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
         guard sender.state == .began else { return }
         
         // Converts point where user did a long press to map coordinates
@@ -256,24 +172,19 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
 //        let homeModel = HomeModel()
 //        homeModel.delegate = self
 //        homeModel.downloadItems()
-        for bump in downloadedItems {
-            let point = MGLPointAnnotation()
-            //point.coordinate = CLLocationCoordinate2D(latitude: Double(bump.latitude!), longitude: Double(bump.longitude!))
-            point.title = "Bump"
-            //point.subtitle = "Intensity" + bump.intensity!
-            
-            self.mapView.addAnnotation(point)
-            self.mapView.setCenter(point.coordinate, animated: true)
-           
-        }
-        
-        print(downloadedItems)
-    }
-
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+//        sync_database()
+//        for bump in downloadedItems {
+//            let point = MGLPointAnnotation()
+//            //point.coordinate = CLLocationCoordinate2D(latitude: Double(bump.latitude!),
+//            point.title = "Bump"
+//            //point.subtitle = "Intensity" + bump.intensity!
+//
+//            self.mapView.addAnnotation(point)
+//            self.mapView.setCenter(point.coordinate, animated: true)
+//
+//        }
+//
+//        print(downloadedItems)
     }
     
     // Present the navigation view controller
@@ -292,5 +203,37 @@ class ViewController: UIViewController, MGLMapViewDelegate, HomeModelProtocol, C
         //TODO: Poslať http post request na MySQL
     }
 
+    func addBumpAnotaionToMap(){
+        guard mapView.userLocation != nil else { return }
+        
+        if (mapView.userLocation?.location?.horizontalAccuracy.isLess(than: 10.0))!{
+            let annotation = MGLPointAnnotation()
+            annotation.coordinate = (mapView.userLocation!.coordinate)
+            annotation.title = "Bobby's Coffee"
+            annotation.subtitle = "Coffeeshop"
+            mapView.addAnnotation(annotation)
+        }
+    }
+}
+
+extension MapViewController: BumpAlgorithmDelegation{
+    func saveBump(data: double3) {
+        print("Do something with accel data")
+        addBumpAnotaionToMap()
+    }
+    
+    
+}
+
+extension MapViewController: MGLMapViewDelegate{
+    
+}
+
+extension MapViewController: ConnectionDelegate{
+    func itemsDownloaded(items: [Bump]) {
+        print("Stiahol som items mozem s nimi pracovat")
+    }
+    
+    
 }
 
