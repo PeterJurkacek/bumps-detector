@@ -12,10 +12,17 @@ import CoreMotion
 import simd
 
 protocol BumpAlgorithmDelegation {
-    func saveBump(data: double3)
+    func saveBump(data: double3, date: Date)
+    func saveBumpInfoAs(tuple: (datum: Date, proces: Double, delta: Double, x: Double, y: Double, z: Double, threshold: Double))
 }
 
-class BumpAlgorithm{
+enum DistanceAlgorithm {
+    case manhatan
+    case euclidian
+    case minski
+}
+
+class BumpDetectionAlgorithm{
     
     var bumpAlgorithmDelegate: BumpAlgorithmDelegation!
     
@@ -29,10 +36,10 @@ class BumpAlgorithm{
     var priorityZ :Double = 0.0
     let ms = 9.81
     var isCalibrated = false
-    let THRESHOLD = 5.0
+    let THRESHOLD = 4.5
     let lastFewItemsCount = 60
     let ItemsFreqiency = 60.0
-    let THRESHOLD_USER_MOVEMENTS = 2.0
+    let THRESHOLD_USER_MOVEMENTS = 3.0
     //var initialRotation: CMRotationRate?
     var timer: Timer?
     var queue: OperationQueue
@@ -98,7 +105,7 @@ class BumpAlgorithm{
         let opositePriorityX = 1.0 - priorityX
         let opositePriorityY = 1.0 - priorityY
         let opositePriorityZ = 1.0 - priorityZ
-        
+
         let sum = sumX*opositePriorityX + sumY*opositePriorityY + sumZ*opositePriorityZ
         
         self.zaznamyGyroskopu.append((date, sum, rotation.x, rotation.y, rotation.z, self.THRESHOLD_USER_MOVEMENTS))
@@ -108,6 +115,7 @@ class BumpAlgorithm{
     }
 
     //MARK: Bump detection algorithms
+ 
     func magnitude(from rotation: double3) -> Double {
         
         let opositePriorityX = 1.0 - priorityX
@@ -161,10 +169,14 @@ class BumpAlgorithm{
         }
         windowAllData.append(data)
         
-        if deltaAllData > THRESHOLD {
-            bumpAlgorithmDelegate.saveBump(data: data)
+//        TODO: if deltaAllData > THRESHOLD {
+//            DispatchQueue.main.async{
+//                self.bumpAlgorithmDelegate.saveBump(data: data, date: date)
+//            }
+//        }
+        DispatchQueue.main.async{
+            self.bumpAlgorithmDelegate.saveBumpInfoAs(tuple: (datum: date, proces: 0.0, delta: deltaAllData, x: data.x, y: data.y, z: data.z, threshold: self.THRESHOLD))
         }
-        
         
         //Window2 -> only calm data
         var deltaCalmData = 0.0
@@ -207,6 +219,7 @@ class BumpAlgorithm{
                         motionManager.startAccelerometerUpdates(to: self.queue){(accelData, error) in
                             if let data = accelData{
                                 if(!self.isCalibrated){
+                                    
                                     self.zaznamyZAccelerometra.append((Date(timeIntervalSince1970: data.timestamp),-20.0, -20.0, data.acceleration.x * self.ms, data.acceleration.y * self.ms, data.acceleration.z * self.ms, self.THRESHOLD))
                                     self.calibrate(for: self.get_g_Unit(for: data.acceleration))
                                     self.isCalibrated = true
@@ -222,5 +235,41 @@ class BumpAlgorithm{
             }
         }
         print("Step Finish")
+    }
+    
+    func startAccelerationManager() {
+        guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable else
+        {
+            print("Zariadenie nepodporuje Accelerometer")
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            motionManager.accelerometerUpdateInterval = TimeInterval(1.0/self.ItemsFreqiency)
+            motionManager.startAccelerometerUpdates()
+        }
+    }
+    
+    func stopAccelerationManager() {
+        if self.motionManager != nil {
+            self.motionManager!.stopAccelerometerUpdates()
+        }
+    }
+    
+    func startGyroManager() {
+        guard let motionManager = self.motionManager, motionManager.isGyroAvailable else
+        {
+            print("Zariadenie nepodporuje Gyro")
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            motionManager.gyroUpdateInterval = TimeInterval(1.0/self.ItemsFreqiency)
+            motionManager.startGyroUpdates()
+        }
+    }
+    
+    func stopGyroManager() {
+        if self.motionManager != nil {
+            self.motionManager!.stopGyroUpdates()
+        }
     }
 }

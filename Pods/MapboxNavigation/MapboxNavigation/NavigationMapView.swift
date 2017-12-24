@@ -44,12 +44,12 @@ open class NavigationMapView: MGLMapView {
         22: MGLStyleValue(rawValue: 30)
     ]
     
-    dynamic public var trafficUnknownColor: UIColor = .trafficUnknown
-    dynamic public var trafficLowColor: UIColor = .trafficLow
-    dynamic public var trafficModerateColor: UIColor = .trafficModerate
-    dynamic public var trafficHeavyColor: UIColor = .trafficHeavy
-    dynamic public var trafficSevereColor: UIColor = .trafficSevere
-    dynamic public var routeCasingColor: UIColor = .defaultRouteCasing
+    @objc dynamic public var trafficUnknownColor: UIColor = .trafficUnknown
+    @objc dynamic public var trafficLowColor: UIColor = .trafficLow
+    @objc dynamic public var trafficModerateColor: UIColor = .trafficModerate
+    @objc dynamic public var trafficHeavyColor: UIColor = .trafficHeavy
+    @objc dynamic public var trafficSevereColor: UIColor = .trafficSevere
+    @objc dynamic public var routeCasingColor: UIColor = .defaultRouteCasing
     
     var userLocationForCourseTracking: CLLocation?
     var animatesUserLocation: Bool = false
@@ -104,7 +104,7 @@ open class NavigationMapView: MGLMapView {
         NotificationCenter.default.removeObserver(self, name: RouteControllerProgressDidChange, object: nil)
     }
     
-    func progressDidChange(_ notification: Notification) {
+    @objc func progressDidChange(_ notification: Notification) {
         guard tracksUserCourse else { return }
         
         let routeProgress = notification.userInfo![RouteControllerAlertLevelDidChangeNotificationRouteProgressKey] as! RouteProgress
@@ -156,7 +156,7 @@ open class NavigationMapView: MGLMapView {
         }
     }
     
-    func updateCourseView(_ sender: UIGestureRecognizer) {
+    @objc func updateCourseView(_ sender: UIGestureRecognizer) {
         frameInterval = FrameIntervalOptions.defaultFrameInterval
         
         if sender.state == .ended {

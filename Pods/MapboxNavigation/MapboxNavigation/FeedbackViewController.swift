@@ -84,7 +84,7 @@ class FeedbackViewController: UIViewController {
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(dismissFeedback), object: nil)
     }
     
-    func dismissFeedback() {
+    @objc func dismissFeedback() {
         abortAutodismiss()
         dismissFeedbackHandler?()
     }

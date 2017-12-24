@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EF51F9501F9F271000D9C32F /* BumpAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpAlgorithm.swift */; };
+		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
+		EF7AA07F1FD9EDE000D93434 /* InternDb.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7AA07E1FD9EDE000D93434 /* InternDb.swift */; };
+		EF7AA0A31FD9FBBD00D93434 /* bumps-detector.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */; };
 		EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA59F331FA2193C004A9939 /* FileUtils.swift */; };
+		EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */; };
 		EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */; };
 		EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */; };
 		EFCB24781F49AC6A00AAEA14 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB24761F49AC6A00AAEA14 /* Main.storyboard */; };
@@ -16,7 +19,7 @@
 		EFCB247D1F49AC6A00AAEA14 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */; };
 		EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24881F49E8D400AAEA14 /* Bump.swift */; };
 		EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */; };
-		EFD53E551F7B8BA700B5C4A1 /* CurrentLocationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD53E541F7B8BA700B5C4A1 /* CurrentLocationViewController.swift */; };
+		EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */; };
 		EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */; };
 		EFE06C421F4A67CD00740875 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE06C411F4A67CD00740875 /* Connection.swift */; };
 		EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */; };
@@ -28,8 +31,11 @@
 		02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bumps_detector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
-		EF51F94F1F9F271000D9C32F /* BumpAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpAlgorithm.swift; sourceTree = "<group>"; };
+		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
+		EF7AA07E1FD9EDE000D93434 /* InternDb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternDb.swift; sourceTree = "<group>"; };
+		EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "bumps-detector.xcdatamodel"; sourceTree = "<group>"; };
 		EFA59F331FA2193C004A9939 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
+		EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpNotifyAlgorithm.swift; sourceTree = "<group>"; };
 		EFCB246F1F49AC6A00AAEA14 /* bumps-detector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "bumps-detector.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
@@ -39,7 +45,7 @@
 		EFCB247E1F49AC6A00AAEA14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EFCB24881F49E8D400AAEA14 /* Bump.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bump.swift; sourceTree = "<group>"; };
 		EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
-		EFD53E541F7B8BA700B5C4A1 /* CurrentLocationViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrentLocationViewController.swift; sourceTree = "<group>"; };
+		EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExportDataViewController.swift; sourceTree = "<group>"; };
 		EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		EFE06C411F4A67CD00740875 /* Connection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
 		EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBump.swift; sourceTree = "<group>"; };
@@ -96,9 +102,10 @@
 		EFCB24711F49AC6A00AAEA14 /* bumps-detector */ = {
 			isa = PBXGroup;
 			children = (
+				EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */,
 				EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */,
 				EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */,
-				EFD53E541F7B8BA700B5C4A1 /* CurrentLocationViewController.swift */,
+				EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */,
 				EFCB24761F49AC6A00AAEA14 /* Main.storyboard */,
 				EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */,
 				EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */,
@@ -107,10 +114,12 @@
 				EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */,
 				EFE06C411F4A67CD00740875 /* Connection.swift */,
 				EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */,
-				EF51F94F1F9F271000D9C32F /* BumpAlgorithm.swift */,
+				EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */,
 				EFA59F331FA2193C004A9939 /* FileUtils.swift */,
 				EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */,
 				EFF44FEB1FBE7466008712E9 /* Provider.swift */,
+				EF7AA07E1FD9EDE000D93434 /* InternDb.swift */,
+				EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -281,8 +290,11 @@
 				EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */,
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
 				EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */,
-				EF51F9501F9F271000D9C32F /* BumpAlgorithm.swift in Sources */,
-				EFD53E551F7B8BA700B5C4A1 /* CurrentLocationViewController.swift in Sources */,
+				EF7AA0A31FD9FBBD00D93434 /* bumps-detector.xcdatamodeld in Sources */,
+				EF7AA07F1FD9EDE000D93434 /* InternDb.swift in Sources */,
+				EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */,
+				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
+				EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */,
 				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,
 				EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */,
 				EFF44FEC1FBE7466008712E9 /* Provider.swift in Sources */,
@@ -401,6 +413,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				VALIDATE_PRODUCT = YES;
@@ -467,6 +480,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */,
+			);
+			currentVersion = EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */;
+			path = "bumps-detector.xcdatamodeld";
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = EFCB24671F49AC6A00AAEA14 /* Project object */;
 }

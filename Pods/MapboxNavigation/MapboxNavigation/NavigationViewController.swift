@@ -426,7 +426,7 @@ public class NavigationViewController: NavigationPulleyViewController, RouteMapV
         NotificationCenter.default.removeObserver(self, name: RouteControllerAlertLevelDidChange, object: routeController)
     }
     
-    func progressDidChange(notification: NSNotification) {
+    @objc func progressDidChange(notification: NSNotification) {
         resetETATimer()
         
         let routeProgress = notification.userInfo![RouteControllerAlertLevelDidChangeNotificationRouteProgressKey] as! RouteProgress
@@ -438,7 +438,7 @@ public class NavigationViewController: NavigationPulleyViewController, RouteMapV
         progressBar.progress = routeProgress.currentLegProgress.alertUserLevel == .arrive ? 1 : CGFloat(routeProgress.fractionTraveled)
     }
     
-    func alertLevelDidChange(notification: NSNotification) {
+    @objc func alertLevelDidChange(notification: NSNotification) {
         let routeProgress = notification.userInfo![RouteControllerAlertLevelDidChangeNotificationRouteProgressKey] as! RouteProgress
         let alertLevel = routeProgress.currentLegProgress.alertUserLevel
         
@@ -475,7 +475,7 @@ public class NavigationViewController: NavigationPulleyViewController, RouteMapV
         }
     }
     
-    func updateETA() {
+    @objc func updateETA() {
         tableViewController?.updateETA(routeProgress: routeController.routeProgress)
     }
     
