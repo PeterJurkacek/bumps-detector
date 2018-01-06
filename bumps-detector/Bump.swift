@@ -21,16 +21,16 @@ struct Bump: Decodable {
 //    let info: String
 //    let last_modified: String
     
-    let latitude:    String
+    let latitude:     String
     let longitude:    String
     let count:        String
-    let b_id:        String
-    let rating:        String
-    let manual:        String
-    let type:        String
-    let fix:        String
+    let b_id:         String
+    let rating:       String
+    let manual:       String
+    let type:         String
+    let fix:          String
     let admin_fix:    String
-    let info:        String
-    let last_modified:    String
+    let info:         String
+    let last_modified:String
 }
 

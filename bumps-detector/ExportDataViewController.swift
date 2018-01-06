@@ -32,6 +32,8 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
     var lastGeocodingError: Error?
     var testNumber = 0
     
+    let fileUtils = FileUtils()
+    
     let dispatchQueue = DispatchQueue(label: "testQueue")
     var readAllDataStorage : [(datum: Date, proces: Double, delta: Double, x: Double, y: Double, z: Double, threshold: Double)] {
         get {
@@ -61,16 +63,17 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
                 //let datum = "\(data.datum)"
                 //let proces = String(format: "%.1f", data.proces)
                 let delta = String(format: "%.3f", data.delta)
-                let x = String(format: "%.3f", data.x)
-                let y = String(format: "%.3f", data.y)
-                let z = String(format: "%.3f", data.z)
+//                let x = String(format: "%.3f", data.x)
+//                let y = String(format: "%.3f", data.y)
+//                let z = String(format: "%.3f", data.z)
                 //let threshold = String(format: "%.1f", data.threshold)
                 
                 //let newLine = "\(datum), \(proces), \(delta), \(x), \(y), \(z), \(threshold)\n"
                 
                 //Write file podla k-means
-                let newLine = "\(x) \(y) \(z) \(delta)\n"
+                //let newLine = "\(x) \(y) \(z) \(delta)\n"
                 
+                let newLine = "\(delta)\n"
                 csvText.append(newLine)
             }
         
@@ -134,7 +137,34 @@ extension ExportDataViewController: BumpAlgorithmDelegation{
     func saveBumpInfoAs(tuple: (datum: Date, proces: Double, delta: Double, x: Double, y: Double, z: Double, threshold: Double)){
         dispatchQueue.sync{ 
             print(tuple)
+        
             allDataStorage.append(tuple)
+            
+            if(allDataStorage.count > 15000){
+                
+                var str = "\(allDataStorage.count) 1\n"
+                
+                for data in allDataStorage {
+                    
+                    //let datum = "\(data.datum)"
+                    //let proces = String(format: "%.1f", data.proces)
+                    let delta = String(format: "%.3f", data.delta)
+                    //                let x = String(format: "%.3f", data.x)
+                    //                let y = String(format: "%.3f", data.y)
+                    //                let z = String(format: "%.3f", data.z)
+                    //let threshold = String(format: "%.1f", data.threshold)
+                    
+                    //let newLine = "\(datum), \(proces), \(delta), \(x), \(y), \(z), \(threshold)\n"
+                    
+                    //Write file podla k-means
+                    //let newLine = "\(x) \(y) \(z) \(delta)\n"
+                    
+                    let newLine = "\(delta)\n"
+                    str.append(newLine)
+                }
+                fileUtils.saveToTxtFile(fileName: "test\(Date()).txt",content: str)
+                allDataStorage.removeAll()
+            }
             updateLabels()
         }
         

@@ -29,6 +29,7 @@ class BumpDetectionAlgorithm{
     let logger: CMLogItem?
     var motionManager: CMMotionManager?
     var windowAllData = [double3]()
+    var windowForVariance = [Double]()
     var windowCalmData = [double3]()
     var gyroItems = [CMRotationRate]()
     var priorityX :Double = 0.0
@@ -41,12 +42,16 @@ class BumpDetectionAlgorithm{
     let ItemsFreqiency = 60.0
     let THRESHOLD_USER_MOVEMENTS = 3.0
     //var initialRotation: CMRotationRate?
-    var timer: Timer?
+    var fetchAccelDataTimer: Timer?
+    var fetchGyroDataTimer: Timer?
     var queue: OperationQueue
     var queueRecognizeBump = DispatchQueue(label: "recognizeBumpsQueue", qos : .userInteractive)
     var zaznamyZAccelerometra = [(Date, Double, Double, Double, Double, Double, Double)]()
     var zaznamyGyroskopu = [(Date, Double, Double, Double, Double, Double)]()
     var date: Date?
+    
+    var accelWindow: WindowAccelData
+    
     //MARK: Initializers
     init(){
         motionManager = CMMotionManager()
@@ -151,20 +156,40 @@ class BumpDetectionAlgorithm{
         
         let averageData: double3 = [deltaX/windowCountDouble, deltaY/windowCountDouble, deltaZ/windowCountDouble]
         
-        let sumX = abs(abs(averageData.x) - abs(x))
-        let sumY = abs(abs(averageData.y) - abs(y))
-        let sumZ = abs(abs(averageData.z) - abs(z))
+        let sumX = abs(averageData.x - x)
+        let sumY = abs(averageData.y - y)
+        let sumZ = abs(averageData.z - z)
         
         return  (self.priorityX * sumX + self.priorityY * sumY + self.priorityZ * sumZ)
+    }
+    
+    func getVariance(window windowData: [Double]) -> Double{
+        
+        var before = -1.0
+        var result = 0.0
+        
+        for actual in windowData {
+            
+            if(before != -1.0){
+                result += abs(actual-before)
+            }
+            
+            before = actual
+            
+        }
+        
+        return result
     }
     
     func recognizeBump(for data:double3, _ date: Date){
         
         //Window1 -> all data
         var deltaAllData = 0.0
+        var variance = 0.0
         
-        if self.windowAllData.count >= lastFewItemsCount {
+        if(self.windowAllData.count >= lastFewItemsCount && self.windowAllData.count > 0){
             deltaAllData = getChangeBetween(lastData: data, window: self.windowAllData)
+            windowForVariance.append(deltaAllData)
             windowAllData.remove(at: 0)
         }
         windowAllData.append(data)
@@ -181,7 +206,7 @@ class BumpDetectionAlgorithm{
         //Window2 -> only calm data
         var deltaCalmData = 0.0
         
-        if self.windowAllData.count >= lastFewItemsCount {
+        if(!self.windowCalmData.isEmpty && self.windowCalmData.count >= lastFewItemsCount){
             deltaCalmData = getChangeBetween(lastData: data, window: self.windowCalmData)
             if(deltaCalmData < THRESHOLD) {
                 windowCalmData.remove(at: 0)
@@ -219,6 +244,84 @@ class BumpDetectionAlgorithm{
                         motionManager.startAccelerometerUpdates(to: self.queue){(accelData, error) in
                             if let data = accelData{
                                 if(!self.isCalibrated){
+                                    self.zaznamyZAccelerometra.append((Date(timeIntervalSince1970: data.timestamp),-20.0, -20.0, data.acceleration.x * self.ms, data.acceleration.y * self.ms, data.acceleration.z * self.ms, self.THRESHOLD))
+                                    self.calibrate(for: self.get_g_Unit(for: data.acceleration))
+                                    self.isCalibrated = true
+                                }
+                                else{
+                                    self.recognizeBump(for: self.get_g_Unit(for: data.acceleration), Date(timeIntervalSince1970: data.timestamp))
+                                }
+                                //NSLog("ACCEL \(data.acceleration)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        print("Step Finish")
+    }
+    
+    func startAccelGyro2(){
+        
+        guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable, motionManager.isGyroAvailable else
+        {
+            print("Zariadenie neposkytuje Gyroscope alebo Accelerometer")
+            return
+        }
+        motionManager.gyroUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+        motionManager.startGyroUpdates()
+        
+        // Configure a timer to fetch the data.
+        self.fetchGyroDataTimer = Timer(fire: Date(), interval: (1.0/60.0),
+                                         repeats: true, block: { (timer) in
+                                            // Get the gyro data.
+                                            if let data = motionManager.gyroData {
+                                                if (self.isDeviceStateChanging(state: data.rotationRate, (Date(timeIntervalSince1970: data.timestamp)))) {
+                                                    self.zaznamyZAccelerometra.append((Date(timeIntervalSince1970: data.timestamp),0.0, 0.0, 0.0, 0.0, 0.0, self.THRESHOLD))
+                                                    //Ak sa meni stav zariadenia stopni akcelerometer
+                                                    if motionManager.isAccelerometerActive {
+                                                        motionManager.stopAccelerometerUpdates()
+                                                        self.isCalibrated = false
+                                                    }
+                                                }
+                                                // Use the accelerometer data in your app.
+                                            }
+        })
+        
+        self.fetchAccelDataTimer = Timer(fire: Date(), interval: (1.0/60.0),
+                           repeats: true, block: { (timer) in
+                            // Get the accelerometer data.
+                            if let data = motionManager.gyroData {
+                                if (self.isDeviceStateChanging(state: data.rotationRate, (Date(timeIntervalSince1970: data.timestamp)))) {
+                                    self.zaznamyZAccelerometra.append((Date(timeIntervalSince1970: data.timestamp),0.0, 0.0, 0.0, 0.0, 0.0, self.THRESHOLD))
+                                    //Ak sa meni stav zariadenia stopni akcelerometer
+                                    if motionManager.isAccelerometerActive {
+                                        motionManager.stopAccelerometerUpdates()
+                                        self.isCalibrated = false
+                                    }
+                                }
+                                // Use the accelerometer data in your app.
+                            }
+        })
+        
+        // Add the timer to the current run loop.
+        RunLoop.current.add(self.fetchGyroDataTimer!, forMode: .defaultRunLoopMode)
+        motionManager.startGyroUpdates(to: queue){(gyroData, error) in
+            if let data = gyroData{
+                if (self.isDeviceStateChanging(state: data.rotationRate, (Date(timeIntervalSince1970: data.timestamp)))) {
+                    self.zaznamyZAccelerometra.append((Date(timeIntervalSince1970: data.timestamp),0.0, 0.0, 0.0, 0.0, 0.0, self.THRESHOLD))
+                    //Ak sa meni stav zariadenia stopni akcelerometer
+                    if motionManager.isAccelerometerActive {
+                        motionManager.stopAccelerometerUpdates()
+                        self.isCalibrated = false
+                    }
+                }
+                else {
+                    if !motionManager.isAccelerometerActive {
+                        motionManager.accelerometerUpdateInterval = TimeInterval(1.0/self.ItemsFreqiency)
+                        motionManager.startAccelerometerUpdates(to: self.queue){(accelData, error) in
+                            if let data = accelData{
+                                if(!self.isCalibrated){
                                     
                                     self.zaznamyZAccelerometra.append((Date(timeIntervalSince1970: data.timestamp),-20.0, -20.0, data.acceleration.x * self.ms, data.acceleration.y * self.ms, data.acceleration.z * self.ms, self.THRESHOLD))
                                     self.calibrate(for: self.get_g_Unit(for: data.acceleration))
@@ -236,6 +339,7 @@ class BumpDetectionAlgorithm{
         }
         print("Step Finish")
     }
+    
     
     func startAccelerationManager() {
         guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable else

@@ -24,6 +24,9 @@
 		EFE06C421F4A67CD00740875 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE06C411F4A67CD00740875 /* Connection.swift */; };
 		EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */; };
 		EFF44FEC1FBE7466008712E9 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF44FEB1FBE7466008712E9 /* Provider.swift */; };
+		EFFD58C51FFEB1F500FA1BA9 /* DataWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C41FFEB1F500FA1BA9 /* DataWindow.swift */; };
+		EFFD58C71FFF6AF000FA1BA9 /* SensorData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C61FFF6AF000FA1BA9 /* SensorData.swift */; };
+		EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */; };
 		F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */; };
 /* End PBXBuildFile section */
 
@@ -50,6 +53,9 @@
 		EFE06C411F4A67CD00740875 /* Connection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
 		EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBump.swift; sourceTree = "<group>"; };
 		EFF44FEB1FBE7466008712E9 /* Provider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
+		EFFD58C41FFEB1F500FA1BA9 /* DataWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataWindow.swift; sourceTree = "<group>"; };
+		EFFD58C61FFF6AF000FA1BA9 /* SensorData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorData.swift; sourceTree = "<group>"; };
+		EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccelData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +126,9 @@
 				EFF44FEB1FBE7466008712E9 /* Provider.swift */,
 				EF7AA07E1FD9EDE000D93434 /* InternDb.swift */,
 				EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */,
+				EFFD58C41FFEB1F500FA1BA9 /* DataWindow.swift */,
+				EFFD58C61FFF6AF000FA1BA9 /* SensorData.swift */,
+				EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -289,6 +298,8 @@
 			files = (
 				EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */,
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
+				EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */,
+				EFFD58C51FFEB1F500FA1BA9 /* DataWindow.swift in Sources */,
 				EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */,
 				EF7AA0A31FD9FBBD00D93434 /* bumps-detector.xcdatamodeld in Sources */,
 				EF7AA07F1FD9EDE000D93434 /* InternDb.swift in Sources */,
@@ -301,6 +312,7 @@
 				EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */,
 				EFE06C421F4A67CD00740875 /* Connection.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,
+				EFFD58C71FFF6AF000FA1BA9 /* SensorData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
