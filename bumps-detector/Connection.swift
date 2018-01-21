@@ -26,6 +26,10 @@ class Connection: NSObject {
     
     weak var delegate: ConnectionDelegate!
     
+    func param(name: String, value: String){
+        
+    }
+    
     func sync_database(){
         // 1
         let queue = DispatchQueue.global()

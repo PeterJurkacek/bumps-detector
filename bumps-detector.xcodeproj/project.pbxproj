@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
+		EF5ED5D520056AFB0006845B /* PendingOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5ED5D420056AFB0006845B /* PendingOperation.swift */; };
 		EF7AA07F1FD9EDE000D93434 /* InternDb.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7AA07E1FD9EDE000D93434 /* InternDb.swift */; };
 		EF7AA0A31FD9FBBD00D93434 /* bumps-detector.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */; };
 		EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA59F331FA2193C004A9939 /* FileUtils.swift */; };
@@ -35,6 +36,7 @@
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
+		EF5ED5D420056AFB0006845B /* PendingOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingOperation.swift; sourceTree = "<group>"; };
 		EF7AA07E1FD9EDE000D93434 /* InternDb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternDb.swift; sourceTree = "<group>"; };
 		EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "bumps-detector.xcdatamodel"; sourceTree = "<group>"; };
 		EFA59F331FA2193C004A9939 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
@@ -129,6 +131,7 @@
 				EFFD58C41FFEB1F500FA1BA9 /* DataWindow.swift */,
 				EFFD58C61FFF6AF000FA1BA9 /* SensorData.swift */,
 				EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */,
+				EF5ED5D420056AFB0006845B /* PendingOperation.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -311,6 +314,7 @@
 				EFF44FEC1FBE7466008712E9 /* Provider.swift in Sources */,
 				EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */,
 				EFE06C421F4A67CD00740875 /* Connection.swift in Sources */,
+				EF5ED5D520056AFB0006845B /* PendingOperation.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,
 				EFFD58C71FFF6AF000FA1BA9 /* SensorData.swift in Sources */,
 			);

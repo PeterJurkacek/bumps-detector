@@ -1,5 +1,5 @@
 //
-//  WindowAccelData.swift
+//  WindowGyroData.swift
 //  bumps-detector
 //
 //  Created by Peter Jurkacek on 5.1.18.
@@ -10,7 +10,7 @@ import Foundation
 import simd
 import CoreMotion
 
-class WindowAccelData {
+class WindowGyroData {
     var priority: double3   = [0.0,0.0,0.0]
     var sum     : double3   = [0.0,0.0,0.0]
     var average : double3   = [0.0,0.0,0.0]
@@ -22,18 +22,18 @@ class WindowAccelData {
     
     init(size: Int, accelData: CMAccelerometerData) {
         self.size = size
-        setPriority(accelData: accelData)
+        self.priority = getPriority(accelData: accelData)
     }
     
-    func setPriority(accelData: CMAccelerometerData) {
-        queue.sync {
+    func getPriority(accelData: CMAccelerometerData) -> double3{
+        return queue.sync {
             let xms = abs(accelData.acceleration.x)
             let yms = abs(accelData.acceleration.y)
             let zms = abs(accelData.acceleration.z)
             
             let sum = xms + yms + zms
             
-            self.priority = [xms / sum, yms / sum, zms / sum]
+            return [xms / sum, yms / sum, zms / sum]
         }
     }
     
@@ -51,44 +51,6 @@ class WindowAccelData {
             print(" ")
         }
     }
-    
-    func changeSize(new size: Int){
-        queue.sync {
-            
-            if self.fifo.count > size {
-                minimazeFifo(new: size)
-            }
-            else {
-                maximazeFifo(new: size)
-            }
-        }
-    }
-    
-    private func minimazeFifo(new size: Int){
-        
-        var temp_fifo = Array<CMAccelerometerData>()
-        let new_first_index = self.size - size
-        
-        for index in new_first_index..<self.size {
-            temp_fifo.append(self.fifo[index])
-        }
-        
-        self.fifo.removeAll()
-        self.size = size
-        self.sum        = [0.0,0.0,0.0]
-        self.average    = [0.0,0.0,0.0]
-        self.variance   = [0.0,0.0,0.0]
-        
-        for element in temp_fifo {
-            self.add(element: element)
-        }
-    }
-    
-    private func maximazeFifo(new size: Int){
-        self.size = size
-    }
-    
-    //MARK: VARIANCE
     
     private func updateVariance(for element: CMAccelerometerData){
         
@@ -117,14 +79,12 @@ class WindowAccelData {
                 variance.x -= abs(first_x_ms2 - second_x_ms2)
                 variance.y -= abs(first_y_ms2 - second_y_ms2)
                 variance.z -= abs(first_z_ms2 - second_z_ms2)
-
+                
             }
         } else {
             print("ERROR updateVariance: Nie je dostatocný počet prvkov v poli")
         }
     }
-    
-    //MARK: SUM
     
     private func updateSum(for element: CMAccelerometerData){
         
@@ -144,8 +104,6 @@ class WindowAccelData {
         }
     }
     
-    //MARK: AVERAGE
-    
     private func updateAverage(for element: CMAccelerometerData){
         
         if(!self.fifo.isEmpty){
@@ -154,32 +112,6 @@ class WindowAccelData {
             average  = [sum.x/fifoCount, sum.y/fifoCount, sum.z/fifoCount]
         } else {
             print("ERROR updateAverage: Pole je prázdne \(self.fifo.count)")
-        }
-    }
-    
-    //MARK: GETTERS
-    func getDeltaOf(items count: Int) -> Double{
-        return queue.sync {
-            if(!fifo.isEmpty && self.fifo.count > count){
-                let new_first_index = self.fifo.count - count
-                
-                var sum     : double3   = [0.0,0.0,0.0]
-                
-                for index in new_first_index..<self.fifo.count {
-                    sum.x += self.fifo[index].acceleration.x
-                    sum.y += self.fifo[index].acceleration.y
-                    sum.z += self.fifo[index].acceleration.z
-                }
-                
-                let doubleCount = Double(count)
-                
-                let sumX = abs(self.average.x - convert_g_to_ms2(from: sum.x/doubleCount)) * self.priority.x
-                let sumY = abs(self.average.y - convert_g_to_ms2(from: sum.y/doubleCount)) * self.priority.y
-                let sumZ = abs(self.average.z - convert_g_to_ms2(from: sum.z/doubleCount)) * self.priority.z
-                
-                return sumX + sumY + sumZ
-                
-            } else { return 0.0 }
         }
     }
     
@@ -206,15 +138,9 @@ class WindowAccelData {
         }
     }
     
-    func getPriority() ->double3{
-        return queue.sync {
-            return self.priority
-        }
-    }
-    
     func getDelta(for element: CMAccelerometerData) -> Double {
         
-       return queue.sync {
+        return queue.sync {
             if(!fifo.isEmpty){
                 let sumX = abs(average.x - convert_g_to_ms2(from: element.acceleration.x)) * self.priority.x
                 let sumY = abs(average.y - convert_g_to_ms2(from: element.acceleration.y)) * self.priority.y
@@ -227,3 +153,4 @@ class WindowAccelData {
         
     }
 }
+

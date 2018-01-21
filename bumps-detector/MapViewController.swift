@@ -14,6 +14,8 @@ import MapboxNavigation
 import CoreLocation
 import simd
 import CoreData
+import CoreMotion
+import CFNetwork
 
 class MapViewController: UIViewController, CLLocationManagerDelegate{
     
@@ -281,12 +283,12 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
     }
 }
 
-extension MapViewController: BumpAlgorithmDelegation{
+extension MapViewController: BumpAlgorithmDelegate{
     
     func saveBump(data: double3, date: Date) {
         addBumpAnotaionToMap()
     }
-    func saveBumpInfoAs(tuple: (datum: Date, proces: Double, delta: Double, x: Double, y: Double, z: Double, threshold: Double)){
+    func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
     
     }
     
