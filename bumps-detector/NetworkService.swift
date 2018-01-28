@@ -8,7 +8,7 @@
 
 import UIKit
 
-struct Services {
+struct ServerServices {
     static let create_bump = "http://vytlky.fiit.stuba.sk//create_bump.php"
     static let get_image = "http://vytlky.fiit.stuba.sk//get_image.php"
     static let get_image_id = "http://vytlky.fiit.stuba.sk//get_image_id.php"
@@ -16,26 +16,26 @@ struct Services {
     static let update_image = "http://vytlky.fiit.stuba.sk//update_image.php"
 }
 
-protocol ConnectionDelegate: class {
+protocol NetworkServiceDelegate: class {
     func itemsDownloaded(items: [Bump])
 }
 
-class Connection: NSObject {
+class NetworkService: NSObject {
     
     //properties
     
-    weak var delegate: ConnectionDelegate!
+    weak var delegate: NetworkServiceDelegate!
     
     func param(name: String, value: String){
         
     }
     
-    func sync_database(){
+    func downloadBumpsFromServer(){
         // 1
         let queue = DispatchQueue.global()
         // 2
         queue.async {
-            var request = URLRequest(url: URL(string: Services.sync_bump)!)
+            var request = URLRequest(url: URL(string: ServerServices.sync_bump)!)
             request.httpMethod = "POST"
             let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&net=1"
             request.httpBody = postString.data(using: .utf8)
@@ -54,6 +54,9 @@ class Connection: NSObject {
                 do {
                     let syncBump = try JSONDecoder().decode(SyncBump.self, from: data)
                     print(syncBump.bumps)
+                    DispatchQueue.main.async {
+                        self.delegate.itemsDownloaded(items: syncBump.bumps)
+                    }
                 }catch{
                     print("Chyba pri JSon parsingu: Skontroluj ci parametre struktur zodpovedaju json datam")
                 }

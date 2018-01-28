@@ -16,15 +16,19 @@ import simd
  */
 class CustomAccelerometerData {
     
-    var accelerometerData: CMAccelerometerData
+    var accelerometerData: CMDeviceMotion
     var priority: double3
-    var accelerationWithPriority: double3
+    var acceleration: double3 = [0.0,0.0,0.0]
     
-    init(accelerometerData: CMAccelerometerData, priority: double3) {
+    init(accelerometerData: CMDeviceMotion, priority: double3) {
         self.accelerometerData = accelerometerData
         self.priority = priority
-        self.accelerationWithPriority = [accelerometerData.acceleration.x * priority.x,
-                                         accelerometerData.acceleration.y * priority.y,
-                                         accelerometerData.acceleration.z * priority.z]
+        self.acceleration = [convert_g_to_ms2(from: accelerometerData.userAcceleration.x) * priority.x,
+                             convert_g_to_ms2(from: accelerometerData.userAcceleration.y) * priority.y,
+                             convert_g_to_ms2(from: accelerometerData.userAcceleration.z) * priority.z]
+    }
+    //Prevádza zrýchlenie v jednotkách G na ms^-2
+    func convert_g_to_ms2(from gunit: Double) -> Double{
+        return gunit * 9.80665
     }
 }

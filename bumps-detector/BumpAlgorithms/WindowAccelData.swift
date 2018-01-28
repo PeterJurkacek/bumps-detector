@@ -15,17 +15,27 @@ class WindowAccelData {
     var sum     : double3   = [0.0,0.0,0.0]
     var average : double3   = [0.0,0.0,0.0]
     var variance: double3   = [0.0,0.0,0.0]
-    var period = Array<CMAccelerometerData>()
-    var fifo = Array<CMAccelerometerData>()
-    var min: CMAccelerometerData?
-    var max: CMAccelerometerData?
+    var period = Array<CustomAccelerometerData>()
+    var fifo = Array<CustomAccelerometerData>()
+    var min: CustomAccelerometerData?
+    var max: CustomAccelerometerData?
     var size: Int
     var queue = DispatchQueue(label: "WindowAccelData queue")
     
-    
-    init(size: Int, accelData: CMAccelerometerData) {
+    init(size: Int) {
         self.size = size
-        setPriority(accelData: accelData)
+    }
+    
+    func setPriority(accelData: CMDeviceMotion) {
+        queue.sync {
+            let xms = abs(accelData.gravity.x)
+            let yms = abs(accelData.gravity.y)
+            let zms = abs(accelData.gravity.z)
+            
+            let sum = xms + yms + zms
+            
+            self.priority = [xms / sum, yms / sum, zms / sum]
+        }
     }
     
     func setPriority(accelData: CMAccelerometerData) {
@@ -40,7 +50,7 @@ class WindowAccelData {
         }
     }
     
-    func add(element: CMAccelerometerData){
+    func add(element: CustomAccelerometerData){
         queue.sync {
             self.fifo.append(element)
             //print("add: \(self.fifo.count)")
@@ -60,7 +70,7 @@ class WindowAccelData {
         }
     }
     
-    func calculatePeriod(for element: CMAccelerometerData){
+    func calculatePeriod(for element: CustomAccelerometerData){
         if !self.period.isEmpty {
         }
     }
@@ -79,7 +89,7 @@ class WindowAccelData {
     
     private func minimazeFifo(new size: Int){
         
-        var temp_fifo = Array<CMAccelerometerData>()
+        var temp_fifo = Array<CustomAccelerometerData>()
         let new_first_index = self.size - size
         
         for index in new_first_index..<self.size {
@@ -103,62 +113,58 @@ class WindowAccelData {
     
     //MARK: VARIANCE
     
-    private func updateVariance(for element: CMAccelerometerData){
+    private func updateVariance(for element: CustomAccelerometerData){
         //print("updateVariance: \(self.fifo.count)")
         if(fifo.count > 1){
-            let pre_last_x_ms2 = convert_g_to_ms2(from: fifo[fifo.count-2].acceleration.x)
-            let pre_last_y_ms2 = convert_g_to_ms2(from: fifo[fifo.count-2].acceleration.y)
-            let pre_last_z_ms2 = convert_g_to_ms2(from: fifo[fifo.count-2].acceleration.z)
+            let pre_last_x_ms2 =  fifo[fifo.count-2].acceleration.x
+            let pre_last_y_ms2 =  fifo[fifo.count-2].acceleration.y
+            let pre_last_z_ms2 =  fifo[fifo.count-2].acceleration.z
             
-            let last_x_ms2 = convert_g_to_ms2(from: fifo[fifo.count-1].acceleration.x)
-            let last_y_ms2 = convert_g_to_ms2(from: fifo[fifo.count-1].acceleration.y)
-            let last_z_ms2 = convert_g_to_ms2(from: fifo[fifo.count-1].acceleration.z)
+            let last_x_ms2 =  fifo[fifo.count-1].acceleration.x
+            let last_y_ms2 =  fifo[fifo.count-1].acceleration.y
+            let last_z_ms2 =  fifo[fifo.count-1].acceleration.z
             
             variance.x += abs(pre_last_x_ms2 - last_x_ms2)
             variance.y += abs(pre_last_y_ms2 - last_y_ms2)
             variance.z += abs(pre_last_z_ms2 - last_z_ms2)
             
             if(size != 0 && self.fifo.count > size){
-                let first_x_ms2 = convert_g_to_ms2(from: fifo[0].acceleration.x)
-                let first_y_ms2 = convert_g_to_ms2(from: fifo[0].acceleration.y)
-                let first_z_ms2 = convert_g_to_ms2(from: fifo[0].acceleration.z)
+                let first_x_ms2 =  fifo[0].acceleration.x
+                let first_y_ms2 =  fifo[0].acceleration.y
+                let first_z_ms2 =  fifo[0].acceleration.z
                 
-                let second_x_ms2 = convert_g_to_ms2(from: fifo[1].acceleration.x)
-                let second_y_ms2 = convert_g_to_ms2(from: fifo[1].acceleration.y)
-                let second_z_ms2 = convert_g_to_ms2(from: fifo[1].acceleration.z)
+                let second_x_ms2 =  fifo[1].acceleration.x
+                let second_y_ms2 =  fifo[1].acceleration.y
+                let second_z_ms2 =  fifo[1].acceleration.z
                 
                 variance.x -= abs(first_x_ms2 - second_x_ms2)
                 variance.y -= abs(first_y_ms2 - second_y_ms2)
                 variance.z -= abs(first_z_ms2 - second_z_ms2)
 
             }
-        } else {
-            print("ERROR updateVariance: Nie je dostatocný počet prvkov v poli")
         }
     }
     
     //MARK: SUM
     
-    private func updateSum(for element: CMAccelerometerData){
+    private func updateSum(for element: CustomAccelerometerData){
         //print("updateSum: \(self.fifo.count)")
         //Započítaj nový element do budúceho výpočtu priemeru
-        sum.x += convert_g_to_ms2(from: element.acceleration.x)
-        sum.y += convert_g_to_ms2(from: element.acceleration.y)
-        sum.z += convert_g_to_ms2(from: element.acceleration.z)
+        sum.x +=  element.acceleration.x
+        sum.y +=  element.acceleration.y
+        sum.z +=  element.acceleration.z
         
         //Odpočítaj starý element z budúceho výpočtu priemeru
         if(size != 0 && self.fifo.count > size){
-            sum.x -= convert_g_to_ms2(from: self.fifo[0].acceleration.x)
-            sum.y -= convert_g_to_ms2(from: self.fifo[0].acceleration.y)
-            sum.z -= convert_g_to_ms2(from: self.fifo[0].acceleration.z)
-        } else {
-            print("ERROR updateSum: Počet prvkov v poli je menej \(size)")
+            sum.x -=  self.fifo[0].acceleration.x
+            sum.y -=  self.fifo[0].acceleration.y
+            sum.z -=  self.fifo[0].acceleration.z
         }
     }
     
     //MARK: AVERAGE
     
-    private func updateAverage(for element: CMAccelerometerData){
+    private func updateAverage(for element: CustomAccelerometerData){
         //print("updateAverage: \(self.fifo.count)")
         if(!self.fifo.isEmpty){
             let fifoCount = Double(self.fifo.count)
@@ -185,17 +191,15 @@ class WindowAccelData {
                 
                 let doubleCount = Double(count)
                 
-                let sumX = abs(self.average.x - convert_g_to_ms2(from: sum.x/doubleCount)) * self.priority.x
-                let sumY = abs(self.average.y - convert_g_to_ms2(from: sum.y/doubleCount)) * self.priority.y
-                let sumZ = abs(self.average.z - convert_g_to_ms2(from: sum.z/doubleCount)) * self.priority.z
+                let sumX = abs(self.average.x -  sum.x/doubleCount) * self.priority.x
+                let sumY = abs(self.average.y -  sum.y/doubleCount) * self.priority.y
+                let sumZ = abs(self.average.z -  sum.z/doubleCount) * self.priority.z
                 
                 return sumX + sumY + sumZ
                 
             } else { return 0.0 }
         }
     }
-    
-    //Prevádza zrýchlenie v jednotkách G na ms^-2
     func convert_g_to_ms2(from gunit: Double) -> Double{
         return gunit * 9.80665
     }
@@ -224,13 +228,13 @@ class WindowAccelData {
         }
     }
     
-    func getDelta(for element: CMAccelerometerData) -> Double {
+    func getDelta(for element: CustomAccelerometerData) -> Double {
         
        return queue.sync {
             if(!fifo.isEmpty){
-                let sumX = abs(average.x - convert_g_to_ms2(from: element.acceleration.x)) * self.priority.x
-                let sumY = abs(average.y - convert_g_to_ms2(from: element.acceleration.y)) * self.priority.y
-                let sumZ = abs(average.z - convert_g_to_ms2(from: element.acceleration.z)) * self.priority.z
+                let sumX = abs(average.x -  element.acceleration.x)
+                let sumY = abs(average.y -  element.acceleration.y)
+                let sumZ = abs(average.z -  element.acceleration.z)
                 
                 return sumX + sumY + sumZ
             }

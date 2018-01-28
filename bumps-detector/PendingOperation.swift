@@ -18,7 +18,6 @@ class PendingOperation {
     lazy var downloadQueue:OperationQueue = {
         var queue = OperationQueue()
         queue.name = "Download queue"
-        queue.maxConcurrentOperationCount = 1
         return queue
     }()
     
@@ -27,7 +26,6 @@ class PendingOperation {
         var queue = OperationQueue()
         queue.qualityOfService = .background
         queue.name = "Image Database queue"
-        queue.maxConcurrentOperationCount = 1
         return queue
     }()
     
@@ -36,7 +34,6 @@ class PendingOperation {
         var queue = OperationQueue()
         queue.qualityOfService = .background
         queue.name = "Accelerometer data queue"
-        queue.maxConcurrentOperationCount = 1
         return queue
     }()
 }

@@ -18,29 +18,20 @@ import CoreMotion
 import CFNetwork
 import RealmSwift
 
-class MapViewController: UIViewController, CLLocationManagerDelegate{
-    
+class MapViewController: UIViewController {
    
-    let locationManager = CLLocationManager()
-    var location: CLLocation?
     var updatingLocation = false
-    var lastLocationError: Error?
     
     let geocoder = CLGeocoder()
     var placemark: CLPlacemark?
     var performingReverseGeocoding = false
     var lastGeocodingError: Error?
     
-    var bumps: [NSManagedObject] = []
-    var gpsAccuracy = CLLocationAccuracy()
-
     var directionsRoute: Route?
-    var origin: CLLocationCoordinate2D?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
     let realm = RealmService.shared.realm
     
-    var bumpsForMapView : Results<BumpForServer>!
-    
+    var bumpsForMapView : Results<BumpFromServer>!
     
     var downloadedItems: [Bump] = [Bump]()
     //var selectedLocation : Bump = Bump()
@@ -49,7 +40,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.bumpsForMapView = realm.objects(BumpForServer.self)
+        self.bumpsForMapView = realm.objects(BumpFromServer.self)
         
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
@@ -61,12 +52,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
         //sync_database()
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        self.bumpDetectionAlgorithm!.startAlgorithm()
-        
-        _ = realm.observe({(notification, realm) in
-            self.bumpsForMapView = realm.objects(BumpForServer.self)
-            print("DB count: \(self.bumpsForMapView.count)")
-        })
+        self.bumpDetectionAlgorithm!.startDeviceMotionSensor()
     }
     
     @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
@@ -131,39 +117,6 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
         return true
     }
     
-    func getLocation() {
-        
-        //checks the app’s authorization status for using location services
-        let authStatus = CLLocationManager.authorizationStatus()
-        if authStatus == .notDetermined {
-            locationManager.requestWhenInUseAuthorization()
-            return
-        }
-        if authStatus == .denied || authStatus == .restricted {
-            showLocationServicesDeniedAlert()
-            return
-        }
-        
-        //It tells the location manager that the view controller is its delegate and that you want to receive locations with an accuracy of up to ten meters.
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
-        
-        //Start the location manager.
-        locationManager.startUpdatingLocation()
-    }
-    
-    // MARK: - CLLocationManagerDelegate
-    func locationManager(_ manager: CLLocationManager,
-                         didFailWithError error: Error) {
-        print("didFailWithError \(error)")
-    }
-    func locationManager(_ manager: CLLocationManager,
-                         didUpdateLocations locations: [CLLocation]) {
-        let newLocation = locations.last!
-        self.location = newLocation
-        print("didUpdateLocations \(newLocation)")
-    }
-    
     // MARK: - UIAlertActions
     func showLocationServicesDeniedAlert() {
         let alert = UIAlertController(title: "Location Services Disabled",
@@ -181,10 +134,21 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
     }
     
     @IBAction func getBump(_ sender: UIButton) {
-//        let homeModel = HomeModel()
-//        homeModel.delegate = self
-//        homeModel.downloadItems()
-//        sync_database()
+            let networkService = NetworkService()
+            networkService.delegate = self
+            networkService.downloadBumpsFromServer()
+            for bump in self.bumpsForMapView {
+                let annotation = MGLPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2D(
+                    latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
+                    longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
+                annotation.title = String(describing: bump.value(forKey: "text"))
+                annotation.subtitle = "hello"
+                DispatchQueue.main.async {
+                        self.mapView.addAnnotation(annotation)
+                }
+                
+            }
         print("ACTION: getBump \(bumpsForMapView.count)")
         for bump in bumpsForMapView {
             let annotation = MGLPointAnnotation()
@@ -277,7 +241,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
 
 extension MapViewController: BumpAlgorithmDelegate{
     
-    func saveBump(data: CMAccelerometerData) {
+    func saveBump(data: CustomAccelerometerData) {
         addBumpAnotaionToMap()
     }
     func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
@@ -290,11 +254,22 @@ extension MapViewController: MGLMapViewDelegate{
     
 }
 
-extension MapViewController: ConnectionDelegate{
+extension MapViewController: NetworkServiceDelegate{
     func itemsDownloaded(items: [Bump]) {
-        print("Stiahol som items mozem s nimi pracovat")
-}
-    
-    
+        for item in items {
+            let newBump = BumpFromServer(latitude: item.latitude,
+                                         longitude: item.longitude,
+                                         count: item.count,
+                                         b_id: item.b_id,
+                                         rating: item.rating,
+                                         manual: item.manual,
+                                         type: item.type,
+                                         fix: item.fix,
+                                         admin_fix: item.admin_fix,
+                                         info: item.info,
+                                         last_modified: item.last_modified)
+            RealmService.shared.create(newBump)
+        }
+    }
 }
 

@@ -124,9 +124,9 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
 }
 
 extension ExportDataViewController: BumpAlgorithmDelegate{
-    func saveBump(data: CMAccelerometerData) {
-    
+    func saveBump(data: CustomAccelerometerData) {
     }
+    
     func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
         dispatchQueue.sync{ 
             //print(tuple)
