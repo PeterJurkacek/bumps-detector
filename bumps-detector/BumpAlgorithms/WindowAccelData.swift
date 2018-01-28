@@ -15,7 +15,10 @@ class WindowAccelData {
     var sum     : double3   = [0.0,0.0,0.0]
     var average : double3   = [0.0,0.0,0.0]
     var variance: double3   = [0.0,0.0,0.0]
+    var period = Array<CMAccelerometerData>()
     var fifo = Array<CMAccelerometerData>()
+    var min: CMAccelerometerData?
+    var max: CMAccelerometerData?
     var size: Int
     var queue = DispatchQueue(label: "WindowAccelData queue")
     
@@ -40,15 +43,25 @@ class WindowAccelData {
     func add(element: CMAccelerometerData){
         queue.sync {
             self.fifo.append(element)
+            //print("add: \(self.fifo.count)")
             updateVariance  ( for: element )
             updateSum       ( for: element )
             updateAverage   ( for: element )
             
-            print("fifo Count: \(fifo.count)")
-            print("variance x: \(self.variance.x), sum x: \(self.sum.x), average x: \(self.average.x)")
-            print("variance y: \(self.variance.y), sum y: \(self.sum.y), average y: \(self.average.y)")
-            print("variance z: \(self.variance.z), sum z: \(self.sum.z), average z: \(self.average.z)")
-            print(" ")
+            if(self.fifo.count > size){
+                self.fifo.remove(at: 0)
+            }
+            
+//            print("fifo Count: \(fifo.count)")
+//            print("variance x: \(self.variance.x), sum x: \(self.sum.x), average x: \(self.average.x)")
+//            print("variance y: \(self.variance.y), sum y: \(self.sum.y), average y: \(self.average.y)")
+//            print("variance z: \(self.variance.z), sum z: \(self.sum.z), average z: \(self.average.z)")
+//            print(" ")
+        }
+    }
+    
+    func calculatePeriod(for element: CMAccelerometerData){
+        if !self.period.isEmpty {
         }
     }
     
@@ -91,7 +104,7 @@ class WindowAccelData {
     //MARK: VARIANCE
     
     private func updateVariance(for element: CMAccelerometerData){
-        
+        //print("updateVariance: \(self.fifo.count)")
         if(fifo.count > 1){
             let pre_last_x_ms2 = convert_g_to_ms2(from: fifo[fifo.count-2].acceleration.x)
             let pre_last_y_ms2 = convert_g_to_ms2(from: fifo[fifo.count-2].acceleration.y)
@@ -105,7 +118,7 @@ class WindowAccelData {
             variance.y += abs(pre_last_y_ms2 - last_y_ms2)
             variance.z += abs(pre_last_z_ms2 - last_z_ms2)
             
-            if(size != 0 && self.fifo.count >= size){
+            if(size != 0 && self.fifo.count > size){
                 let first_x_ms2 = convert_g_to_ms2(from: fifo[0].acceleration.x)
                 let first_y_ms2 = convert_g_to_ms2(from: fifo[0].acceleration.y)
                 let first_z_ms2 = convert_g_to_ms2(from: fifo[0].acceleration.z)
@@ -127,18 +140,17 @@ class WindowAccelData {
     //MARK: SUM
     
     private func updateSum(for element: CMAccelerometerData){
-        
+        //print("updateSum: \(self.fifo.count)")
         //Započítaj nový element do budúceho výpočtu priemeru
         sum.x += convert_g_to_ms2(from: element.acceleration.x)
         sum.y += convert_g_to_ms2(from: element.acceleration.y)
         sum.z += convert_g_to_ms2(from: element.acceleration.z)
         
         //Odpočítaj starý element z budúceho výpočtu priemeru
-        if(size != 0 && self.fifo.count >= size){
+        if(size != 0 && self.fifo.count > size){
             sum.x -= convert_g_to_ms2(from: self.fifo[0].acceleration.x)
             sum.y -= convert_g_to_ms2(from: self.fifo[0].acceleration.y)
             sum.z -= convert_g_to_ms2(from: self.fifo[0].acceleration.z)
-            self.fifo.remove(at: 0)
         } else {
             print("ERROR updateSum: Počet prvkov v poli je menej \(size)")
         }
@@ -147,7 +159,7 @@ class WindowAccelData {
     //MARK: AVERAGE
     
     private func updateAverage(for element: CMAccelerometerData){
-        
+        //print("updateAverage: \(self.fifo.count)")
         if(!self.fifo.isEmpty){
             let fifoCount = Double(self.fifo.count)
             //Zisti aktuálnu hodnotu priemeru fifo pola

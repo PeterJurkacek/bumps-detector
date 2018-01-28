@@ -5,4 +5,5 @@ target 'bumps-detector' do
     pod 'Mapbox-iOS-SDK', '~> 3.6'
     pod 'MapboxNavigation', '~> 0.9.0'
     pod 'MapboxGeocoder.swift', '~> 0.6'
+    pod 'RealmSwift', '~> 3.1'
 end

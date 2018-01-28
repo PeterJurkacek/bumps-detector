@@ -11,8 +11,8 @@ import UIKit
 import CoreMotion
 import simd
 
-protocol BumpAlgorithmDelegate: NSObjectProtocol{
-    func saveBump(data: double3, date: Date)
+protocol BumpAlgorithmDelegate {
+    func saveBump(data: CMAccelerometerData)
     func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double )
 }
 
@@ -24,7 +24,7 @@ enum DistanceAlgorithm {
 
 class BumpDetectionAlgorithm{
     
-    weak var bumpAlgorithmDelegate: BumpAlgorithmDelegate?
+    var bumpAlgorithmDelegate: BumpAlgorithmDelegate?
     
     var motionManager: CMMotionManager?
     var gyroItems = [CMRotationRate]()
@@ -43,10 +43,7 @@ class BumpDetectionAlgorithm{
     //MARK: Initializers
     init(){
         motionManager = CMMotionManager()
-        queue = OperationQueue()
-        queue.qualityOfService = .utility
-        queue.name = "BumpDetection Thread"
-        queue.maxConcurrentOperationCount = 1
+        queue = PendingOperation.shared.accelerometerQueue
     }
     
     //MARK: Calibration Methods
@@ -110,19 +107,19 @@ class BumpDetectionAlgorithm{
     func recognizeBump(for data: CMAccelerometerData, with window: WindowAccelData){
         
         let delta = window.getDelta(for: data)
-        print("\(delta)")
+        var custom_data: CustomAccelerometerData
         window.add(element: data)
         
-//        TODO: if deltaAllData > THRESHOLD {
-//            DispatchQueue.main.async{
-//                self.bumpAlgorithmDelegate.saveBump(data: data, date: date)
-//            }
-//        }
-        DispatchQueue.main.async{
-            //if(self.bumpAlgorithmDelegate != nil){
-                self.bumpAlgorithmDelegate?.saveBumpInfoAs(data: data, average: window.average, sum: window.sum, variance: window.variance, priority: window.priority, delta: delta)
-            //}
+        if delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
+            DispatchQueue.main.async{
+                self.bumpAlgorithmDelegate!.saveBump(data: data)
+            }
         }
+//        DispatchQueue.main.async{
+//            //if(self.bumpAlgorithmDelegate != nil){
+//                self.bumpAlgorithmDelegate?.saveBumpInfoAs(data: data, average: window.average, sum: window.sum, variance: window.variance, priority: window.priority, delta: delta)
+//            //}
+//        }
     }
 
     //MARK: Sensor Methods
@@ -150,7 +147,7 @@ class BumpDetectionAlgorithm{
             } else { print("Nebol vytvorený objekt MotionManager.") }
     }
     
-    func startAccelGyro(){
+    func startAlgorithm(){
         guard let motionManager = self.motionManager, motionManager.isAccelerometerAvailable, motionManager.isGyroAvailable else
         {
             print("Zariadenie neposkytuje Gyroscope alebo Accelerometer")

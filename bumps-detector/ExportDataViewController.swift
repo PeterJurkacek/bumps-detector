@@ -103,10 +103,9 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
         super.viewDidLoad()
         //updateLabels()
         //configureGetButton()
-        let pendingOperations = PendingOperation()
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        self.bumpDetectionAlgorithm!.startAccelerometer()
+        self.bumpDetectionAlgorithm!.startAlgorithm()
         runTimer()
     }
     
@@ -125,9 +124,8 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
 }
 
 extension ExportDataViewController: BumpAlgorithmDelegate{
+    func saveBump(data: CMAccelerometerData) {
     
-    func saveBump(data: double3, date: Date) {
-        
     }
     func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
         dispatchQueue.sync{ 

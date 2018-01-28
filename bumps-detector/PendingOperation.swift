@@ -9,6 +9,11 @@
 import Foundation
 
 class PendingOperation {
+    
+    private init() {}
+    
+    static let shared = PendingOperation()
+    
     lazy var downloadsInProgress = [NSIndexPath:Operation]()
     lazy var downloadQueue:OperationQueue = {
         var queue = OperationQueue()
@@ -17,10 +22,11 @@ class PendingOperation {
         return queue
     }()
     
-    lazy var filtrationsInProgress = [NSIndexPath:Operation]()
-    lazy var filtrationQueue:OperationQueue = {
+    lazy var databaseInProgress = [NSIndexPath:Operation]()
+    lazy var databaseQueue:OperationQueue = {
         var queue = OperationQueue()
-        queue.name = "Image Filtration queue"
+        queue.qualityOfService = .background
+        queue.name = "Image Database queue"
         queue.maxConcurrentOperationCount = 1
         return queue
     }()
@@ -28,6 +34,7 @@ class PendingOperation {
     lazy var accelerometerInProgress = [NSIndexPath:Operation]()
     lazy var accelerometerQueue:OperationQueue = {
         var queue = OperationQueue()
+        queue.qualityOfService = .background
         queue.name = "Accelerometer data queue"
         queue.maxConcurrentOperationCount = 1
         return queue

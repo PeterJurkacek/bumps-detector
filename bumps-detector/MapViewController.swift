@@ -16,6 +16,7 @@ import simd
 import CoreData
 import CoreMotion
 import CFNetwork
+import RealmSwift
 
 class MapViewController: UIViewController, CLLocationManagerDelegate{
     
@@ -36,6 +37,9 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
     var directionsRoute: Route?
     var origin: CLLocationCoordinate2D?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
+    let realm = RealmService.shared.realm
+    
+    var bumpsForMapView : Results<BumpForServer>!
     
     
     var downloadedItems: [Bump] = [Bump]()
@@ -44,6 +48,8 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.bumpsForMapView = realm.objects(BumpForServer.self)
         
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
@@ -55,10 +61,12 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
         //sync_database()
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        DispatchQueue.global(qos: .utility).async{
-            self.bumpDetectionAlgorithm!.startAccelGyro()
-        }
-        fetchCoreData(from: "NewBump")
+        self.bumpDetectionAlgorithm!.startAlgorithm()
+        
+        _ = realm.observe({(notification, realm) in
+            self.bumpsForMapView = realm.objects(BumpForServer.self)
+            print("DB count: \(self.bumpsForMapView.count)")
+        })
     }
     
     @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
@@ -177,21 +185,15 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
 //        homeModel.delegate = self
 //        homeModel.downloadItems()
 //        sync_database()
-        for bump in bumps {
-            print(bump.value(forKey: "latitude"))
-            print(bump.value(forKey: "longitude"))
-//            let point = MGLPointAnnotation()
-            
-//            guard let lat = bump.value(forKey: "latitude") as? Double else { return }
-//            guard let lon = bump.value(forKey: "longitude") as? Double else { return }
-            
-//            point.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-//            point.title = String(describing: bump.value(forKey: "text"))
-            //point.subtitle = "Intensity" + bump.intensity!
-
-//            self.mapView.addAnnotation(point)
-            //self.mapView.setCenter(point.coordinate, animated: true)
-
+        print("ACTION: getBump \(bumpsForMapView.count)")
+        for bump in bumpsForMapView {
+            let annotation = MGLPointAnnotation()
+            annotation.coordinate = CLLocationCoordinate2D(
+                latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
+                longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
+            annotation.title = String(describing: bump.value(forKey: "text"))
+            annotation.subtitle = "hello"
+            mapView.addAnnotation(annotation)
         }
 //
 //        print(downloadedItems)
@@ -214,78 +216,68 @@ class MapViewController: UIViewController, CLLocationManagerDelegate{
     }
 
     func addBumpAnotaionToMap(){
-        guard mapView.userLocation != nil else { return }
-        print("Zaznamenal som výtlk idem kontrolovať, či mám dobrú location\(mapView.userLocation?.location?.horizontalAccuracy)")
-        if (mapView.userLocation?.location?.horizontalAccuracy.isLess(than: 100.0))!{
-            guard let appDelegate =
-                UIApplication.shared.delegate as? AppDelegate else {
-                    return
-            }
+        
+        if let location = mapView.userLocation {
+            let newBump = BumpForServer(intensity: 0.description,
+                                        latitude: location.coordinate.latitude.description,
+                                        longitude: location.coordinate.longitude.description,
+                                        manual: 0.description,
+                                        text: "novy bump",
+                                        type: "detectionAlgorithm")
             
-            // 1
-            let managedContext =
-                appDelegate.persistentContainer.viewContext
-            
-            // 2
-            let entity =
-                NSEntityDescription.entity(forEntityName: "NewBump",
-                                           in: managedContext)!
-            
-            let bump = NSManagedObject(entity: entity,
-                                       insertInto: managedContext)
-            
-            // 3
-            
-            bump.setValue(String(describing: mapView.userLocation?.coordinate.latitude), forKeyPath: "latitude")
-            bump.setValue(String(describing: mapView.userLocation?.coordinate.longitude), forKeyPath: "longitude")
-            bump.setValue("20", forKeyPath: "intensity")
-            bump.setValue("0", forKeyPath: "manual")
-            bump.setValue(String(describing:Date()), forKeyPath: "created_at")
-            bump.setValue("0", forKeyPath: "type")
-            bump.setValue("bump", forKeyPath: "text")
-            
-            print("bump\(bump.value(forKey: "latitude") ?? "")")
-            // 4
-            do {
-                try managedContext.save()
-                //people.append(person)
-            } catch let error as NSError {
-                print("Could not save. \(error), \(error.userInfo)")
-            }
-            let annotation = MGLPointAnnotation()
-            annotation.coordinate = (mapView.userLocation!.coordinate)
-            annotation.title = "New Bump"
-            annotation.subtitle = "hello"
-            mapView.addAnnotation(annotation)
-        }
-    }
-    
-    func fetchCoreData(from table: String){
-        //1
-        guard let appDelegate =
-            UIApplication.shared.delegate as? AppDelegate else {
-                return
+            RealmService.shared.create(newBump)
         }
         
-        let managedContext =
-            appDelegate.persistentContainer.viewContext
-        
-        //2
-        let fetchRequest =
-            NSFetchRequest<NSManagedObject>(entityName: table)
-        
-        //3
-        do {
-            bumps = try managedContext.fetch(fetchRequest)
-        } catch let error as NSError {
-            print("Could not fetch. \(error), \(error.userInfo)")
-        }
+//        guard mapView.userLocation != nil else { return }
+//        print("Zaznamenal som výtlk idem kontrolovať, či mám dobrú location\(mapView.userLocation?.location?.horizontalAccuracy)")
+//        if (mapView.userLocation?.location?.horizontalAccuracy.isLess(than: 100.0))!{
+//            guard let appDelegate =
+//                UIApplication.shared.delegate as? AppDelegate else {
+//                    return
+//            }
+//
+//            // 1
+//            let managedContext =
+//                appDelegate.persistentContainer.viewContext
+//
+//            // 2
+//            let entity =
+//                NSEntityDescription.entity(forEntityName: "NewBump",
+//                                           in: managedContext)!
+//
+//            let bump = NSManagedObject(entity: entity,
+//                                       insertInto: managedContext)
+//
+//            // 3
+//
+//            bump.setValue(String(describing: mapView.userLocation?.coordinate.latitude), forKeyPath: "latitude")
+//            bump.setValue(String(describing: mapView.userLocation?.coordinate.longitude), forKeyPath: "longitude")
+//            bump.setValue("20", forKeyPath: "intensity")
+//            bump.setValue("0", forKeyPath: "manual")
+//            bump.setValue(String(describing:Date()), forKeyPath: "created_at")
+//            bump.setValue("0", forKeyPath: "type")
+//            bump.setValue("bump", forKeyPath: "text")
+//
+//            print("bump\(bump.value(forKey: "latitude") ?? "")")
+//            // 4
+//            do {
+//                try managedContext.save()
+//                //people.append(person)
+//            } catch let error as NSError {
+//                print("Could not save. \(error), \(error.userInfo)")
+//            }
+//            let annotation = MGLPointAnnotation()
+//            annotation.coordinate = (mapView.userLocation!.coordinate)
+//            annotation.title = "New Bump"
+//            annotation.subtitle = "hello"
+//            mapView.addAnnotation(annotation)
+//        }
     }
 }
 
 extension MapViewController: BumpAlgorithmDelegate{
     
-    func saveBump(data: double3, date: Date) {
+    func saveBump(data: CMAccelerometerData) {
         addBumpAnotaionToMap()
     }
     func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
