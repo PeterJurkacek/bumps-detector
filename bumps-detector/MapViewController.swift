@@ -23,7 +23,7 @@ class MapViewController: UIViewController {
     var updatingLocation = false
     
     let geocoder = CLGeocoder()
-    var placemark: CLPlacemark?
+    var placemark : CLPlacemark?
     var performingReverseGeocoding = false
     var lastGeocodingError: Error?
     
@@ -31,16 +31,17 @@ class MapViewController: UIViewController {
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
     let realm = RealmService.shared.realm
     
-    var bumpsForMapView : Results<BumpFromServer>!
+    var bumpsFromServer : Results<BumpFromServer>!
+    var bumpsForServer  : Results<BumpForServer>!
     
-    var downloadedItems: [Bump] = [Bump]()
+    var downloadedItems : [Bump] = [Bump]()
     //var selectedLocation : Bump = Bump()
     @IBOutlet weak var mapView: MGLMapView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.bumpsForMapView = realm.objects(BumpFromServer.self)
+        self.bumpsFromServer = realm.objects(BumpFromServer.self)
         
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
@@ -137,7 +138,7 @@ class MapViewController: UIViewController {
             let networkService = NetworkService()
             networkService.delegate = self
             networkService.downloadBumpsFromServer()
-            for bump in self.bumpsForMapView {
+            for bump in self.bumpsFromServer {
                 let annotation = MGLPointAnnotation()
                 annotation.coordinate = CLLocationCoordinate2D(
                     latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
@@ -149,8 +150,8 @@ class MapViewController: UIViewController {
                 }
                 
             }
-        print("ACTION: getBump \(bumpsForMapView.count)")
-        for bump in bumpsForMapView {
+        print("ACTION: getBump \(bumpsFromServer.count)")
+        for bump in bumpsFromServer {
             let annotation = MGLPointAnnotation()
             annotation.coordinate = CLLocationCoordinate2D(
                 latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
@@ -256,6 +257,8 @@ extension MapViewController: MGLMapViewDelegate{
 
 extension MapViewController: NetworkServiceDelegate{
     func itemsDownloaded(items: [Bump]) {
+        
+        print("Before update\(self.bumpsFromServer.count)")
         for item in items {
             let newBump = BumpFromServer(latitude: item.latitude,
                                          longitude: item.longitude,
@@ -268,8 +271,9 @@ extension MapViewController: NetworkServiceDelegate{
                                          admin_fix: item.admin_fix,
                                          info: item.info,
                                          last_modified: item.last_modified)
-            RealmService.shared.create(newBump)
+            //RealmService.shared.createOrUpdate(newBump)
         }
+        print("After update\(self.bumpsFromServer.count)")
     }
 }
 

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
 		EF5ED5D520056AFB0006845B /* PendingOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5ED5D420056AFB0006845B /* PendingOperation.swift */; };
-		EF7AA0A31FD9FBBD00D93434 /* bumps-detector.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */; };
 		EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA59F331FA2193C004A9939 /* FileUtils.swift */; };
 		EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */; };
 		EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */; };
@@ -38,7 +37,6 @@
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
 		EF5ED5D420056AFB0006845B /* PendingOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingOperation.swift; sourceTree = "<group>"; };
-		EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "bumps-detector.xcdatamodel"; sourceTree = "<group>"; };
 		EFA59F331FA2193C004A9939 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
 		EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpNotifyAlgorithm.swift; sourceTree = "<group>"; };
 		EFCB246F1F49AC6A00AAEA14 /* bumps-detector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "bumps-detector.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,7 +110,6 @@
 		EFCB24711F49AC6A00AAEA14 /* bumps-detector */ = {
 			isa = PBXGroup;
 			children = (
-				EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */,
 				EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */,
 				EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */,
 				EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */,
@@ -328,7 +325,6 @@
 				EFD919DA201CC5520092445A /* BumpFromServer.swift in Sources */,
 				EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */,
 				EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */,
-				EF7AA0A31FD9FBBD00D93434 /* bumps-detector.xcdatamodeld in Sources */,
 				EFD919E3201E28D30092445A /* CustomAccelerometerData.swift in Sources */,
 				EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */,
 				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
@@ -520,19 +516,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCVersionGroup section */
-		EF7AA0A11FD9FBBC00D93434 /* bumps-detector.xcdatamodeld */ = {
-			isa = XCVersionGroup;
-			children = (
-				EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */,
-			);
-			currentVersion = EF7AA0A21FD9FBBC00D93434 /* bumps-detector.xcdatamodel */;
-			path = "bumps-detector.xcdatamodeld";
-			sourceTree = "<group>";
-			versionGroupType = wrapper.xcdatamodel;
-		};
-/* End XCVersionGroup section */
 	};
 	rootObject = EFCB24671F49AC6A00AAEA14 /* Project object */;
 }

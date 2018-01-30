@@ -11,7 +11,7 @@ import RealmSwift
 
 @objcMembers class BumpFromServer: Object {
     
-    dynamic var created_at =  Date()
+    dynamic var created_at:   String = ""
     dynamic var latitude:     String = ""
     dynamic var longitude:    String = ""
     dynamic var count:        String = ""
@@ -24,7 +24,8 @@ import RealmSwift
     dynamic var info:         String = ""
     dynamic var last_modified:String = ""
     
-    convenience init(latitude: String,
+    convenience init(
+                    latitude: String,
                     longitude: String,
                     count: String,
                     b_id: String,
@@ -49,6 +50,10 @@ import RealmSwift
         self.info = info
         self.last_modified=last_modified
         
+    }
+    
+    override static func primaryKey() -> String? {
+        return "b_id"
     }
 }
 
