@@ -23,33 +23,33 @@ open class GeocodeOptions: NSObject {
      
      To find out what kinds of results are available for a particular country, consult [the Geocoding API’s coverage map](https://www.mapbox.com/geocoding/#coverage).
      */
-    open var allowedISOCountryCodes: [String]?
+    @objc open var allowedISOCountryCodes: [String]?
     
     /**
      A location to use as a hint when looking up the specified address.
      
      This property prioritizes results that are close to a specific location, which is typically the user’s current location. If the value of this property is `nil` – which it is by default – no specific location is prioritized.
      */
-    open var focalLocation: CLLocation?
+    @objc open var focalLocation: CLLocation?
     
     /**
      The bitmask of placemark scopes, such as country and neighborhood, to include in the results.
      
      The default value of this property is `PlacemarkScope.all`, which includes all scopes.
      */
-    open var allowedScopes: PlacemarkScope = [.all]
+    @objc open var allowedScopes: PlacemarkScope = [.all]
     
     /**
      The region in which each resulting placemark must be located.
      
      By default, no region is specified, so results may be located anywhere in the world.
      */
-    open var allowedRegion: RectangularRegion?
+    @objc open var allowedRegion: RectangularRegion?
     
     /**
-     Limit the number of results returned. The default is `5` for forward geocoding and `1` for reverse geocoding.
+     Limit the number of results returned. For forward geocoding, the default is `5` and the maximum is `10`. For reverse geocoding, the default is `1` and the maximum is `5`.
      */
-    public var maximumResultCount: UInt
+    @objc public var maximumResultCount: UInt
 
     // MARK: Specifying the Output Format
     
@@ -62,7 +62,7 @@ open class GeocodeOptions: NSObject {
      
      - experiment: This option is experimental.
      */
-    open var locale: Locale?
+    @objc open var locale: Locale?
     
     fileprivate override init() {
         self.maximumResultCount = 0
@@ -81,7 +81,7 @@ open class GeocodeOptions: NSObject {
         var params: [URLQueryItem] = []
         if let allowedISOCountryCodes = allowedISOCountryCodes {
             assert(allowedISOCountryCodes.filter {
-                $0.characters.count != 2 || $0.contains("-")
+                $0.count != 2 || $0.contains("-")
             }.isEmpty, "Only ISO 3166-1 alpha-2 codes are allowed.")
             let codeList = allowedISOCountryCodes.joined(separator: ",").lowercased()
             params.append(URLQueryItem(name: "country", value: codeList))
@@ -128,7 +128,7 @@ open class ForwardGeocodeOptions: GeocodeOptions {
      
      - parameter query: A place name or address to search for. The query may have a maximum of 20 words or numbers; it may have up to 256 characters including spaces and punctuation.
      */
-    public convenience init(query: String) {
+    @objc public convenience init(query: String) {
         self.init(queries: [query])
     }
     
@@ -139,7 +139,7 @@ open class ForwardGeocodeOptions: GeocodeOptions {
      - parameter postalAddress: A `CNPostalAddress` object to search for.
      */
     @available(iOS 9.0, OSX 10.11, *)
-    public convenience init(postalAddress: CNPostalAddress) {
+    @objc public convenience init(postalAddress: CNPostalAddress) {
         let formattedAddress = CNPostalAddressFormatter().string(from: postalAddress)
         self.init(query: formattedAddress.replacingOccurrences(of: "\n", with: ", "))
     }
@@ -176,7 +176,7 @@ open class ReverseGeocodeOptions: GeocodeOptions {
      
      - parameter coordinate: A coordinate pair to search for.
      */
-    public convenience init(coordinate: CLLocationCoordinate2D) {
+    @objc public convenience init(coordinate: CLLocationCoordinate2D) {
         self.init(coordinates: [coordinate])
     }
     
@@ -185,7 +185,7 @@ open class ReverseGeocodeOptions: GeocodeOptions {
      
      - parameter location: A `CLLocation` object to search for.
      */
-    public convenience init(location: CLLocation) {
+    @objc public convenience init(location: CLLocation) {
         self.init(coordinate: location.coordinate)
     }
 }
@@ -210,7 +210,7 @@ open class ForwardBatchGeocodeOptions: ForwardGeocodeOptions, BatchGeocodeOption
      
      - parameter queries: An array of up to 50 place names or addresses to search for. An individual query may have a maximum of 20 words or numbers; it may have up to 256 characters including spaces and punctuation.
      */
-    public override init(queries: [String]) {
+    @objc public override init(queries: [String]) {
         super.init(queries: queries)
     }
 }
@@ -225,7 +225,7 @@ open class ReverseBatchGeocodeOptions: ReverseGeocodeOptions, BatchGeocodeOption
      
      - parameter coordinates: An array of up to 50 coordinate pairs to search for.
      */
-    public override init(coordinates: [CLLocationCoordinate2D]) {
+    @objc public override init(coordinates: [CLLocationCoordinate2D]) {
         super.init(coordinates: coordinates)
     }
     
@@ -234,7 +234,7 @@ open class ReverseBatchGeocodeOptions: ReverseGeocodeOptions, BatchGeocodeOption
      
      - parameter location: An array of up to 50 `CLLocation` objects to search for.
      */
-    public convenience init(locations: [CLLocation]) {
+    @objc public convenience init(locations: [CLLocation]) {
         self.init(coordinates: locations.map { $0.coordinate })
     }
 }

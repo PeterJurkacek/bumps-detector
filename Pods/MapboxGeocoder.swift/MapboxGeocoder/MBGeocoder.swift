@@ -1,3 +1,5 @@
+import Foundation
+
 typealias JSONDictionary = [String: Any]
 
 /// Indicates that an error occurred in MapboxGeocoder.
@@ -134,7 +136,7 @@ open class Geocoder: NSObject {
      - parameter accessToken: A Mapbox [access token](https://www.mapbox.com/help/define-access-token/). If an access token is not specified when initializing the geocoder object, it should be specified in the `MGLMapboxAccessToken` key in the main application bundle’s Info.plist.
      - parameter host: An optional hostname to the server API. The Mapbox Geocoding API endpoint is used by default.
      */
-    public init(accessToken: String?, host: String?) {
+    @objc public init(accessToken: String?, host: String?) {
         let accessToken = accessToken ?? defaultAccessToken
         assert(accessToken != nil && !accessToken!.isEmpty, "A Mapbox access token is required. Go to <https://www.mapbox.com/studio/account/tokens/>. In Info.plist, set the MGLMapboxAccessToken key to your access token, or use the Geocoder(accessToken:host:) initializer.")
         
@@ -153,7 +155,7 @@ open class Geocoder: NSObject {
      
      - parameter accessToken: A Mapbox [access token](https://www.mapbox.com/help/define-access-token/). If an access token is not specified when initializing the geocoder object, it should be specified in the `MGLMapboxAccessToken` key in the main application bundle’s Info.plist.
      */
-    public convenience init(accessToken: String?) {
+    @objc public convenience init(accessToken: String?) {
         self.init(accessToken: accessToken, host: nil)
     }
     
@@ -170,17 +172,22 @@ open class Geocoder: NSObject {
      - parameter completionHandler: The closure (block) to call with the resulting placemarks. This closure is executed on the application’s main thread.
      - returns: The data task used to perform the HTTP request. If, while waiting for the completion handler to execute, you no longer want the resulting placemarks, cancel this task.
      */
+    
+    @discardableResult
     @objc(geocodeWithOptions:completionHandler:)
     open func geocode(_ options: GeocodeOptions, completionHandler: @escaping CompletionHandler) -> URLSessionDataTask {
         let url = urlForGeocoding(options)
-        let task = dataTaskWithURL(url, completionHandler: { (json) in
-            let featureCollection = json as! JSONDictionary
-            assert(featureCollection["type"] as? String == "FeatureCollection")
-            let features = featureCollection["features"] as! [JSONDictionary]
-            let attribution = featureCollection["attribution"] as? String
-            
-            let placemarks = features.flatMap { GeocodedPlacemark(featureJSON: $0) }
-            completionHandler(placemarks, attribution, nil)
+        
+        let task = dataTaskWithURL(url, completionHandler: { (data) in
+            guard let data = data else { return }
+            let decoder = JSONDecoder()
+            do {
+                let result = try decoder.decode(GeocodeResult.self, from: data)
+                assert(result.type == "FeatureCollection")
+                completionHandler(result.placemarks, result.attribution, nil)
+            } catch {
+                completionHandler(nil, nil, error as NSError)
+            }
         }) { (error) in
             completionHandler(nil, nil, error)
         }
@@ -199,17 +206,24 @@ open class Geocoder: NSObject {
      - parameter completionHandler: The closure (block) to call with the resulting placemarks. This closure is executed on the application’s main thread.
      - returns: The data task used to perform the HTTP request. If, while waiting for the completion handler to execute, you no longer want the resulting placemarks, cancel this task.
      */
+    @discardableResult
     open func batchGeocode<T: GeocodeOptions>(_ options: T, completionHandler: @escaping BatchCompletionHandler) -> URLSessionDataTask where T: BatchGeocodeOptions {
         let url = urlForGeocoding(options)
-        let task = dataTaskWithURL(url, completionHandler: { (json) in
-            let featureCollections = json as! [JSONDictionary]
-            let placemarksByQuery = featureCollections.map { (featureCollection) -> [GeocodedPlacemark] in
-                assert(featureCollection["type"] as? String == "FeatureCollection")
-                let features = featureCollection["features"] as! [JSONDictionary]
-                return features.flatMap { GeocodedPlacemark(featureJSON: $0) }
+        
+        let task = dataTaskWithURL(url, completionHandler: { (data) in
+            guard let data = data else { return }
+            let decoder = JSONDecoder()
+            
+            do {
+                let result = try decoder.decode([GeocodeResult].self, from: data)
+                let placemarks = result.map { $0.placemarks }
+                let attributionsByQuery = result.map { $0.attribution }
+                completionHandler(placemarks, attributionsByQuery, nil)
+                
+            } catch {
+                completionHandler(nil, nil, error as NSError)
             }
-            let attributionsByQuery = featureCollections.map { $0["attribution"] as! String }
-            completionHandler(placemarksByQuery, attributionsByQuery, nil)
+            
         }) { (error) in
             completionHandler(nil, nil, error)
         }
@@ -226,38 +240,42 @@ open class Geocoder: NSObject {
      - returns: The data task for the URL.
      - postcondition: The caller must resume the returned task.
      */
-    fileprivate func dataTaskWithURL(_ url: URL, completionHandler: @escaping (_ json: Any) -> Void, errorHandler: @escaping (_ error: NSError) -> Void) -> URLSessionDataTask {
+    fileprivate func dataTaskWithURL(_ url: URL, completionHandler: @escaping (_ data: Data?) -> Void, errorHandler: @escaping (_ error: NSError) -> Void) -> URLSessionDataTask {
         var request = URLRequest(url: url)
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
         return URLSession.shared.dataTask(with: request) { (data, response, error) in
-            var json: JSONDictionary = [:]
-            if let data = data, let mimeType = response?.mimeType, mimeType == "application/json" || mimeType == "application/vnd.geo+json" {
-                do {
-                    json = try JSONSerialization.jsonObject(with: data, options: []) as! JSONDictionary
-                } catch {
-                    assert(false, "Invalid data")
-                }
-            }
+
+            guard let data = data else { return }
+            let decoder = JSONDecoder()
             
-            let apiMessage = json["message"] as? String
-            guard data != nil && error == nil && apiMessage == nil else {
-                let apiError = Geocoder.descriptiveError(json, response: response, underlyingError: error as NSError?)
+            do {
+                let result = try decoder.decode(GeocodeAPIResult.self, from: data)
+                guard result.message == nil else {
+                    let apiError = Geocoder.descriptiveError(["message": result.message!], response: response, underlyingError: error as NSError?)
+                    DispatchQueue.main.async {
+                        errorHandler(apiError)
+                    }
+                    return
+                }
                 DispatchQueue.main.async {
-                    errorHandler(apiError)
+                    completionHandler(data)
                 }
-                return
-            }
-            
-            DispatchQueue.main.async {
-                completionHandler(json)
+            } catch {
+                DispatchQueue.main.async {
+                    errorHandler(error as NSError)
+                }
             }
         }
+    }
+    
+    internal struct GeocodeAPIResult: Codable {
+        let message: String?
     }
     
     /**
      The HTTP URL used to fetch the geocodes from the API.
      */
-    open func urlForGeocoding(_ options: GeocodeOptions) -> URL {
+    @objc open func urlForGeocoding(_ options: GeocodeOptions) -> URL {
         let params = options.params + [
             URLQueryItem(name: "access_token", value: accessToken),
         ]

@@ -1,8 +1,8 @@
 PODS:
-  - AWSCore (2.6.6)
-  - AWSPolly (2.6.6):
-    - AWSCore (= 2.6.6)
-  - Mapbox-iOS-SDK (3.6.4)
+  - AWSCore (2.6.11)
+  - AWSPolly (2.6.11):
+    - AWSCore (= 2.6.11)
+  - Mapbox-iOS-SDK (3.7.3)
   - MapboxCoreNavigation (0.9.0):
     - MapboxDirections.swift (~> 0.10.5)
     - MapboxMobileEvents (~> 0.2)
@@ -10,7 +10,7 @@ PODS:
     - Turf (~> 0.0.3)
   - MapboxDirections.swift (0.10.6):
     - Polyline (= 4.1.1)
-  - MapboxGeocoder.swift (0.6.3)
+  - MapboxGeocoder.swift (0.8.0)
   - MapboxMobileEvents (0.2.10)
   - MapboxNavigation (0.9.0):
     - AWSPolly (~> 2.6)
@@ -29,9 +29,9 @@ PODS:
   - Realm/Headers (3.1.0)
   - RealmSwift (3.1.0):
     - Realm (= 3.1.0)
-  - SDWebImage (4.2.2):
-    - SDWebImage/Core (= 4.2.2)
-  - SDWebImage/Core (4.2.2)
+  - SDWebImage (4.2.3):
+    - SDWebImage/Core (= 4.2.3)
+  - SDWebImage/Core (4.2.3)
   - Solar (2.0.0)
   - Turf (0.0.4)
 
@@ -42,12 +42,12 @@ DEPENDENCIES:
   - RealmSwift (~> 3.1)
 
 SPEC CHECKSUMS:
-  AWSCore: 64619e45b47678afab53ca0f9b4fa380ebee6f0b
-  AWSPolly: 1491ed4d692befddded0af142f1258a209a4379b
-  Mapbox-iOS-SDK: 47847dd44285477e0dfffd0130f65c8a52823ada
+  AWSCore: a461695bf302a32a366768bf36056be3a2c87d8d
+  AWSPolly: fa1600710f3eb20624caeb1d0566d77a44ae4902
+  Mapbox-iOS-SDK: 5304bd9605babe6da9050ea4cb23c1671420b737
   MapboxCoreNavigation: 9cd3a9f11230414091acb822158a245137105b97
   MapboxDirections.swift: fbe95bd11c66339c1ef8b96301464f326394ac0d
-  MapboxGeocoder.swift: fbd6f0f79eda6d0b714a36259c5ff5dcd72c1bf1
+  MapboxGeocoder.swift: 16e8488bbb81a5036b9a11d4d7714200337db86b
   MapboxMobileEvents: 9e48b59d0eed04508595dcb04a77b7632e1c3054
   MapboxNavigation: d99b6973ec4890ae4109a46dd41fb5cf23ad0a16
   OSRMTextInstructions: 7bbe5a1ba548991d2a7ffba38262845e7a024390
@@ -55,7 +55,7 @@ SPEC CHECKSUMS:
   Pulley: 3d47a5ca819b8f35a63e9a4811d35035d484d1d9
   Realm: 09513d7c054678d65cd02ce09871f805b0d758ac
   RealmSwift: e868fee9b10e5490ad94b6b6ecd9027944da1824
-  SDWebImage: 89a9d32cd520bbb46eb14e541d5109b3564af198
+  SDWebImage: 791bb72962b3492327ddcac4b1880bd1b5458431
   Solar: ea092f7660c1b58d2b754227decb61a1c6710826
   Turf: 6c169618fa671e3f8a7b764b5b3332053ad6110e
 

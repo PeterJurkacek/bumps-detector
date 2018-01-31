@@ -35,6 +35,7 @@ class MapViewController: UIViewController {
     var bumpsForServer  : Results<BumpForServer>!
     
     var downloadedItems : [Bump] = [Bump]()
+    var mapAnnotations  = [MGLAnnotation]()
     //var selectedLocation : Bump = Bump()
     @IBOutlet weak var mapView: MGLMapView!
     
@@ -234,7 +235,26 @@ extension MapViewController: MGLMapViewDelegate{
 
 extension MapViewController: NetworkServiceDelegate{
     func itemsDownloaded() {
-        print(bumpsFromServer)
+        
+        DispatchQueue.global().async {
+            let realmService = RealmService()
+            let results = realmService.realm.objects(BumpFromServer.self)
+            self.mapView.removeAnnotations(self.self.mapAnnotations)
+            self.mapAnnotations.removeAll()
+            for bump in results {
+                let annotation = MGLPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2D(
+                    latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
+                    longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
+                annotation.title = String(describing: bump.value(forKey: "type"))
+                annotation.subtitle = "hello"
+                self.mapAnnotations.append(annotation)
+            }
+            DispatchQueue.main.async {
+                self.mapView.addAnnotations(self.mapAnnotations)
+            }
+        }
+        
     }
 }
 

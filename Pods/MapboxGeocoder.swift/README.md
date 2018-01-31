@@ -9,33 +9,33 @@
 
 MapboxGeocoder.swift makes it easy to connect your iOS, macOS, tvOS, or watchOS application to the [Mapbox Geocoding API](https://www.mapbox.com/geocoding/). MapboxGeocoder.swift exposes the power of the [Carmen](https://github.com/mapbox/carmen) geocoder through a simple API similar to Core Location’s CLGeocoder.
 
-MapboxGeocoder.swift pairs well with [MapboxDirections.swift](https://github.com/mapbox/MapboxDirections.swift), [MapboxStatic.swift](https://github.com/mapbox/MapboxStatic.swift), and the [Mapbox iOS SDK](https://www.mapbox.com/ios-sdk/) or [macOS SDK](https://github.com/mapbox/mapbox-gl-native/tree/master/platform/macos).
+MapboxGeocoder.swift pairs well with [MapboxDirections.swift](https://github.com/mapbox/MapboxDirections.swift), [MapboxStatic.swift](https://github.com/mapbox/MapboxStatic.swift), and the [Mapbox Maps SDK for iOS](https://www.mapbox.com/ios-sdk/) or the [Mapbox Maps SDK for macOS](https://github.com/mapbox/mapbox-gl-native/tree/master/platform/macos).
 
 ## Getting started
 
 Specify the following dependency in your [Carthage](https://github.com/Carthage/Carthage/) Cartfile:
 
 ```cartfile
-github "mapbox/MapboxGeocoder.swift" ~> 0.6
+github "mapbox/MapboxGeocoder.swift" ~> 0.8
 ```
 
 Or in your [CocoaPods](http://cocoapods.org/) Podfile:
 
 ```podspec
-pod 'MapboxGeocoder.swift', '~> 0.6'
+pod 'MapboxGeocoder.swift', '~> 0.8'
 ```
 
 Then `import MapboxGeocoder` or `@import MapboxGeocoder;`.
 
 For Objective-C targets, it may be necessary to enable the `ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES` build setting.
 
-v0.5.2 is the last release of MapboxGeocoder.swift written in Swift 2.3. The `swift2.3` branch corresponds to this release, plus any critical bug fixes that have been applied since. All subsequent releases will be based on the `master` branch, which is written in Swift 3. The Swift examples below are written in Swift 3; see the `swift2.3` branch’s readme for Swift 2.3 examples.
+v0.6.3 is the last release of MapboxGeocoder.swift written in Swift 3.2. The `swift3.2` branch corresponds to this release, plus any critical bug fixes that have been applied since. All subsequent releases will be based on the `master` branch, which is written in Swift 4. The Swift examples below are written in Swift 4; see the `swift3.2` branch’s readme for Swift 3.2 examples.
 
 This repository includes example applications written in both Swift and Objective-C showing use of the framework (as well as a comparison of writing apps in either language). More examples and detailed documentation are available in the [Mapbox API Documentation](https://www.mapbox.com/api-documentation/?language=Swift#geocoding).
 
 ## Usage
 
-You will need a [Mapbox access token](https://www.mapbox.com/developers/api/#access-tokens) in order to use the API. If you’re already using the [Mapbox iOS SDK](https://www.mapbox.com/ios-sdk/) or [macOS SDK](https://github.com/mapbox/mapbox-gl-native/tree/master/platform/macos), MapboxGeocoder.swift automatically recognizes your access token, as long as you’ve placed it in the `MGLMapboxAccessToken` key of your application’s Info.plist file.
+You will need a [Mapbox access token](https://www.mapbox.com/developers/api/#access-tokens) in order to use the API. If you’re already using the [Mapbox Maps SDK for iOS](https://www.mapbox.com/ios-sdk/) or [Mapbox Maps SDK for macOS](https://github.com/mapbox/mapbox-gl-native/tree/master/platform/macos), MapboxGeocoder.swift automatically recognizes your access token, as long as you’ve placed it in the `MGLMapboxAccessToken` key of your application’s Info.plist file.
 
 The examples below are each provided in Swift (denoted with `main.swift`) and Objective-C (`main.m`). For further details, see the [MapboxGeocoder.swift API reference](http://cocoadocs.org/docsets/MapboxGeocoder.swift/).
 
