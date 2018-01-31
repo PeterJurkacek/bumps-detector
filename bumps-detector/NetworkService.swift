@@ -17,7 +17,7 @@ struct ServerServices {
 }
 
 protocol NetworkServiceDelegate: class {
-    func itemsDownloaded(items: [Bump])
+    func itemsDownloaded()
 }
 
 class NetworkService: NSObject {
@@ -54,8 +54,23 @@ class NetworkService: NSObject {
                 do {
                     let syncBump = try JSONDecoder().decode(SyncBump.self, from: data)
                     print(syncBump.bumps)
+                    let realm = RealmService()
+                    for item in syncBump.bumps {
+                        let newBump = BumpFromServer(latitude: item.latitude,
+                                                     longitude: item.longitude,
+                                                     count: item.count,
+                                                     b_id: item.b_id,
+                                                     rating: item.rating,
+                                                     manual: item.manual,
+                                                     type: item.type,
+                                                     fix: item.fix,
+                                                     admin_fix: item.admin_fix,
+                                                     info: item.info,
+                                                     last_modified: item.last_modified)
+                        realm.createOrUpdate(newBump)
+                    }
                     DispatchQueue.main.async {
-                        self.delegate.itemsDownloaded(items: syncBump.bumps)
+                        self.delegate.itemsDownloaded()
                     }
                 }catch{
                     print("Chyba pri JSon parsingu: Skontroluj ci parametre struktur zodpovedaju json datam")

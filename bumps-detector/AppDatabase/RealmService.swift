@@ -11,11 +11,11 @@ import RealmSwift
 
 class RealmService {
     
-    private init() {}
+    var realm: Realm
     
-    static let shared = RealmService()
-    
-    var realm = try! Realm()
+    init() {
+       realm = try! Realm()
+    }
     
     func create<T: Object>(_ object: T){
         do {
@@ -23,7 +23,7 @@ class RealmService {
                 realm.add(object)
             }
         } catch {
-            print(error)
+            print("ERROR: \(error)")
         }
     }
     
@@ -33,7 +33,7 @@ class RealmService {
                 realm.add(object, update: true)
             }
         } catch {
-            print(error)
+            print("ERROR: \(error)")
         }
     }
     
@@ -45,7 +45,7 @@ class RealmService {
                 }
             }
         } catch {
-            print(error)
+            print("ERROR: \(error)")
         }
     }
     
@@ -55,7 +55,7 @@ class RealmService {
                 realm.delete(object)
             }
         } catch {
-            print(error)
+            print("ERROR: \(error)")
         }
     }
 }

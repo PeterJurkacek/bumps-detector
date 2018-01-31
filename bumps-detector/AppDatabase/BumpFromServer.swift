@@ -11,7 +11,6 @@ import RealmSwift
 
 @objcMembers class BumpFromServer: Object {
     
-    dynamic var created_at:   String = ""
     dynamic var latitude:     String = ""
     dynamic var longitude:    String = ""
     dynamic var count:        String = ""

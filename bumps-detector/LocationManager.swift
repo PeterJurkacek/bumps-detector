@@ -80,7 +80,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate{
                 performingReverseGeocoding = true
                 geocoder.reverseGeocodeLocation(newLocation, completionHandler: {
                     placemarks, error in
-                    print("*** Found placemarks: \(placemarks), error: \(error)")
+                    print("*** Found placemarks: \(String(describing: placemarks)), error: \(error)")
                 })
             }
         }

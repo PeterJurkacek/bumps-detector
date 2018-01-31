@@ -29,7 +29,7 @@ class MapViewController: UIViewController {
     
     var directionsRoute: Route?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
-    let realm = RealmService.shared.realm
+    let realmService = RealmService()
     
     var bumpsFromServer : Results<BumpFromServer>!
     var bumpsForServer  : Results<BumpForServer>!
@@ -41,7 +41,8 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.bumpsFromServer = realm.objects(BumpFromServer.self)
+        self.bumpsFromServer = realmService.realm.objects(BumpFromServer.self)
+        self.bumpsForServer = realmService.realm.objects(BumpForServer.self)
         
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
@@ -53,7 +54,7 @@ class MapViewController: UIViewController {
         //sync_database()
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        self.bumpDetectionAlgorithm!.startDeviceMotionSensor()
+        bumpDetectionAlgorithm!.startDeviceMotionSensor()
     }
     
     @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
@@ -138,30 +139,6 @@ class MapViewController: UIViewController {
             let networkService = NetworkService()
             networkService.delegate = self
             networkService.downloadBumpsFromServer()
-            for bump in self.bumpsFromServer {
-                let annotation = MGLPointAnnotation()
-                annotation.coordinate = CLLocationCoordinate2D(
-                    latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
-                    longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
-                annotation.title = String(describing: bump.value(forKey: "text"))
-                annotation.subtitle = "hello"
-                DispatchQueue.main.async {
-                        self.mapView.addAnnotation(annotation)
-                }
-                
-            }
-        print("ACTION: getBump \(bumpsFromServer.count)")
-        for bump in bumpsFromServer {
-            let annotation = MGLPointAnnotation()
-            annotation.coordinate = CLLocationCoordinate2D(
-                latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
-                longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
-            annotation.title = String(describing: bump.value(forKey: "text"))
-            annotation.subtitle = "hello"
-            mapView.addAnnotation(annotation)
-        }
-//
-//        print(downloadedItems)
     }
     
     // Present the navigation view controller
@@ -190,7 +167,7 @@ class MapViewController: UIViewController {
                                         text: "novy bump",
                                         type: "detectionAlgorithm")
             
-            RealmService.shared.create(newBump)
+            realmService.create(newBump)
         }
         
 //        guard mapView.userLocation != nil else { return }
@@ -256,24 +233,8 @@ extension MapViewController: MGLMapViewDelegate{
 }
 
 extension MapViewController: NetworkServiceDelegate{
-    func itemsDownloaded(items: [Bump]) {
-        
-        print("Before update\(self.bumpsFromServer.count)")
-        for item in items {
-            let newBump = BumpFromServer(latitude: item.latitude,
-                                         longitude: item.longitude,
-                                         count: item.count,
-                                         b_id: item.b_id,
-                                         rating: item.rating,
-                                         manual: item.manual,
-                                         type: item.type,
-                                         fix: item.fix,
-                                         admin_fix: item.admin_fix,
-                                         info: item.info,
-                                         last_modified: item.last_modified)
-            //RealmService.shared.createOrUpdate(newBump)
-        }
-        print("After update\(self.bumpsFromServer.count)")
+    func itemsDownloaded() {
+        print(bumpsFromServer)
     }
 }
 
