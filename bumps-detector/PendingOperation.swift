@@ -34,6 +34,7 @@ class PendingOperation {
         var queue = OperationQueue()
         queue.qualityOfService = .background
         queue.name = "Accelerometer data queue"
+        queue.maxConcurrentOperationCount = 1
         return queue
     }()
 }

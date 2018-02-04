@@ -115,11 +115,6 @@ class MapViewController: UIViewController {
         }
     }
     
-    // Always allow callouts to appear when annotations are tapped.
-    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
-        return true
-    }
-    
     // MARK: - UIAlertActions
     func showLocationServicesDeniedAlert() {
         let alert = UIAlertController(title: "Location Services Disabled",
@@ -132,33 +127,53 @@ class MapViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
-        self.presentNavigation(along: directionsRoute!)
+    @IBAction func showBumpsFromServer(_ sender: UIButton) {
+        let networkService = NetworkService()
+        networkService.delegate = self
+        
+        if let userLocation = mapView.userLocation {
+            networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 1 )
+        } else { print("Nemam userLocation") }
+            
     }
     
-    @IBAction func getBump(_ sender: UIButton) {
-            let networkService = NetworkService()
-            networkService.delegate = self
-            networkService.downloadBumpsFromServer()
+    @IBAction func showBumpsForServer(_ sender: Any) {
+        DispatchQueue.global().async {
+            let realmService = RealmService()
+            let results = realmService.realm.objects(BumpForServer.self)
+            let annotations = self.getAnnotations(results: results)
+            
+            DispatchQueue.main.async {
+                if let annotations = self.mapView.annotations {
+                    self.mapView.removeAnnotations(annotations)
+                }
+                self.mapView.addAnnotations(annotations)
+            }
+        }
     }
+    
+    func getAnnotations<T: Object>(results: Results<T>) -> [MGLAnnotation] {
+            var newAnnotations = [MGLAnnotation]()
+            for bump in results {
+                let annotation = MGLPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2D(
+                    latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
+                    longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
+                annotation.title = String(describing: bump.value(forKey: "type"))
+                annotation.subtitle = "hello"
+                newAnnotations.append(annotation)
+            }
+            return newAnnotations
+    }
+    
     
     // Present the navigation view controller
     func presentNavigation(along route: Route) {
         let viewController = NavigationViewController(for: route)
         self.present(viewController, animated: true, completion: nil)
     }
-    
-    @IBAction func createBump(_ sender: Any) {
-        //TODO: Získať údaj o aktuálnej polohe
-//        let bump = Bump(
-//            latitude : (self.mapView.userLocation?.coordinate.latitude)!,
-//            longitude: (self.mapView.userLocation?.coordinate.longitude)!,
-//            intensity: 0.5)
-        //TODO: Vytvoriť JSON object
-        //TODO: Poslať http post request na MySQL
-    }
 
-    func addBumpAnotaionToMap(){
+    func addDetectedBumpToInternDB(intensity: String, location: CLLocationCoordinate2D, manual: String, text: String, type: String){
         
         if let location = mapView.userLocation {
             let newBump = BumpForServer(intensity: 0.description,
@@ -170,67 +185,45 @@ class MapViewController: UIViewController {
             
             realmService.create(newBump)
         }
-        
-//        guard mapView.userLocation != nil else { return }
-//        print("Zaznamenal som výtlk idem kontrolovať, či mám dobrú location\(mapView.userLocation?.location?.horizontalAccuracy)")
-//        if (mapView.userLocation?.location?.horizontalAccuracy.isLess(than: 100.0))!{
-//            guard let appDelegate =
-//                UIApplication.shared.delegate as? AppDelegate else {
-//                    return
-//            }
-//
-//            // 1
-//            let managedContext =
-//                appDelegate.persistentContainer.viewContext
-//
-//            // 2
-//            let entity =
-//                NSEntityDescription.entity(forEntityName: "NewBump",
-//                                           in: managedContext)!
-//
-//            let bump = NSManagedObject(entity: entity,
-//                                       insertInto: managedContext)
-//
-//            // 3
-//
-//            bump.setValue(String(describing: mapView.userLocation?.coordinate.latitude), forKeyPath: "latitude")
-//            bump.setValue(String(describing: mapView.userLocation?.coordinate.longitude), forKeyPath: "longitude")
-//            bump.setValue("20", forKeyPath: "intensity")
-//            bump.setValue("0", forKeyPath: "manual")
-//            bump.setValue(String(describing:Date()), forKeyPath: "created_at")
-//            bump.setValue("0", forKeyPath: "type")
-//            bump.setValue("bump", forKeyPath: "text")
-//
-//            print("bump\(bump.value(forKey: "latitude") ?? "")")
-//            // 4
-//            do {
-//                try managedContext.save()
-//                //people.append(person)
-//            } catch let error as NSError {
-//                print("Could not save. \(error), \(error.userInfo)")
-//            }
-//            let annotation = MGLPointAnnotation()
-//            annotation.coordinate = (mapView.userLocation!.coordinate)
-//            annotation.title = "New Bump"
-//            annotation.subtitle = "hello"
-//            mapView.addAnnotation(annotation)
-//        }
     }
 }
 
 extension MapViewController: BumpAlgorithmDelegate{
+    func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double) {
+    }
     
     func saveBump(data: CustomAccelerometerData) {
-        addBumpAnotaionToMap()
-    }
-    func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
-    
+        let requiredAccuracy = 100.0
+        print("BUMP DETECTED!!!")
+        if let userLocation = mapView.userLocation {
+            if let location = userLocation.location {
+                if (location.horizontalAccuracy.isLess(than: requiredAccuracy)){
+                    let annotation = MGLPointAnnotation()
+                    annotation.coordinate = CLLocationCoordinate2D(
+                        latitude:  location.coordinate.latitude,
+                        longitude: location.coordinate.longitude)
+                    annotation.title = "Bump"
+                    annotation.subtitle = "Bude sa odosielat na server"
+                    addDetectedBumpToInternDB(intensity: "-1", location: location.coordinate, manual: "0", text: "Hello New Bump", type: "AutoDetect")
+                    self.mapView.addAnnotation(annotation)
+                } else { print("Presnost location: \(location.horizontalAccuracy) nie je dostacujuca: \(requiredAccuracy)") }
+            } else { print("Neexistuje location") }
+        } else { print("Neexistuje userLocation") }
     }
     
 }
 
 extension MapViewController: MGLMapViewDelegate{
     
+    // Always allow callouts to appear when annotations are tapped.
+    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
+        return true
+    }
+    
+    
+    func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
+        self.presentNavigation(along: directionsRoute!)
+    }
 }
 
 extension MapViewController: NetworkServiceDelegate{
@@ -239,7 +232,9 @@ extension MapViewController: NetworkServiceDelegate{
         DispatchQueue.global().async {
             let realmService = RealmService()
             let results = realmService.realm.objects(BumpFromServer.self)
-            self.mapView.removeAnnotations(self.self.mapAnnotations)
+            if let annotations = self.mapView.annotations {
+                self.mapView.removeAnnotations(annotations)
+            }
             self.mapAnnotations.removeAll()
             for bump in results {
                 let annotation = MGLPointAnnotation()

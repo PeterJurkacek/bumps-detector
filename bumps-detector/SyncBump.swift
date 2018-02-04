@@ -10,3 +10,7 @@ struct SyncBump: Decodable {
     let bumps: [Bump]
     let success: Int
 }
+
+struct bumpForServerResponse: Decodable {
+    let success: Int
+}

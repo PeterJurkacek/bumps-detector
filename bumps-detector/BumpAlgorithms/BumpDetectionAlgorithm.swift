@@ -60,7 +60,7 @@ class BumpDetectionAlgorithm{
         window.add(element: data)
         //print(delta)
         if delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
-            OperationQueue.main.addOperation {
+            DispatchQueue.main.async {
                 self.bumpAlgorithmDelegate!.saveBump(data: data)
             }
         }
@@ -71,7 +71,7 @@ class BumpDetectionAlgorithm{
             if motionManager.isDeviceMotionAvailable {
                 motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
                 motionManager.startDeviceMotionUpdates(to: queue){(deviceMotion, error) in
-                    if let data = deviceMotion{
+                    if let data = deviceMotion {
                         if (self.isDeviceStateChanging(state: data.attitude)) {
                             self.isCalibrated = false
                             NSLog("POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
