@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13189.4" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="2bw-kK-8r6">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="2bw-kK-8r6">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13165.3"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -325,7 +326,7 @@
                                                 <rect key="frame" x="0.0" y="0.0" width="233" height="70"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="1 km" textAlignment="natural" lineBreakMode="wordWrap" minimumScaleFactor="0.40000000000000002" translatesAutoresizingMaskIntoConstraints="NO" id="u1L-N9-mMS" customClass="MBDistanceLabel">
-                                                        <rect key="frame" x="0.0" y="0.0" width="233" height="21.5"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="233" height="27"/>
                                                         <fontDescription key="fontDescription" type="system" weight="medium" pointSize="26"/>
                                                         <nil key="textColor"/>
                                                         <nil key="highlightedColor"/>
@@ -339,10 +340,10 @@
                                                         </attributedString>
                                                     </label>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="YWf-jk-QP6">
-                                                        <rect key="frame" x="0.0" y="21.5" width="233" height="48.5"/>
+                                                        <rect key="frame" x="0.0" y="27" width="233" height="43"/>
                                                         <subviews>
                                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Enter the roundabout and take the 4th exit onto New Hampshire Avenue Northwest" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" minimumScaleFactor="0.5" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BR8-8N-Rhk" customClass="MBDestinationLabel">
-                                                                <rect key="frame" x="0.0" y="0.0" width="233" height="48.5"/>
+                                                                <rect key="frame" x="0.0" y="0.0" width="233" height="43"/>
                                                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="35"/>
                                                                 <color key="textColor" red="0.1764705882" green="0.1764705882" blue="0.1764705882" alpha="1" colorSpace="calibratedRGB"/>
                                                                 <nil key="highlightedColor"/>
@@ -536,7 +537,7 @@
                                                             </constraints>
                                                         </view>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="qH5-Og-q0a">
-                                                            <rect key="frame" x="54.5" y="96" width="47.5" height="23"/>
+                                                            <rect key="frame" x="54.5" y="96" width="47.5" height="22"/>
                                                             <fontDescription key="fontDescription" type="system" weight="medium" pointSize="19"/>
                                                             <color key="textColor" red="0.066666666666666666" green="0.066666666666666666" blue="0.066666666666666666" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             <nil key="highlightedColor"/>
@@ -672,7 +673,7 @@
                                                     </constraints>
                                                 </view>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="subtitleLabel" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="w7x-Wj-c7z" customClass="MBCellSubtitleLabel">
-                                                    <rect key="frame" x="58" y="48" width="99" height="60"/>
+                                                    <rect key="frame" x="58" y="51" width="99" height="54"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" red="0.58039215690000001" green="0.58039215690000001" blue="0.58039215690000001" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
@@ -686,7 +687,7 @@
                                                     </attributedString>
                                                 </label>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Uu2-ej-daK" customClass="MBDashedLineView">
-                                                    <rect key="frame" x="16" y="8" width="343" height="1"/>
+                                                    <rect key="frame" x="23" y="11" width="329" height="1"/>
                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="1" id="bEv-mt-Xie"/>
@@ -701,7 +702,7 @@
                                                     </userDefinedRuntimeAttributes>
                                                 </view>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" verticalHuggingPriority="251" text="titleLabel" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fcw-K2-mfp" customClass="MBCellTitleLabel">
-                                                    <rect key="frame" x="58" y="25" width="67" height="20"/>
+                                                    <rect key="frame" x="58" y="28" width="67" height="20"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
                                                     <color key="textColor" red="0.1764705882" green="0.1764705882" blue="0.1764705882" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
@@ -797,7 +798,7 @@
                             </attributedString>
                         </label>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="10:09" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HRl-MT-kqB" userLabel="etaLabel" customClass="MBArrivalTimeLabel">
-                            <rect key="frame" x="238" y="32" width="48" height="22"/>
+                            <rect key="frame" x="232" y="32" width="48" height="22"/>
                             <fontDescription key="fontDescription" type="system" weight="medium" pointSize="18"/>
                             <nil key="textColor"/>
                             <nil key="highlightedColor"/>
@@ -811,7 +812,7 @@
                             </attributedString>
                         </label>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rwq-3y-Mg0" userLabel="Divider View" customClass="MBSeparatorView">
-                            <rect key="frame" x="296" y="23" width="1" height="40"/>
+                            <rect key="frame" x="290" y="23" width="1" height="40"/>
                             <color key="backgroundColor" red="1" green="0.32771947689999997" blue="0.3476559052" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                             <constraints>
                                 <constraint firstAttribute="width" constant="1" id="q7v-Jd-uwt"/>

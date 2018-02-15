@@ -416,7 +416,7 @@ open class NavigationMapView: MGLMapView {
         }
         
         if let lastLeg =  route.legs.last {
-            removeAnnotations(annotations ?? [])
+//            removeAnnotations(annotations ?? [])
             let destination = MGLPointAnnotation()
             destination.coordinate = lastLeg.destination.coordinate
             addAnnotation(destination)

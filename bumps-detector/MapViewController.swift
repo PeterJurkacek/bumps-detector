@@ -18,6 +18,7 @@ import CoreMotion
 import CFNetwork
 import RealmSwift
 
+//Navigacia je inspirovana tutorialom https://www.mapbox.com/help/ios-navigation-sdk/
 class MapViewController: UIViewController {
    
     var updatingLocation = false
@@ -26,6 +27,7 @@ class MapViewController: UIViewController {
     var placemark : CLPlacemark?
     var performingReverseGeocoding = false
     var lastGeocodingError: Error?
+    var destinationAnnotation = MGLPointAnnotation()
     
     var directionsRoute: Route?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
@@ -42,17 +44,22 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.addSubview(mapView)
+        
+        // Set the map view's delegate
+        mapView.delegate = self
+        
+        // Allow the map to display the user's location
+        mapView.showsUserLocation = true
+        mapView.setUserTrackingMode(.follow, animated: true)
+        
+        // Add a gesture recognizer to the map view
+        let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
+        mapView.addGestureRecognizer(tap)
+        
         self.bumpsFromServer = realmService.realm.objects(BumpFromServer.self)
         self.bumpsForServer = realmService.realm.objects(BumpForServer.self)
         
-        let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
-        mapView.addGestureRecognizer(tap)
-      
-        // Allow the map view to display the user's location
-        mapView.setUserTrackingMode(MGLUserTrackingMode.follow, animated: true)
-        // Set the map view's delegate
-        //mapView.delegate = self
-        //sync_database()
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
         bumpDetectionAlgorithm!.startDeviceMotionSensor()
@@ -66,53 +73,17 @@ class MapViewController: UIViewController {
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
         
         // Create a basic point annotation and add it to the map
-        let annotation = MGLPointAnnotation()
-        annotation.coordinate = coordinate
-        annotation.title = "Start navigation"
-        mapView.addAnnotation(annotation)
-        
-        calculateRoute(from: (mapView.userLocation!.coordinate), to: annotation.coordinate) { [unowned self] (route, error) in
-            if error != nil {
-                // Print an error message
-                print("Error calculating route")
-            }
-        }
-    }
-    
-    // Calculate route to be used for navigation
-    func calculateRoute(from origin: CLLocationCoordinate2D,
-                        to destination: CLLocationCoordinate2D,
-                        completion: @escaping (Route?, Error?) -> ()) {
-        
-        let originWaypoint = Waypoint(coordinate: origin, name: "Start")
-        
-        let destinationWaypoint = Waypoint(coordinate: destination, name: "Finish")
-        
-        let options = NavigationRouteOptions(waypoints: [originWaypoint, destinationWaypoint], profileIdentifier: .automobileAvoidingTraffic)
-        
-        _ = Directions.shared.calculate(options) { (waypoints, routes, error) in
-            guard let route = routes?.first else { return }
-            self.directionsRoute = route
-            self.drawRoute(route: self.directionsRoute!)
-        }
-    }
-    
-    func drawRoute(route: Route) {
-        guard route.coordinateCount > 0 else { return }
-        // Convert the route’s coordinates into a polyline.
-        var routeCoordinates = route.coordinates!
-        let polyline = MGLPolylineFeature(coordinates: &routeCoordinates, count: route.coordinateCount)
-        
-        // If there's already a route line on the map, reset its shape to the new route
-        if let source = mapView.style?.source(withIdentifier: "route-source") as? MGLShapeSource {
-            source.shape = polyline
-        } else {
-            let source = MGLShapeSource(identifier: "route-source", features: [polyline], options: nil)
-            let lineStyle = MGLLineStyleLayer(identifier: "route-style", source: source)
+        let annotation = self.destinationAnnotation
+            annotation.coordinate = coordinate
+            annotation.title = "Start navigation"
+            mapView.addAnnotation(annotation)
             
-            mapView.style?.addSource(source)
-            mapView.style?.addLayer(lineStyle)
-        }
+            calculateRoute(from: (mapView.userLocation!.coordinate), to: annotation.coordinate) { [unowned self] (route, error) in
+                if error != nil {
+                    // Print an error message
+                    print("Error calculating route")
+                }
+            }
     }
     
     // MARK: - UIAlertActions
@@ -172,7 +143,7 @@ class MapViewController: UIViewController {
         let viewController = NavigationViewController(for: route)
         self.present(viewController, animated: true, completion: nil)
     }
-
+    
     func addDetectedBumpToInternDB(intensity: String, location: CLLocationCoordinate2D, manual: String, text: String, type: String){
         
         if let location = mapView.userLocation {
@@ -221,8 +192,89 @@ extension MapViewController: MGLMapViewDelegate{
     }
     
     
+//    func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
+//        self.presentNavigation(along: directionsRoute!)
+//    }
+    
+    // Present the navigation view controller when the callout is selected
     func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
-        self.presentNavigation(along: directionsRoute!)
+//        var annotations = [MGLAnnotation]()
+//        for coordinate in (self.directionsRoute!.coordinates)! {
+//            let annotation = MGLPointAnnotation()
+//            annotation.coordinate = CLLocationCoordinate2D(
+//                latitude: coordinate.latitude,
+//                longitude: coordinate.longitude)
+//            annotation.title = "TYPE"
+//            annotation.subtitle = "BUMP"
+//            annotations.append(annotation)
+//        }
+        
+        if let annotations = self.mapView.annotations {
+            self.mapView.removeAnnotations(annotations)
+        }
+        let navigationViewController = NavigationViewController(for: directionsRoute!)
+        print("BEFORE\(String(describing: navigationViewController.mapView?.annotations?.count))")
+        navigationViewController.mapView?.addAnnotations(self.mapAnnotations)
+        //navigationViewController.mapView?.showAnnotations(annotations, animated: true)
+        print("AFTER\(String(describing: navigationViewController.mapView?.annotations?.count))")
+        self.present(navigationViewController, animated: true, completion: nil)
+    }
+    
+    // Calculate route to be used for navigation
+    func calculateRoute(from origin: CLLocationCoordinate2D,
+                        to destination: CLLocationCoordinate2D,
+                        completion: @escaping (Route?, Error?) -> ()) {
+        
+        // Coordinate accuracy is the maximum distance away from the waypoint that the route may still be considered viable, measured in meters. Negative values indicate that a indefinite number of meters away from the route and still be considered viable.
+        let origin = Waypoint(coordinate: origin, coordinateAccuracy: -1, name: "Start")
+        let destination = Waypoint(coordinate: destination, coordinateAccuracy: -1, name: "Finish")
+        
+        // Specify that the route is intended for automobiles avoiding traffic
+        let options = NavigationRouteOptions(waypoints: [origin, destination], profileIdentifier: .automobileAvoidingTraffic)
+        options.includesSteps = true
+        
+        //shapeFormat parameter hovori formate coordinatov, ktore sa ziskaju. .polyline je su kompresovane coordinaty a teda sa prenasa mensie mnozstvo dat ako napr. pri .geoJson
+        options.shapeFormat = .polyline
+        
+        //routeShape parameter hovori o pocte coordinatov z ktorych sa vyresli mapa
+        options.routeShapeResolution = .full
+        
+        options.attributeOptions = .speed
+        // Generate the route object and draw it on the map
+        Directions.shared.calculate(options) { [unowned self] (waypoints, routes, error) in
+            guard let route = routes?.first, error == nil else {
+                print(error!.localizedDescription)
+                return
+            }
+            self.directionsRoute = route
+            self.drawRoute(route: self.directionsRoute!)
+        }
+    }
+    
+    func drawRoute(route: Route) {
+        guard route.coordinateCount > 0 else { return }
+        // Convert the route’s coordinates into a polyline
+        
+        var routeCoordinates = route.coordinates!
+        _ = BumpNotifyAlgorithm(route: route, delegate: self)
+        
+        let polyline = MGLPolylineFeature(coordinates: &routeCoordinates, count: route.coordinateCount)
+        
+        // If there's already a route line on the map, reset its shape to the new route
+        if let source = mapView.style?.source(withIdentifier: "route-source") as? MGLShapeSource {
+            source.shape = polyline
+        } else {
+            let source = MGLShapeSource(identifier: "route-source", features: [polyline], options: nil)
+            
+            // Customize the route line color and width
+            let lineStyle = MGLLineStyleLayer(identifier: "route-style", source: source)
+            lineStyle.lineColor = MGLStyleValue(rawValue: #colorLiteral(red: 0.5843137503, green: 0.8235294223, blue: 0.4196078479, alpha: 1))
+            lineStyle.lineWidth = MGLStyleValue(rawValue: 5)
+            
+            // Add the source and style layer of the route line to the map
+            mapView.style?.addSource(source)
+            mapView.style?.addLayer(lineStyle)
+        }
     }
 }
 
@@ -239,8 +291,8 @@ extension MapViewController: NetworkServiceDelegate{
             for bump in results {
                 let annotation = MGLPointAnnotation()
                 annotation.coordinate = CLLocationCoordinate2D(
-                    latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
-                    longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
+                    latitude: bump.value(forKey: "latitude") as! Double,
+                    longitude: bump.value(forKey: "longitude") as! Double)
                 annotation.title = String(describing: bump.value(forKey: "type"))
                 annotation.subtitle = "hello"
                 self.mapAnnotations.append(annotation)
@@ -251,5 +303,17 @@ extension MapViewController: NetworkServiceDelegate{
         }
         
     }
+}
+
+extension MapViewController: BumpNotifyAlgorithmDelegate {
+    func notify(annotations: [MGLAnnotation]) {
+        //for annotation in annotations {
+            //self.directionsRoute?.routeOptions.waypoints.append(Waypoint(coordinate: annotation.coordinate, coordinateAccuracy: 2, name: "Bump"))
+            self.mapAnnotations = annotations
+            self.mapView.addAnnotations(self.mapAnnotations)
+        //}
+    }
+    
+    
 }
 

@@ -33,6 +33,7 @@ class BumpDetectionAlgorithm{
     let THRESHOLD_USER_MOVEMENTS = 1.0
     let lastFewItemsCount = 60
     let ItemsFreqiency = 60.0
+    var prevAttitude: CMAttitude?
     
     var queue: OperationQueue
     var date: Date?
@@ -94,15 +95,23 @@ class BumpDetectionAlgorithm{
     }
     
     func isDeviceStateChanging(state attitude :CMAttitude) -> Bool {
+        
         if self.initialDeviceAttitude == nil {
             self.initialDeviceAttitude = attitude
             return false
         }
         else {
-            let initMagnitude = magnitude(from: initialDeviceAttitude!)
-            let sum = abs(magnitude(from: attitude) - initMagnitude)
+            let monitoringAttitude = attitude.copy() as! CMAttitude
+            //print("BEFORE: \(magnitude(from: monitoringAttitude))")
+            monitoringAttitude.multiply(byInverseOf: initialDeviceAttitude!)
+            //print("AFTER: \(magnitude(from: monitoringAttitude))")
+            let deltaMagnitude = magnitude(from: monitoringAttitude)
+            //let sum = abs(magnitude(from: attitude) - initMagnitude)
             //NSLog("SUM \(sum)")
-            return sum > THRESHOLD_USER_MOVEMENTS ? true: false
+            if deltaMagnitude > THRESHOLD_USER_MOVEMENTS {
+                return true
+            }
+            return false
         }
     }
     

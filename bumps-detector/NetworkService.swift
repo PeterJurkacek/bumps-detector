@@ -67,9 +67,9 @@ class NetworkService: NSObject {
                     print("POCET: \(syncBump.bumps.count)")
                     let realm = RealmService()
                     for item in syncBump.bumps {
-                        let newBump = BumpFromServer(latitude: item.latitude,
-                                                     longitude: item.longitude,
-                                                     count: item.count,
+                        let newBump = BumpFromServer(latitude: (item.latitude as NSString).doubleValue,
+                                                     longitude: (item.longitude as NSString).doubleValue,
+                                                     count: (item.count as NSString).integerValue,
                                                      b_id: item.b_id,
                                                      rating: item.rating,
                                                      manual: item.manual,
@@ -193,12 +193,15 @@ class NetworkService: NSObject {
         for bump in result {
             listID          += bump.b_id + innerSeparator
             listDate        += bump.last_modified + innerSeparator
-            listCount       += bump.count + innerSeparator
+            listCount       += bump.count.description + innerSeparator
         }
         
-        listID.removeLast()
-        listDate.removeLast()
-        listCount.removeLast()
+        if(!listID.isEmpty && !listDate.isEmpty && !listCount.isEmpty){
+            listID.removeLast()
+            listDate.removeLast()
+            listCount.removeLast()
+        }
+        
         
         var parameters = ""
         parameters.append("date=\(actualDate)")
