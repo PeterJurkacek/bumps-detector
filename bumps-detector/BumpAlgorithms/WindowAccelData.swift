@@ -15,6 +15,8 @@ class WindowAccelData {
     var sum     : double3   = [0.0,0.0,0.0]
     var average : double3   = [0.0,0.0,0.0]
     var variance: double3   = [0.0,0.0,0.0]
+    var weigth_sum: double3     = [0.0,0.0,0.0]
+    var weigth_average: double3 = [0.0,0.0,0.0]
     var period = Array<CustomAccelerometerData>()
     var fifo = Array<CustomAccelerometerData>()
     var min: CustomAccelerometerData?

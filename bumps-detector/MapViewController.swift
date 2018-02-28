@@ -49,10 +49,6 @@ class MapViewController: UIViewController {
         // Set the map view's delegate
         mapView.delegate = self
         
-        // Allow the map to display the user's location
-        mapView.showsUserLocation = true
-        mapView.setUserTrackingMode(.follow, animated: true)
-        
         // Add a gesture recognizer to the map view
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
@@ -67,6 +63,10 @@ class MapViewController: UIViewController {
     
     @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
         guard sender.state == .began else { return }
+        
+        if let annotations = self.mapView.annotations {
+            self.mapView.removeAnnotations(annotations)
+        }
         
         // Converts point where user did a long press to map coordinates
         let point = sender.location(in: mapView)
@@ -160,6 +160,7 @@ class MapViewController: UIViewController {
 }
 
 extension MapViewController: BumpAlgorithmDelegate{
+    
     func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double) {
     }
     
@@ -191,6 +192,42 @@ extension MapViewController: MGLMapViewDelegate{
         return true
     }
     
+    func mapView(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation?) {
+        self.bumpDetectionAlgorithm?.userLocation = userLocation?.location
+    }
+
+    func mapViewDidFinishLoadingMap(_ mapView: MGLMapView) {
+        // Allow the map to display the user's location
+        mapView.showsUserLocation = true
+        mapView.setUserTrackingMode(.followWithHeading, animated: true)
+    }
+    
+    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
+        // Try to reuse the existing ‘pisa’ annotation image, if it exists.
+        var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: "pothole")
+        
+        if annotationImage == nil {
+            // Leaning Tower of Pisa by Stefan Spieler from the Noun Project.
+            var image = UIImage(named: "pothole")!
+            let size = CGSize(width: 50, height: 50)
+            UIGraphicsBeginImageContext(size)
+            image.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+            // The anchor point of an annotation is currently always the center. To
+            // shift the anchor point to the bottom of the annotation, the image
+            // asset includes transparent bottom padding equal to the original image
+            // height.
+            //
+            // To make this padding non-interactive, we create another image object
+            // with a custom alignment rect that excludes the padding.
+            image = image.withAlignmentRectInsets(UIEdgeInsets(top: 0, left: 0, bottom: image.size.height/2, right: 0))
+            let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            // Initialize the ‘pisa’ annotation image with the UIImage we just loaded.
+            annotationImage = MGLAnnotationImage(image: resizedImage!, reuseIdentifier: "pothole")
+        }
+        
+        return annotationImage
+    }
     
 //    func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
 //        self.presentNavigation(along: directionsRoute!)

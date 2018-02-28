@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EF43639620380EBC00B8CAC2 /* CustomNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */; };
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
 		EF5ED5D520056AFB0006845B /* PendingOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5ED5D420056AFB0006845B /* PendingOperation.swift */; };
 		EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA59F331FA2193C004A9939 /* FileUtils.swift */; };
@@ -35,6 +36,7 @@
 		02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bumps_detector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
+		EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationViewController.swift; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
 		EF5ED5D420056AFB0006845B /* PendingOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingOperation.swift; sourceTree = "<group>"; };
 		EFA59F331FA2193C004A9939 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 				EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */,
 				EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */,
 				EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */,
+				EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */,
 				EFCB24761F49AC6A00AAEA14 /* Main.storyboard */,
 				EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */,
 				EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */,
@@ -325,6 +328,7 @@
 				EFD919DE201D46C50092445A /* BumpForServer.swift in Sources */,
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
 				EFD919DA201CC5520092445A /* BumpFromServer.swift in Sources */,
+				EF43639620380EBC00B8CAC2 /* CustomNavigationViewController.swift in Sources */,
 				EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */,
 				EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */,
 				EFD919E3201E28D30092445A /* CustomAccelerometerData.swift in Sources */,

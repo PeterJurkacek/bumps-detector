@@ -36,61 +36,50 @@ class BumpNotifyAlgorithm {
     //MARK: Bump detection algorithms
     func getAllCoordinatesBetween(start: CLLocationCoordinate2D, end: CLLocationCoordinate2D) -> [CLLocationCoordinate2D]{
 //        A[1, 2]
-//        B[2, 4]
-//        x = 1 + 1t
-//        y = 2 + 2t
+//        B[4, 8]
+//        x = 1 + 3t
+//        y = 2 + 5t
         let constant = calculateConstant(start: start, end: end)
         
         //Vzdialenost medzi dvoma bodmi na mape
         let distanceBetween = start.distance(to: end)
         
+        let areaInMeters = 4.0
         
-        var t = 0.0
+        var t = areaInMeters
         var counter = 0
         var previousCoordinate = start
         var newCoordinates = [CLLocationCoordinate2D]()
         var distance = 0.0
         while true {
-            let findedCoordinate = calculate(coordinate: start, constant: constant, t: (t/distanceBetween))
-//            if findedCoordinate.latitude == end.latitude && findedCoordinate.longitude == end.longitude {
-//                if(counter > 0) {
-//                    distance = distance / Double(counter)
-//                }
-//                print("KONSTANTA: \(constant.latitude) \(constant.longitude), DISTANCE: \(distance)")
-//                return newCoordinates
-//            }
-            if findedCoordinate.distance(to: end) <= 4 {
-                if(counter > 0) {
-                    distance = distance / Double(counter)
-                }
-                print("KONSTANTA: \(constant.latitude) \(constant.longitude), DISTANCE: \(distance)")
+            let findedCoordinate = calculateEquationsOfLines(coordinate: start, constant: constant, t: (t/distanceBetween))
+            if findedCoordinate.distance(to: end) <= areaInMeters {
+                print("LAST DISTANCE: \(findedCoordinate.distance(to: end)) \(t)/\(distanceBetween)")
                 return newCoordinates
             }
 
             do {
-                let result = try RealmService().realm.findNearby(type: BumpFromServer.self, origin: findedCoordinate, radius: 2, sortAscending: nil)
+                let result = try RealmService().realm.findNearby(type: BumpFromServer.self, origin: findedCoordinate, radius: areaInMeters/2, sortAscending: nil)
                 for bump in result {
                     self.bumps.insert(bump)
                 }
             } catch {
                 print("ERROR: RealmService().realm.findNearby")
             }
-            newCoordinates.append(findedCoordinate)
-            t += 4
-            counter += 1
+            
             if(counter >= 1000){
-                if(counter > 0) {
-                    distance = distance / Double(counter)
-                }
+//                if(counter > 0) {
+//                    distance = distance / Double(counter)
+//                }
                 print("KONSTANTA: \(constant.latitude) \(constant.longitude), DISTANCE: \(distance)")
                 print("COUNTER: JE \(counter)")
                 return newCoordinates
             }
 
-            distance = distance + findedCoordinate.distance(to: previousCoordinate)
-            //print("DISTANCE: \(distance)")
-//            print("finded  : \(findedCoordinate)")
-//            print("previous: \(previousCoordinate)")
+            distance = findedCoordinate.distance(to: previousCoordinate)
+            newCoordinates.append(findedCoordinate)
+            t += areaInMeters
+            counter += 1
             previousCoordinate = findedCoordinate
         }
     }
@@ -103,7 +92,7 @@ class BumpNotifyAlgorithm {
         return CLLocationCoordinate2D(latitude: newLatitude, longitude: newLongitude)
     }
     
-    func calculate(coordinate: CLLocationCoordinate2D, constant: CLLocationCoordinate2D, t: Double) -> CLLocationCoordinate2D {
+    func calculateEquationsOfLines(coordinate: CLLocationCoordinate2D, constant: CLLocationCoordinate2D, t: Double) -> CLLocationCoordinate2D {
         
         let newLatitude = coordinate.latitude + constant.latitude * t
         let newLongitude = coordinate.longitude + constant.longitude * t

@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import CoreMotion
 import simd
+import CoreLocation
 
 protocol BumpAlgorithmDelegate {
     func saveBump(data: CustomAccelerometerData)
@@ -22,10 +23,10 @@ enum DistanceAlgorithm {
     case minski
 }
 
-class BumpDetectionAlgorithm{
+class BumpDetectionAlgorithm {
     
+    var userLocation: CLLocation?
     var bumpAlgorithmDelegate: BumpAlgorithmDelegate?
-    
     var motionManager: CMMotionManager?
     var gyroItems = [CMRotationRate]()
     var isCalibrated = false
@@ -56,6 +57,7 @@ class BumpDetectionAlgorithm{
     
     func recognizeBump(for data: CustomAccelerometerData){
         
+        print(self.userLocation)
         let window = self.windowAccelData
         let delta = window.getDelta(for: data)
         window.add(element: data)
