@@ -35,5 +35,6 @@ import RealmSwift
         self.type = type
         
     }
+    
 }
 

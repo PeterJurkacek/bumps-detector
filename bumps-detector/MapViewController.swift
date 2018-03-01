@@ -123,6 +123,10 @@ class MapViewController: UIViewController {
         }
     }
     
+    @IBAction func sendBumpToServer(_ sender: UIButton) {
+        
+    }
+    
     func getAnnotations<T: Object>(results: Results<T>) -> [MGLAnnotation] {
             var newAnnotations = [MGLAnnotation]()
             for bump in results {
@@ -160,9 +164,10 @@ class MapViewController: UIViewController {
 }
 
 extension MapViewController: BumpAlgorithmDelegate{
-    
-    func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double) {
+    func saveExportData(data: DataForExport) {
+        
     }
+    
     
     func saveBump(data: CustomAccelerometerData) {
         let requiredAccuracy = 100.0

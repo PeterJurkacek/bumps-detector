@@ -18,9 +18,9 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
     @IBOutlet weak var timeLabel: UILabel!
     
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
-    var allDataStorage = [(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double)]()
     var timer = Timer()
     var seconds = 0;
+    var dataCount = 0;
     
     let locationManager = CLLocationManager()
     var location: CLLocation?
@@ -103,15 +103,18 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
         super.viewDidLoad()
         //updateLabels()
         //configureGetButton()
+    
+        
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        self.bumpDetectionAlgorithm!.startAlgorithm()
+        bumpDetectionAlgorithm!.startDeviceMotionSensor()
         runTimer()
     }
     
     func updateLabels() {
-        dataCountLabel.text = "\(allDataStorage.count)"
+        dataCountLabel.text = "\(dataCount)"
         timeLabel.text = "\(seconds)"
+        dataCount += 1
     }
     
     func runTimer() {
@@ -124,23 +127,23 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
 }
 
 extension ExportDataViewController: BumpAlgorithmDelegate{
-    func saveBump(data: CustomAccelerometerData) {
+    func saveExportData(data: DataForExport) {
+        dispatchQueue.async{
+            //print(tuple)
+            self.fileUtils.dataForExport.append(data)
+            
+            if(self.fileUtils.dataForExport.count > 1000){
+                self.fileUtils.createFile()
+                
+                self.fileUtils.dataForExport.removeAll()
+            }
+            DispatchQueue.main.async {
+                self.updateLabels()
+            }
+        }
     }
     
-    func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double ){
-        dispatchQueue.sync{ 
-            //print(tuple)
-        
-            allDataStorage.append((data: data, average: average, sum: sum, variance: variance, priority: priority, delta: delta))
-            
-            if(allDataStorage.count > 5000){
-                fileUtils.createFileContent(allData: allDataStorage)
-            
-                allDataStorage.removeAll()
-            }
-            updateLabels()
-        }
-        
+    func saveBump(data: CustomAccelerometerData) {
     }
     
     

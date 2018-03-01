@@ -14,7 +14,7 @@ import CoreLocation
 
 protocol BumpAlgorithmDelegate {
     func saveBump(data: CustomAccelerometerData)
-    func saveBumpInfoAs(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double )
+    func saveExportData(data: DataForExport)
 }
 
 enum DistanceAlgorithm {
@@ -55,18 +55,32 @@ class BumpDetectionAlgorithm {
         startDeviceMotionSensor()
     }
     
-    func recognizeBump(for data: CustomAccelerometerData){
+    func recognizeBump(for customData: CustomAccelerometerData){
         
         print(self.userLocation)
         let window = self.windowAccelData
-        let delta = window.getDelta(for: data)
-        window.add(element: data)
+        let average_delta = window.getDeltaFromAverage(for: customData)
+        let average_weigth_delta = window.getDeltaFromWeigthAverage(for: customData)
+        window.add(element: customData)
         //print(delta)
-        if delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
-            DispatchQueue.main.async {
-                self.bumpAlgorithmDelegate!.saveBump(data: data)
-            }
+        
+        DispatchQueue.main.async {
+            self.bumpAlgorithmDelegate?.saveExportData(data: DataForExport(
+                customAccelData: customData,
+                average: window.getAverage(),
+                average_delta: average_delta,
+                sum: window.getSum(),
+                variance: window.getVariance(),
+                weigth_average: window.getWeigthAverage(),
+                weigth_sum: window.getWeigthSum(),
+                weigth_average_delta: average_weigth_delta,
+                priority: window.getPriority()))
         }
+//        if average_delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
+//            DispatchQueue.main.async {
+//                self.bumpAlgorithmDelegate!.saveBump(data: data)
+//            }
+//        }
     }
     
     func startDeviceMotionSensor(){

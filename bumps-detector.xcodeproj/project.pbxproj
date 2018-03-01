@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3F0F74204735A500301E19 /* DataForExport.swift */; };
 		EF43639620380EBC00B8CAC2 /* CustomNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */; };
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
 		EF5ED5D520056AFB0006845B /* PendingOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5ED5D420056AFB0006845B /* PendingOperation.swift */; };
@@ -36,6 +37,7 @@
 		02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bumps_detector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
+		EF3F0F74204735A500301E19 /* DataForExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataForExport.swift; sourceTree = "<group>"; };
 		EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationViewController.swift; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
 		EF5ED5D420056AFB0006845B /* PendingOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingOperation.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */,
 				EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */,
 				EFD919E2201E28D30092445A /* CustomAccelerometerData.swift */,
+				EF3F0F74204735A500301E19 /* DataForExport.swift */,
 			);
 			path = BumpAlgorithms;
 			sourceTree = "<group>";
@@ -333,6 +336,7 @@
 				EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */,
 				EFD919E3201E28D30092445A /* CustomAccelerometerData.swift in Sources */,
 				EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */,
+				EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */,
 				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
 				EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */,
 				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,

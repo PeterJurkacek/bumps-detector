@@ -15,10 +15,11 @@ class FileUtils {
     var fileName: String?
     var path: NSURL?
     var csvText: String?
+    var dataForExport = [DataForExport]()
+
     
-    func createFileContent(allData: [(data: CMAccelerometerData, average: double3, sum: double3, variance: double3, priority: double3, delta: Double )]){
-        var str = "DATUM,CAS,X,Y,Z,AVERAGE,X,Y,Z,SUM,X,Y,Z,VARIANCE,X,Y,Z,PRIORITY,X,Y,Z,,DELTA,\(allData.count)\n"
-        
+    func createFile(){
+        var str = "DATUM,CAS,ACC_X,ACC_Y,ACC_Z,AVG_X,AVG_Y,AVG_Z,SUM_X,SUM_Y,SUM_Z,AVGW_X,AVGW_Y,AVGW_Z,SUMW_X,SUMW_Y,SUMW_Z,VAR_X,VAR_Y,VAR_Z,ACCW_X,ACCW_Y,ACCW_Z,AVERAGE_DELTA,WEIGTH_AVERAGE_DELTA,\(dataForExport.count)\n"
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .short
         dateFormatter.timeStyle = .none
@@ -27,17 +28,19 @@ class FileUtils {
         timeFormatter.dateStyle = .none
         timeFormatter.timeStyle = .medium
         
-        for item in allData {
+        for item in dataForExport {
             
-            let date = "\(dateFormatter.string(from: Date(timeIntervalSinceNow: item.data.timestamp)))"
-            let time = "\(timeFormatter.string(from: Date(timeIntervalSinceNow: item.data.timestamp)))"
-            let xyz  = "\(item.data.acceleration.x),\(item.data.acceleration.y),\(item.data.acceleration.z)"
-            let average = "\(item.average.x),\(item.average.y),\(item.average.z)"
-            let sum = "\(item.sum.x),\(item.sum.y),\(item.sum.z)"
-            let variance = "\(item.variance.x),\(item.variance.y),\(item.variance.z)"
-            let priority = "\(item.priority.x),\(item.priority.y),\(item.priority.z)"
+            let date = "\(dateFormatter.string(from: Date(timeIntervalSinceNow: (item.customAccelData!.accelerometerData.timestamp))))"
+            let time = "\(timeFormatter.string(from: Date(timeIntervalSinceNow: (item.customAccelData!.accelerometerData.timestamp))))"
+            let xyz  = "\(item.customAccelData!.acceleration.x),\(item.customAccelData!.acceleration.y),\(item.customAccelData!.acceleration.z)"
+            let average = "\(item.average!.x),\(item.average!.y),\(item.average!.z)"
+            let sum = "\(item.sum!.x),\(item.sum!.y),\(item.sum!.z)"
+            let weigth_average = "\(item.weigth_average!.x),\(item.weigth_average!.y),\(item.weigth_average!.z)"
+            let weigth_sum = "\(item.weigth_sum!.x),\(item.weigth_sum!.y),\(item.weigth_sum!.z)"
+            let variance = "\(item.variance!.x),\(item.variance!.y),\(item.variance!.z)"
+            let priority = "\(item.priority!.x),\(item.priority!.y),\(item.priority!.z)"
             
-            let newLine = "\(date),\(time),\(xyz),,\(average),,\(sum),,\(variance),,\(priority),,\(item.delta)\n"
+            let newLine = "\(date),\(time),\(xyz),\(average),\(sum),\(weigth_average),\(weigth_sum),\(variance),\(priority),\(item.average_delta!),\(item.weigth_average_delta!)\n"
             str.append(newLine)
         }
         let currentDate = Date()
@@ -64,10 +67,11 @@ class FileUtils {
             //reading
             do {
                 let text2 = try String(contentsOf: fileURL, encoding: .utf8)
-                print(text2)
+                //print(text2)
             }
             catch {/* error handling here */}
-        }
+            print("INFO: All data save to file \(file.description)")
+        } else { print("Error: saveToTxtFile")}
     }
     
     func saveToJsonFile() {

@@ -141,11 +141,24 @@ class NetworkService: NSObject {
         var deviceId = "deviceId"
         if let id = UIDevice.current.identifierForVendor?.uuidString {
             deviceId = id
-        }
-        let rating = "rating"
-        let info = "info"
+        } else { print("INFO: Nepodarilo sa zistit device_id") }
+        
+        //TODO Toto odstranit ked sa odstrania z BumpForServer tie ktorym sa nepocital rating pocas insertu
+        let rating = calculateRating(from: bump.intensity)
+        let info = "IOS bump"
         
         var parameters = ""
+        //odosielaná datekcia
+//        params.add(new BasicNameValuePair("latitude", latitude));
+//        params.add(new BasicNameValuePair("longitude", longitude));
+//        params.add(new BasicNameValuePair("intensity", Float.toString(intensity)));
+//        params.add(new BasicNameValuePair("rating", Float.toString(rating)));
+//        params.add(new BasicNameValuePair("manual", Integer.toString(manual)));
+//        params.add(new BasicNameValuePair("type", Integer.toString(type)));
+//        params.add(new BasicNameValuePair("device_id", androidId));
+//        params.add(new BasicNameValuePair("date",  getDate(location.getTime(), "yyyy-MM-dd HH:mm:ss")));
+//        params.add(new BasicNameValuePair("actual_date", getDate(new Date().getTime(), "yyyy-MM-dd HH:mm:ss")));
+//        params.add(new BasicNameValuePair("info", text));
         parameters.append("latitude=\(bump.latitude)\(outerSeparator)")
         parameters.append("longitude=\(bump.longitude)\(outerSeparator)")
         parameters.append("intensity=\(bump.intensity)\(outerSeparator)")
@@ -153,12 +166,24 @@ class NetworkService: NSObject {
         parameters.append("manual=\(bump.manual)\(outerSeparator)")
         parameters.append("type=\(bump.type)\(outerSeparator)")
         parameters.append("device_id=\(deviceId)\(outerSeparator)")
-        parameters.append("date=\(bump.created_at)\(outerSeparator)")
+        parameters.append("date=\(dateFormatter.string(from: bump.created_at))\(outerSeparator)")
         parameters.append("actual_date=\(dateFormatter.string(from: Date()))\(outerSeparator)")
         parameters.append("info=\(info)\(outerSeparator)")
         print(parameters)
         
         return parameters
+    }
+    
+    func calculateRating(from intensity: String) -> String {
+        let intensity = Double(intensity)!
+        if      (0.0 <= intensity && intensity < 6.0)       { return "1" } //Maly vytlk
+        else if (6.0 <= intensity && intensity < 10.0)      { return "2" } //Stredny vytlk
+        else if (10.0 <= intensity && intensity < 10000.0)  { return "3" } //Velky vytlk
+        else {  return "-1"  } //Chyba
+    }
+    
+    func isNumber(number: Double,from: Double, to: Double) -> Bool {
+        return from <= number && number <= to;
     }
     
     func createParams(coordinate: CLLocationCoordinate2D, net: Int) -> String {

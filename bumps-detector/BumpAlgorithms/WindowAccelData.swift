@@ -15,7 +15,8 @@ class WindowAccelData {
     var sum     : double3   = [0.0,0.0,0.0]
     var average : double3   = [0.0,0.0,0.0]
     var variance: double3   = [0.0,0.0,0.0]
-    var weigth_sum: double3     = [0.0,0.0,0.0]
+    var priority_sum:   double3 = [0.0,0.0,0.0]
+    var weigth_sum:     double3 = [0.0,0.0,0.0]
     var weigth_average: double3 = [0.0,0.0,0.0]
     var period = Array<CustomAccelerometerData>()
     var fifo = Array<CustomAccelerometerData>()
@@ -58,7 +59,9 @@ class WindowAccelData {
             //print("add: \(self.fifo.count)")
             updateVariance  ( for: element )
             updateSum       ( for: element )
-            updateAverage   ( for: element )
+            
+            updateAverage       ()
+            updateWeigthAverage ()
             
             if(self.fifo.count > size){
                 self.fifo.remove(at: 0)
@@ -156,17 +159,25 @@ class WindowAccelData {
         sum.y +=  element.acceleration.y
         sum.z +=  element.acceleration.z
         
+        priority_sum.x +=  element.priority.x
+        priority_sum.y +=  element.priority.y
+        priority_sum.z +=  element.priority.z
+        
         //Odpočítaj starý element z budúceho výpočtu priemeru
         if(size != 0 && self.fifo.count > size){
             sum.x -=  self.fifo[0].acceleration.x
             sum.y -=  self.fifo[0].acceleration.y
             sum.z -=  self.fifo[0].acceleration.z
+            
+            priority_sum.x -=  self.fifo[0].priority.x
+            priority_sum.y -=  self.fifo[0].priority.y
+            priority_sum.z -=  self.fifo[0].priority.z
         }
     }
     
     //MARK: AVERAGE
     
-    private func updateAverage(for element: CustomAccelerometerData){
+    private func updateAverage(){
         //print("updateAverage: \(self.fifo.count)")
         if(!self.fifo.isEmpty){
             let fifoCount = Double(self.fifo.count)
@@ -174,6 +185,16 @@ class WindowAccelData {
             average  = [sum.x/fifoCount, sum.y/fifoCount, sum.z/fifoCount]
         } else {
             print("ERROR updateAverage: Pole je prázdne \(self.fifo.count)")
+        }
+    }
+    
+    private func updateWeigthAverage(){
+        //print("updateAverage: \(self.fifo.count)")
+        if(!self.fifo.isEmpty){
+            //Zisti aktuálnu hodnotu priemeru fifo pola
+            weigth_average  = [sum.x/priority_sum.x, sum.y/priority_sum.y, sum.z/priority_sum.z]
+        } else {
+            print("ERROR updateWeigthAverage: Pole je prázdne \(self.fifo.count)")
         }
     }
     
@@ -212,9 +233,21 @@ class WindowAccelData {
         }
     }
     
+    func getWeigthAverage() -> double3{
+        return queue.sync {
+            return self.weigth_average
+        }
+    }
+    
     func getSum() -> double3{
         return queue.sync {
             return self.sum
+        }
+    }
+    
+    func getWeigthSum() -> double3{
+        return queue.sync {
+            return self.weigth_sum
         }
     }
     
@@ -230,13 +263,28 @@ class WindowAccelData {
         }
     }
     
-    func getDelta(for element: CustomAccelerometerData) -> Double {
+    func getDeltaFromAverage(for element: CustomAccelerometerData) -> Double {
         
        return queue.sync {
             if(!fifo.isEmpty){
                 let sumX = abs(average.x -  element.acceleration.x)
                 let sumY = abs(average.y -  element.acceleration.y)
                 let sumZ = abs(average.z -  element.acceleration.z)
+                
+                return sumX + sumY + sumZ
+            }
+            else { return 0.0 }
+        }
+        
+    }
+    
+    func getDeltaFromWeigthAverage(for element: CustomAccelerometerData) -> Double {
+        
+        return queue.sync {
+            if(!fifo.isEmpty){
+                let sumX = abs(weigth_average.x -  element.acceleration.x)
+                let sumY = abs(weigth_average.y -  element.acceleration.y)
+                let sumZ = abs(weigth_average.z -  element.acceleration.z)
                 
                 return sumX + sumY + sumZ
             }
