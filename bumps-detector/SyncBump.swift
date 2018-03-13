@@ -11,6 +11,6 @@ struct SyncBump: Decodable {
     let success: Int
 }
 
-struct bumpForServerResponse: Decodable {
+struct BumpForServerResponse: Decodable {
     let success: Int
 }

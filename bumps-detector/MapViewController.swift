@@ -19,7 +19,7 @@ import CFNetwork
 import RealmSwift
 
 //Navigacia je inspirovana tutorialom https://www.mapbox.com/help/ios-navigation-sdk/
-class MapViewController: UIViewController {
+class MapViewController: UIViewController, CLLocationManagerDelegate {
    
     var updatingLocation = false
     
@@ -28,10 +28,13 @@ class MapViewController: UIViewController {
     var performingReverseGeocoding = false
     var lastGeocodingError: Error?
     var destinationAnnotation = MGLPointAnnotation()
+    var navigationViewController: NavigationViewController?
     
-    var directionsRoute: Route?
+    var currentRoute: Route?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
-    let realmService = RealmService()
+    var bumpNotifyAlgorithm: BumpNotifyAlgorithm?
+    var locationManager = CLLocationManager()
+     var alertController: UIAlertController!
     
     var bumpsFromServer : Results<BumpFromServer>!
     var bumpsForServer  : Results<BumpForServer>!
@@ -39,28 +42,32 @@ class MapViewController: UIViewController {
     var downloadedItems : [Bump] = [Bump]()
     var mapAnnotations  = [MGLAnnotation]()
     //var selectedLocation : Bump = Bump()
-    @IBOutlet weak var mapView: MGLMapView!
+    @IBOutlet weak var mapView: NavigationMapView!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+    
         view.addSubview(mapView)
         
-        // Set the map view's delegate
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        
+        automaticallyAdjustsScrollViewInsets = false
         mapView.delegate = self
+        mapView.navigationMapDelegate = self
+
+        
+        bumpDetectionAlgorithm = BumpDetectionAlgorithm()
+        bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
+        bumpDetectionAlgorithm!.startDeviceMotionSensor()
         
         // Add a gesture recognizer to the map view
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
         
-        self.bumpsFromServer = realmService.realm.objects(BumpFromServer.self)
-        self.bumpsForServer = realmService.realm.objects(BumpForServer.self)
-        
-        bumpDetectionAlgorithm = BumpDetectionAlgorithm()
-        bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        bumpDetectionAlgorithm!.startDeviceMotionSensor()
     }
-    
+
     @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
         guard sender.state == .began else { return }
         
@@ -98,7 +105,7 @@ class MapViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    @IBAction func showBumpsFromServer(_ sender: UIButton) {
+    @IBAction func showBumpsFromServer() {
         let networkService = NetworkService()
         networkService.delegate = self
         
@@ -110,8 +117,7 @@ class MapViewController: UIViewController {
     
     @IBAction func showBumpsForServer(_ sender: Any) {
         DispatchQueue.global().async {
-            let realmService = RealmService()
-            let results = realmService.realm.objects(BumpForServer.self)
+            let results = BumpForServer.all()
             let annotations = self.getAnnotations(results: results)
             
             DispatchQueue.main.async {
@@ -125,6 +131,11 @@ class MapViewController: UIViewController {
     
     @IBAction func sendBumpToServer(_ sender: UIButton) {
         
+        DispatchQueue.global().async {
+            let networkService = NetworkService()
+            networkService.delegate = self
+            networkService.sendAllBumpsToServer()
+        }
     }
     
     func getAnnotations<T: Object>(results: Results<T>) -> [MGLAnnotation] {
@@ -157,8 +168,12 @@ class MapViewController: UIViewController {
                                         manual: 0.description,
                                         text: "novy bump",
                                         type: "detectionAlgorithm")
-            
-            realmService.create(newBump)
+            do {
+                try newBump.saveMeToInternDb()
+            }
+            catch {
+                print("ERROR: class MapViewController, call addDetectedBumpToInternDB - Nepodarilo sa mi uloz \(newBump) do inernej DB")
+            }
         }
     }
 }
@@ -181,7 +196,7 @@ extension MapViewController: BumpAlgorithmDelegate{
                         longitude: location.coordinate.longitude)
                     annotation.title = "Bump"
                     annotation.subtitle = "Bude sa odosielat na server"
-                    addDetectedBumpToInternDB(intensity: "-1", location: location.coordinate, manual: "0", text: "Hello New Bump", type: "AutoDetect")
+                    addDetectedBumpToInternDB(intensity: "-1", location: location.coordinate, manual: "0", text: "Hello New Bump", type: "0")
                     self.mapView.addAnnotation(annotation)
                 } else { print("Presnost location: \(location.horizontalAccuracy) nie je dostacujuca: \(requiredAccuracy)") }
             } else { print("Neexistuje location") }
@@ -207,32 +222,32 @@ extension MapViewController: MGLMapViewDelegate{
         mapView.setUserTrackingMode(.followWithHeading, animated: true)
     }
     
-    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
-        // Try to reuse the existing ‘pisa’ annotation image, if it exists.
-        var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: "pothole")
-        
-        if annotationImage == nil {
-            // Leaning Tower of Pisa by Stefan Spieler from the Noun Project.
-            var image = UIImage(named: "pothole")!
-            let size = CGSize(width: 50, height: 50)
-            UIGraphicsBeginImageContext(size)
-            image.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
-            // The anchor point of an annotation is currently always the center. To
-            // shift the anchor point to the bottom of the annotation, the image
-            // asset includes transparent bottom padding equal to the original image
-            // height.
-            //
-            // To make this padding non-interactive, we create another image object
-            // with a custom alignment rect that excludes the padding.
-            image = image.withAlignmentRectInsets(UIEdgeInsets(top: 0, left: 0, bottom: image.size.height/2, right: 0))
-            let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-            // Initialize the ‘pisa’ annotation image with the UIImage we just loaded.
-            annotationImage = MGLAnnotationImage(image: resizedImage!, reuseIdentifier: "pothole")
-        }
-        
-        return annotationImage
-    }
+//    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
+//        // Try to reuse the existing ‘pisa’ annotation image, if it exists.
+//        var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: "pothole")
+//        
+//        if annotationImage == nil {
+//            // Leaning Tower of Pisa by Stefan Spieler from the Noun Project.
+//            var image = UIImage(named: "pothole")!
+//            let size = CGSize(width: 50, height: 50)
+//            UIGraphicsBeginImageContext(size)
+//            image.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+//            // The anchor point of an annotation is currently always the center. To
+//            // shift the anchor point to the bottom of the annotation, the image
+//            // asset includes transparent bottom padding equal to the original image
+//            // height.
+//            //
+//            // To make this padding non-interactive, we create another image object
+//            // with a custom alignment rect that excludes the padding.
+//            image = image.withAlignmentRectInsets(UIEdgeInsets(top: 0, left: 0, bottom: image.size.height/2, right: 0))
+//            let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+//            UIGraphicsEndImageContext()
+//            // Initialize the ‘pisa’ annotation image with the UIImage we just loaded.
+//            annotationImage = MGLAnnotationImage(image: resizedImage!, reuseIdentifier: "pothole")
+//        }
+//        
+//        return annotationImage
+//    }
     
 //    func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
 //        self.presentNavigation(along: directionsRoute!)
@@ -254,12 +269,12 @@ extension MapViewController: MGLMapViewDelegate{
         if let annotations = self.mapView.annotations {
             self.mapView.removeAnnotations(annotations)
         }
-        let navigationViewController = NavigationViewController(for: directionsRoute!)
-        print("BEFORE\(String(describing: navigationViewController.mapView?.annotations?.count))")
-        navigationViewController.mapView?.addAnnotations(self.mapAnnotations)
-        //navigationViewController.mapView?.showAnnotations(annotations, animated: true)
-        print("AFTER\(String(describing: navigationViewController.mapView?.annotations?.count))")
-        self.present(navigationViewController, animated: true, completion: nil)
+        self.navigationViewController = NavigationViewController(for: currentRoute!)
+        if let navigationViewController = self.navigationViewController {
+            navigationViewController.navigationDelegate = self
+            self.present(navigationViewController, animated: true, completion: nil)
+            print("AFTER NAVIGATION VIEW")
+        }
     }
     
     // Calculate route to be used for navigation
@@ -278,7 +293,7 @@ extension MapViewController: MGLMapViewDelegate{
         //shapeFormat parameter hovori formate coordinatov, ktore sa ziskaju. .polyline je su kompresovane coordinaty a teda sa prenasa mensie mnozstvo dat ako napr. pri .geoJson
         options.shapeFormat = .polyline
         
-        //routeShape parameter hovori o pocte coordinatov z ktorych sa vyresli mapa
+        //routeShape parameter hovori o pocte coordinatov z ktorych sa vykresli mapa
         options.routeShapeResolution = .full
         
         options.attributeOptions = .speed
@@ -288,34 +303,10 @@ extension MapViewController: MGLMapViewDelegate{
                 print(error!.localizedDescription)
                 return
             }
-            self.directionsRoute = route
-            self.drawRoute(route: self.directionsRoute!)
-        }
-    }
-    
-    func drawRoute(route: Route) {
-        guard route.coordinateCount > 0 else { return }
-        // Convert the route’s coordinates into a polyline
-        
-        var routeCoordinates = route.coordinates!
-        _ = BumpNotifyAlgorithm(route: route, delegate: self)
-        
-        let polyline = MGLPolylineFeature(coordinates: &routeCoordinates, count: route.coordinateCount)
-        
-        // If there's already a route line on the map, reset its shape to the new route
-        if let source = mapView.style?.source(withIdentifier: "route-source") as? MGLShapeSource {
-            source.shape = polyline
-        } else {
-            let source = MGLShapeSource(identifier: "route-source", features: [polyline], options: nil)
-            
-            // Customize the route line color and width
-            let lineStyle = MGLLineStyleLayer(identifier: "route-style", source: source)
-            lineStyle.lineColor = MGLStyleValue(rawValue: #colorLiteral(red: 0.5843137503, green: 0.8235294223, blue: 0.4196078479, alpha: 1))
-            lineStyle.lineWidth = MGLStyleValue(rawValue: 5)
-            
-            // Add the source and style layer of the route line to the map
-            mapView.style?.addSource(source)
-            mapView.style?.addLayer(lineStyle)
+            self.currentRoute = route
+            //self.drawRoute(route: self.directionsRoute!)
+            self.mapView.showRoute(route)
+            self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: self)
         }
     }
 }
@@ -324,12 +315,13 @@ extension MapViewController: NetworkServiceDelegate{
     func itemsDownloaded() {
         
         DispatchQueue.global().async {
-            let realmService = RealmService()
-            let results = realmService.realm.objects(BumpFromServer.self)
+            
             if let annotations = self.mapView.annotations {
                 self.mapView.removeAnnotations(annotations)
             }
             self.mapAnnotations.removeAll()
+            
+            let results = BumpFromServer.all()
             for bump in results {
                 let annotation = MGLPointAnnotation()
                 annotation.coordinate = CLLocationCoordinate2D(
@@ -349,13 +341,40 @@ extension MapViewController: NetworkServiceDelegate{
 
 extension MapViewController: BumpNotifyAlgorithmDelegate {
     func notify(annotations: [MGLAnnotation]) {
-        //for annotation in annotations {
-            //self.directionsRoute?.routeOptions.waypoints.append(Waypoint(coordinate: annotation.coordinate, coordinateAccuracy: 2, name: "Bump"))
-            self.mapAnnotations = annotations
-            self.mapView.addAnnotations(self.mapAnnotations)
-        //}
+        self.mapView.addAnnotations(annotations)
     }
     
     
 }
 
+//MARK: - NavigationMapViewDelegate
+extension MapViewController: NavigationMapViewDelegate {
+    
+    func navigationMapView(_ mapView: NavigationMapView, didSelect route: Route) {
+        currentRoute = route
+    }
+    
+    // To use these delegate methods, set the `VoiceControllerDelegate` on your `VoiceController`.
+    //
+    // Called when there is an error with speaking a voice instruction.
+    func voiceController(_ voiceController: RouteVoiceController, spokenInstructionsDidFailWith error: Error) {
+        print(error.localizedDescription)
+    }
+}
+
+//MARK: NavigationViewControllerDelegate
+extension MapViewController: NavigationViewControllerDelegate {
+    // By default, when the user arrives at a waypoint, the next leg starts immediately.
+    // If you implement this method, return true to preserve this behavior.
+    // Return false to remain on the current leg, for example to allow the user to provide input.
+    // If you return false, you must manually advance to the next leg. See the example above in `confirmationControllerDidConfirm(_:)`.
+    
+    
+    // Called when the user hits the `Cancel` button.
+    // If implemented, you are responsible for also dismissing the UI.
+    func navigationViewControllerDidCancelNavigation(_ navigationViewController: NavigationViewController) {
+        print("The user has exited")
+        self.mapView.removeRoute()
+        navigationViewController.dismiss(animated: true, completion: nil)
+    }
+}

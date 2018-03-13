@@ -30,49 +30,47 @@ class WindowAccelData {
     }
     
     func setPriority(accelData: CMDeviceMotion) {
-        queue.sync {
-            let xms = abs(accelData.gravity.x)
-            let yms = abs(accelData.gravity.y)
-            let zms = abs(accelData.gravity.z)
-            
-            let sum = xms + yms + zms
-            
-            self.priority = [xms / sum, yms / sum, zms / sum]
-        }
+       
+        let xms = abs(accelData.gravity.x)
+        let yms = abs(accelData.gravity.y)
+        let zms = abs(accelData.gravity.z)
+        
+        let sum = xms + yms + zms
+        
+        self.priority = [xms / sum, yms / sum, zms / sum]
     }
     
     func setPriority(accelData: CMAccelerometerData) {
-        queue.sync {
-            let xms = abs(accelData.acceleration.x)
-            let yms = abs(accelData.acceleration.y)
-            let zms = abs(accelData.acceleration.z)
-            
-            let sum = xms + yms + zms
-            
-            self.priority = [xms / sum, yms / sum, zms / sum]
-        }
+    
+        let xms = abs(accelData.acceleration.x)
+        let yms = abs(accelData.acceleration.y)
+        let zms = abs(accelData.acceleration.z)
+        
+        let sum = xms + yms + zms
+        
+        self.priority = [xms / sum, yms / sum, zms / sum]
+
     }
     
     func add(element: CustomAccelerometerData){
-        queue.sync {
-            self.fifo.append(element)
-            //print("add: \(self.fifo.count)")
-            updateVariance  ( for: element )
-            updateSum       ( for: element )
-            
-            updateAverage       ()
-            updateWeigthAverage ()
-            
-            if(self.fifo.count > size){
-                self.fifo.remove(at: 0)
-            }
-            
+
+        self.fifo.append(element)
+        //print("add: \(self.fifo.count)")
+        updateVariance  ( for: element )
+        updateSum       ( for: element )
+        
+        updateAverage       ()
+        updateWeigthAverage ()
+        
+        if(self.fifo.count > size){
+            self.fifo.remove(at: 0)
+        }
+        
 //            print("fifo Count: \(fifo.count)")
 //            print("variance x: \(self.variance.x), sum x: \(self.sum.x), average x: \(self.average.x)")
 //            print("variance y: \(self.variance.y), sum y: \(self.sum.y), average y: \(self.average.y)")
 //            print("variance z: \(self.variance.z), sum z: \(self.sum.z), average z: \(self.average.z)")
 //            print(" ")
-        }
     }
     
     func calculatePeriod(for element: CustomAccelerometerData){
@@ -81,14 +79,12 @@ class WindowAccelData {
     }
     
     func changeSize(new size: Int){
-        queue.sync {
-            
-            if self.fifo.count > size {
-                minimazeFifo(new: size)
-            }
-            else {
-                maximazeFifo(new: size)
-            }
+
+        if self.fifo.count > size {
+            minimazeFifo(new: size)
+        }
+        else {
+            maximazeFifo(new: size)
         }
     }
     
@@ -227,69 +223,40 @@ class WindowAccelData {
         return gunit * 9.80665
     }
     
-    func getAverage() -> double3{
-        return queue.sync {
-            return self.average
-        }
-    }
-    
-    func getWeigthAverage() -> double3{
-        return queue.sync {
-            return self.weigth_average
-        }
-    }
-    
-    func getSum() -> double3{
-        return queue.sync {
-            return self.sum
-        }
-    }
-    
-    func getWeigthSum() -> double3{
-        return queue.sync {
-            return self.weigth_sum
-        }
-    }
-    
-    func getVariance() -> double3{
-        return queue.sync {
-            return self.variance
-        }
-    }
-    
-    func getPriority() ->double3{
-        return queue.sync {
-            return self.priority
-        }
-    }
-    
     func getDeltaFromAverage(for element: CustomAccelerometerData) -> Double {
         
-       return queue.sync {
-            if(!fifo.isEmpty){
-                let sumX = abs(average.x -  element.acceleration.x)
-                let sumY = abs(average.y -  element.acceleration.y)
-                let sumZ = abs(average.z -  element.acceleration.z)
-                
-                return sumX + sumY + sumZ
-            }
-            else { return 0.0 }
+        if(!fifo.isEmpty){
+            let sumX = abs(average.x -  element.acceleration.x)
+            let sumY = abs(average.y -  element.acceleration.y)
+            let sumZ = abs(average.z -  element.acceleration.z)
+            
+            return sumX + sumY + sumZ
         }
+        else { return 0.0 }
         
     }
     
     func getDeltaFromWeigthAverage(for element: CustomAccelerometerData) -> Double {
         
-        return queue.sync {
-            if(!fifo.isEmpty){
-                let sumX = abs(weigth_average.x -  element.acceleration.x)
-                let sumY = abs(weigth_average.y -  element.acceleration.y)
-                let sumZ = abs(weigth_average.z -  element.acceleration.z)
-                
-                return sumX + sumY + sumZ
-            }
-            else { return 0.0 }
+        if(!fifo.isEmpty){
+            let sumX = abs(weigth_average.x -  element.acceleration.x)
+            let sumY = abs(weigth_average.y -  element.acceleration.y)
+            let sumZ = abs(weigth_average.z -  element.acceleration.z)
+            
+            return sumX + sumY + sumZ
         }
-        
+        else { return 0.0 }
+    }
+    
+    func clean(){
+        self.priority = [0.0,0.0,0.0]
+        self.sum      = [0.0,0.0,0.0]
+        self.average  = [0.0,0.0,0.0]
+        self.variance = [0.0,0.0,0.0]
+        self.priority_sum   = [0.0,0.0,0.0]
+        self.weigth_sum     = [0.0,0.0,0.0]
+        self.weigth_average = [0.0,0.0,0.0]
+        self.period = Array<CustomAccelerometerData>()
+        self.fifo = Array<CustomAccelerometerData>()
     }
 }

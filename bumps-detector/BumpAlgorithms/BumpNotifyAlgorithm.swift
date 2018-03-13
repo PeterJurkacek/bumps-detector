@@ -54,17 +54,13 @@ class BumpNotifyAlgorithm {
         while true {
             let findedCoordinate = calculateEquationsOfLines(coordinate: start, constant: constant, t: (t/distanceBetween))
             if findedCoordinate.distance(to: end) <= areaInMeters {
-                print("LAST DISTANCE: \(findedCoordinate.distance(to: end)) \(t)/\(distanceBetween)")
+                //print("LAST DISTANCE: \(findedCoordinate.distance(to: end)) \(t)/\(distanceBetween)")
                 return newCoordinates
             }
 
-            do {
-                let result = try RealmService().realm.findNearby(type: BumpFromServer.self, origin: findedCoordinate, radius: areaInMeters/2, sortAscending: nil)
-                for bump in result {
-                    self.bumps.insert(bump)
-                }
-            } catch {
-                print("ERROR: RealmService().realm.findNearby")
+            let result = BumpFromServer.findNearby(origin: findedCoordinate, radius: areaInMeters/2, sortAscending: nil)
+            for bump in result {
+                self.bumps.insert(bump)
             }
             
             if(counter >= 1000){
@@ -84,6 +80,65 @@ class BumpNotifyAlgorithm {
         }
     }
     
+    func findAllBumpsBetween(start: CLLocationCoordinate2D, end: CLLocationCoordinate2D) -> [BumpFromServer] {
+        
+        let constant = calculateConstant(start: start, end: end)
+        
+        //Vzdialenost medzi dvoma bodmi na mape
+        let distanceBetween = start.distance(to: end)
+        
+        let areaInMeters = 4.0
+        
+        var t = areaInMeters
+        var counter = 0
+        var previousCoordinate = start
+        var bumps = Set<BumpFromServer>()
+        var newCoordinates = [CLLocationCoordinate2D]()
+        var distance = 0.0
+        while true {
+            let findedCoordinate = calculateEquationsOfLines(coordinate: start, constant: constant, t: (t/distanceBetween))
+            if findedCoordinate.distance(to: end) <= areaInMeters {
+                //print("LAST DISTANCE: \(findedCoordinate.distance(to: end)) \(t)/\(distanceBetween)")
+                updateMainUI(bumps: bumps)
+                return Array<BumpFromServer>(bumps)
+            }
+            
+            let result = BumpFromServer.findNearby(origin: findedCoordinate, radius: areaInMeters/2, sortAscending: nil)
+            for bump in result {
+                //print(bump)
+                bumps.insert(BumpFromServer(value: bump))
+            }
+            
+            if(counter >= 1000){
+                print("KONSTANTA: \(constant.latitude) \(constant.longitude), DISTANCE: \(distance)")
+                print("COUNTER: JE \(counter)")
+                return Array<BumpFromServer>(bumps)
+            }
+            
+            distance = findedCoordinate.distance(to: previousCoordinate)
+            newCoordinates.append(findedCoordinate)
+            t += areaInMeters
+            counter += 1
+            previousCoordinate = findedCoordinate
+        }
+    }
+    
+    func updateMainUI(bumps: Set<BumpFromServer>){
+        var annotations = [MGLAnnotation]()
+        for bump in bumps {
+            let annotation = MGLPointAnnotation()
+            annotation.coordinate = CLLocationCoordinate2D(
+                latitude: bump.value(forKey: "latitude") as! Double,
+                longitude: bump.value(forKey: "longitude") as! Double)
+            annotation.title = String(describing: bump.value(forKey: "type"))
+            annotation.subtitle = "hello"
+            annotations.append(annotation)
+        }
+        DispatchQueue.main.async {
+            self.delegate.notify(annotations: annotations)
+        }
+    }
+    
     func calculateConstant(start: CLLocationCoordinate2D, end: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
         
         let newLatitude = (end.latitude - start.latitude)//.rounded(toPlaces: 10)
@@ -100,55 +155,51 @@ class BumpNotifyAlgorithm {
         return CLLocationCoordinate2D(latitude: newLatitude, longitude: newLongitude)
     }
     
+    func concurrentFindAllBumpsOnTheRoute(array: [CLLocationCoordinate2D], numThreads: Int = 5) -> [BumpFromServer] {
+        var best = [BumpFromServer]()  // 1
+        let size = array.count
+        DispatchQueue.concurrentPerform(iterations: numThreads, execute: { (i) in
+            // divide up the work
+            let batchSize = size / numThreads  // 2
+            
+            let start = i * batchSize
+            let end: Int
+            if i == numThreads - 1 {  // 4
+                // have the last thread finish it off in case our array is an odd size
+                end = array.count - 1
+            } else {
+                end = (i + 1) * batchSize  // 3
+            }
+            
+            // do our part
+            let batchBest = findBumpsForChunk(start, end, array)
+            best.append(contentsOf: batchBest)  // 5
+        })
+        return best  // 6
+    }
+    
+    func findBumpsForChunk(_ start: Int, _ end: Int, _ array: [CLLocationCoordinate2D]) -> [BumpFromServer]{
+        var best = [BumpFromServer]()
+        for i in start..<end {
+            if(i < array.count-1){
+                let A = array[i]
+                let B = array[i+1]
+                best.append(contentsOf: self.findAllBumpsBetween(start: A, end: B))
+            }
+        }
+        return best
+    }
+    
     func startAlgorithm() {
         DispatchQueue.global().async {
             if let routeCoordinate = self.route?.coordinates {
                 
-                var generatedCoordinate = [CLLocationCoordinate2D]()
-                
-                for i in 0..<routeCoordinate.count {
-//                    A[1, 2]
-//                    B[2, 4]
-//
-//                    x = 1 + 1t
-//                    y = 2 + 2t
-                    
-                    if(i < routeCoordinate.count-1){
-                        let A = routeCoordinate[i]
-                        let B = routeCoordinate[i+1]
-                        generatedCoordinate.append(contentsOf: self.getAllCoordinatesBetween(start: A, end: B))
-                    }
-                    
-                }
-                
+                var findedBumps = [BumpFromServer]()
+                //findedBumps.append(contentsOf: self.findBumpsForChunk(0, routeCoordinate.count, routeCoordinate))
+                self.findBumpsForChunk(0, routeCoordinate.count, routeCoordinate)
                 print("routeCoordinate.count: \(routeCoordinate.count)")
-                print("generatedCoordinate.coutn: \(generatedCoordinate.count)")
+                print("findedBumps: \(findedBumps.count)")
                 
-                var annotations = [MGLAnnotation]()
-                for bump in self.bumps {
-                    let annotation = MGLPointAnnotation()
-                    annotation.coordinate = CLLocationCoordinate2D(
-                        latitude: bump.value(forKey: "latitude") as! Double,
-                        longitude: bump.value(forKey: "longitude") as! Double)
-                    annotation.title = String(describing: bump.value(forKey: "type"))
-                    annotation.subtitle = "hello"
-                    annotations.append(annotation)
-                }
-                
-//                var annotations = [MGLAnnotation]()
-//                for bump in generatedCoordinate {
-//                    let annotation = MGLPointAnnotation()
-//                    annotation.coordinate = CLLocationCoordinate2D(
-//                        latitude: bump.latitude,
-//                        longitude: bump.longitude)
-//                    annotation.subtitle = "hello"
-//                    annotations.append(annotation)
-//                }
-
-
-                DispatchQueue.main.async {
-                    self.delegate.notify(annotations: annotations)
-                }
             }
         }
     }

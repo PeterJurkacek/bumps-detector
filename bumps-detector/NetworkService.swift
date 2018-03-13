@@ -65,7 +65,8 @@ class NetworkService: NSObject {
                     let syncBump = try JSONDecoder().decode(SyncBump.self, from: data)
                     print(syncBump.bumps)
                     print("POCET: \(syncBump.bumps.count)")
-                    let realm = RealmService()
+                    
+                    var bumpsForUpdate = [BumpFromServer]()
                     for item in syncBump.bumps {
                         let newBump = BumpFromServer(latitude: (item.latitude as NSString).doubleValue,
                                                      longitude: (item.longitude as NSString).doubleValue,
@@ -78,8 +79,11 @@ class NetworkService: NSObject {
                                                      admin_fix: item.admin_fix,
                                                      info: item.info,
                                                      last_modified: item.last_modified)
-                        realm.createOrUpdate(newBump)
+                        bumpsForUpdate.append(newBump)
                     }
+                    BumpFromServer.addOrUpdate(bumpsForUpdate)
+                    //BumpsFromServer.updateAll(objects: bumpsForUpdate)
+                    
                     DispatchQueue.main.async {
                         self.delegate.itemsDownloaded()
                     }
@@ -91,143 +95,134 @@ class NetworkService: NSObject {
         }
     }
     
-    func sendBumpToServer( bump: BumpForServer ){
-        // 1
-        let queue = DispatchQueue.global()
-        // 2
-        queue.async {
-            var request = URLRequest(url: URL(string: ServerServices.create_bump)!)
-            request.httpMethod = "POST"
-
-            let parameters = self.createParamsBumpForServer(bump: bump)
-            request.httpBody = parameters.data(using: .utf8)
-            
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                guard let data = data, error == nil else {                                                 // check for fundamental networking error
-                    print("error=\(String(describing: error))")
-                    return
-                }
-                
-                if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {           // check for http errors
-                    print("statusCode should be 200, but is \(httpStatus.statusCode)")
-                    print("response = \(String(describing: response))")
-                    
-                }
-                //SWIFT 4.0 JSONparsing
-                do {
-                    let response = try JSONDecoder().decode(bumpForServerResponse.self, from: data)
-                    print(response.success)
-                    if(response.success == 1) {
-                        let realm = RealmService()
-                        realm.delete(bump)
-                    }
-                    DispatchQueue.main.async {
-                        print("Podarilo sa mi odoslat bump a mozno aj vymazat")
-                    }
-                }catch{
-                    print("Chyba pri JSon parsingu: Skontroluj ci parametre struktur zodpovedaju json datam")
-                }
-            }
-            task.resume()
+    func sendAllBumpsToServer(){
+        let bumps = BumpForServer.all()
+        for bump in bumps {
+            self.sendBumpToServer(bump: bump)
         }
     }
     
-    func createParamsBumpForServer(bump: BumpForServer) -> String {
+    func sendBumpToServer( bump: BumpForServer ) {
         
+        var request = URLRequest(url: URL(string: ServerServices.create_bump)!)
+        request.httpMethod = "POST"
+
+        let parameters = self.createParams(bump: bump)
+        
+        let bump_object = BumpForServer(value: bump)
+        print(parameters)
+        request.httpBody = parameters.data(using: .utf8)
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {                                                 // check for fundamental networking error
+                print("error=\(String(describing: error))")
+                return
+            }
+
+            if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {           // check for http errors
+                print("ERROR: statusCode should be 200, but is \(httpStatus.statusCode)")
+                print("ERROR: response = \(String(describing: response))")
+
+            }
+            //SWIFT 4.0 JSONparsing
+            do {
+                let response = try JSONDecoder().decode(BumpForServerResponse.self, from: data)
+                if( response.success == 1 ) {
+                    do {
+                        try bump_object.deleteSelf()
+                    } catch {
+                        print("ERROR: Class BumpDetectionAlgorithm, call sendBumpToServer() - Nepodarilo sa vymazat bump z databazy")
+                    }
+                } else { print("ERROR response: \(response.success)") }
+            }catch{
+                print("ERROR: Chyba pri JSon parsingu: Skontroluj ci parametre struktur zodpovedaju json datam")
+            }
+        }
+        task.resume()
+    }
+    
+    func createParams(bump: BumpForServer) -> String {
+        
+        //Nasetujeme format datumu
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         
-        let outerSeparator = "&"
-        var deviceId = "deviceId"
+        var deviceId = "unknown device ID"
+        //Zistujeme device ID
         if let id = UIDevice.current.identifierForVendor?.uuidString {
             deviceId = id
         } else { print("INFO: Nepodarilo sa zistit device_id") }
         
-        //TODO Toto odstranit ked sa odstrania z BumpForServer tie ktorym sa nepocital rating pocas insertu
-        let rating = calculateRating(from: bump.intensity)
-        let info = "IOS bump"
-        
+        //Vytvorime body params pre http POST request na odoslanie jedného výtlku na server
+        let outerSeparator = "&"
         var parameters = ""
-        //odosielaná datekcia
-//        params.add(new BasicNameValuePair("latitude", latitude));
-//        params.add(new BasicNameValuePair("longitude", longitude));
-//        params.add(new BasicNameValuePair("intensity", Float.toString(intensity)));
-//        params.add(new BasicNameValuePair("rating", Float.toString(rating)));
-//        params.add(new BasicNameValuePair("manual", Integer.toString(manual)));
-//        params.add(new BasicNameValuePair("type", Integer.toString(type)));
-//        params.add(new BasicNameValuePair("device_id", androidId));
-//        params.add(new BasicNameValuePair("date",  getDate(location.getTime(), "yyyy-MM-dd HH:mm:ss")));
-//        params.add(new BasicNameValuePair("actual_date", getDate(new Date().getTime(), "yyyy-MM-dd HH:mm:ss")));
-//        params.add(new BasicNameValuePair("info", text));
-        parameters.append("latitude=\(bump.latitude)\(outerSeparator)")
-        parameters.append("longitude=\(bump.longitude)\(outerSeparator)")
-        parameters.append("intensity=\(bump.intensity)\(outerSeparator)")
-        parameters.append("rating=\(rating)\(outerSeparator)")
-        parameters.append("manual=\(bump.manual)\(outerSeparator)")
-        parameters.append("type=\(bump.type)\(outerSeparator)")
-        parameters.append("device_id=\(deviceId)\(outerSeparator)")
-        parameters.append("date=\(dateFormatter.string(from: bump.created_at))\(outerSeparator)")
-        parameters.append("actual_date=\(dateFormatter.string(from: Date()))\(outerSeparator)")
-        parameters.append("info=\(info)\(outerSeparator)")
-        print(parameters)
+        
+        parameters.append("latitude=\(bump.latitude)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("longitude=\(bump.longitude)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("intensity=\(bump.intensity)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("rating=\(bump.rating)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("manual=\(bump.manual)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("type=\(bump.type)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("device_id=\(deviceId)")
+        parameters.append("\(outerSeparator)")
+        parameters.append("date=\(dateFormatter.string(from: bump.created_at))")
+        parameters.append("\(outerSeparator)")
+        parameters.append("actual_date=\(dateFormatter.string(from: Date()))")
+        parameters.append("\(outerSeparator)")
+        parameters.append("info=\(bump.text)")
+        
+        print("INFO: \(parameters)")
         
         return parameters
     }
     
-    func calculateRating(from intensity: String) -> String {
-        let intensity = Double(intensity)!
-        if      (0.0 <= intensity && intensity < 6.0)       { return "1" } //Maly vytlk
-        else if (6.0 <= intensity && intensity < 10.0)      { return "2" } //Stredny vytlk
-        else if (10.0 <= intensity && intensity < 10000.0)  { return "3" } //Velky vytlk
-        else {  return "-1"  } //Chyba
-    }
-    
-    func isNumber(number: Double,from: Double, to: Double) -> Bool {
-        return from <= number && number <= to;
-    }
-    
     func createParams(coordinate: CLLocationCoordinate2D, net: Int) -> String {
         
+        //Nasetujeme format datumu
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         
-        //let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&net=1"
-        let dateFormatterStringToDate = DateFormatter()
-        dateFormatterStringToDate.dateFormat = "yyyy-MM-dd"
-        let testDate = dateFormatterStringToDate.date(from: "2017-10-13")
+        //Nasetujeme si dátum synchronizacie so serverom a aktuálnu geograficku polohu
+        let actualDate = dateFormatter.string(from: Date())
+        let actualLatitude = coordinate.latitude
+        let actualLongitude = coordinate.longitude
         
-        let testLocation = CLLocationCoordinate2D(latitude: ("48.1607117" as NSString).doubleValue, longitude: ("17.0958196" as NSString).doubleValue)
+//        let dateFormatterStringToDate = DateFormatter()
+//        dateFormatterStringToDate.dateFormat = "yyyy-MM-dd"
+//        let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&net=1"
+//        let testDate = dateFormatterStringToDate.date(from: "2017-10-13")
+//        let testLocation = CLLocationCoordinate2D(latitude: ("48.1607117" as NSString).doubleValue, longitude: ("17.0958196" as NSString).doubleValue)
+//        let actualDate = dateFormatterStringToDate.string(from: testDate!)
+//        let actualLatitude = testLocation.latitude
+//        let actualLongitude = testLocation.longitude
         
-//        let actualDate = dateFormatter.string(from: Date())
-//        let actualLatitude = coordinate.latitude
-//        let actualLongitude = coordinate.longitude
-        
-        let actualDate = dateFormatterStringToDate.string(from: testDate!)
-        let actualLatitude = testLocation.latitude
-        let actualLongitude = testLocation.longitude
-        
-        let result = RealmService().realm.objects(BumpFromServer.self)
-        
+        //
         var listID = ""
         var listDate = ""
         var listCount = ""
-        
         let innerSeparator = "@"
         let outerSeparator = "&"
         
+        let result = BumpFromServer.all()
         for bump in result {
             listID          += bump.b_id + innerSeparator
             listDate        += bump.last_modified + innerSeparator
             listCount       += bump.count.description + innerSeparator
         }
         
+        //Odstranenie posledneho innerSeparatora z vytvorenych listov
         if(!listID.isEmpty && !listDate.isEmpty && !listCount.isEmpty){
             listID.removeLast()
             listDate.removeLast()
             listCount.removeLast()
         }
         
-        
+        //Vytvorime body params pre http POST request na odoslanie výtlkov na server kvoli aktualizacii internej databazy
         var parameters = ""
         parameters.append("date=\(actualDate)")
         parameters.append("\(outerSeparator)")

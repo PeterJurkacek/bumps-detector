@@ -46,7 +46,10 @@ class BumpDetectionAlgorithm {
     //MARK: Initializers
     init(){
         motionManager = CMMotionManager()
-        queue = PendingOperation.shared.accelerometerQueue
+        queue = OperationQueue()
+        queue.qualityOfService = .background
+        queue.name = "DeviceMotionQueue"
+        queue.maxConcurrentOperationCount = 1
     }
 
     //MARK: Bump detection algorithms
@@ -57,30 +60,35 @@ class BumpDetectionAlgorithm {
     
     func recognizeBump(for customData: CustomAccelerometerData){
         
-        print(self.userLocation)
         let window = self.windowAccelData
         let average_delta = window.getDeltaFromAverage(for: customData)
         let average_weigth_delta = window.getDeltaFromWeigthAverage(for: customData)
         window.add(element: customData)
-        //print(delta)
-        
-        DispatchQueue.main.async {
-            self.bumpAlgorithmDelegate?.saveExportData(data: DataForExport(
-                customAccelData: customData,
-                average: window.getAverage(),
-                average_delta: average_delta,
-                sum: window.getSum(),
-                variance: window.getVariance(),
-                weigth_average: window.getWeigthAverage(),
-                weigth_sum: window.getWeigthSum(),
-                weigth_average_delta: average_weigth_delta,
-                priority: window.getPriority()))
+
+        if average_delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
+            print("INFO: Class BumpDetectionAlgorithm, call recognizeBump() - Bump detected")
+            let requiredLocationAccuracy = 6.0 //hodnota v metroch
+            if let location = self.userLocation {
+                if (location.horizontalAccuracy.isLess(than: requiredLocationAccuracy)){
+                    
+                    let bump = BumpForServer(intensity: average_delta.description,
+                                                latitude: location.coordinate.latitude.description,
+                                                longitude: location.coordinate.longitude.description,
+                                                manual: "0",
+                                                text: "IOS app Auto-detect bump",
+                                                type: "bump")
+                    //Ulozenie objektu BumpForServer do Internej databázy
+                    do {
+                        print(bump.rating)
+                        try bump.saveMeToInternDb()
+                        //let networkService = NetworkService()
+                        //networkService.sendBumpToServer(bump: bump)
+                    } catch {
+                        print("ERROR: Class BumpDetectionAlgorithm, call recognizeBump() - Nepodarilo sa mi uloz detekovany vytlk do Internej Databazy")
+                    }
+                } else { print("WARNING: Class BumpDetectionAlgorithm, call recognizeBump() Presnost location: \(location.horizontalAccuracy)m nie je dostacujuca: \(requiredLocationAccuracy)m") }
+            } else { print("WARNING: Class BumpDetectionAlgorithm, call recognizeBump() Nepoznam aktuálnu polohu") }
         }
-//        if average_delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
-//            DispatchQueue.main.async {
-//                self.bumpAlgorithmDelegate!.saveBump(data: data)
-//            }
-//        }
     }
     
     func startDeviceMotionSensor(){
@@ -91,23 +99,24 @@ class BumpDetectionAlgorithm {
                     if let data = deviceMotion {
                         if (self.isDeviceStateChanging(state: data.attitude)) {
                             self.isCalibrated = false
-                            NSLog("POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
+                            NSLog("WARNING: POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
                             self.initialDeviceAttitude = data.attitude
                             motionManager.deviceMotionUpdateInterval = TimeInterval(2.0)
                         }
                         else if(!self.isCalibrated){
-                            self.isCalibrated = true
+                            self.windowAccelData = WindowAccelData(size: 60)
                             self.windowAccelData.setPriority(accelData: data)
                             motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/self.ItemsFreqiency)
+                            self.isCalibrated = true
                         }
                         else {
-                            let customData = CustomAccelerometerData(accelerometerData: data, priority: self.windowAccelData.getPriority())
+                            let customData = CustomAccelerometerData(accelerometerData: data, priority: self.windowAccelData.priority)
                             self.recognizeBump(for: customData)
                         }
                     }
                 }
-            }else { print("Na zariadeni nie je dostupny deviceMotion.") }
-        } else { print("Nebol vytvorený objekt MotionManager.") }
+            }else { print("WARNING: Na zariadeni nie je dostupny deviceMotion.") }
+        } else { print("WARNING: Nebol vytvorený objekt MotionManager.") }
     }
     
     func isDeviceStateChanging(state attitude :CMAttitude) -> Bool {
