@@ -27,6 +27,7 @@
 		EFD919E3201E28D30092445A /* CustomAccelerometerData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD919E2201E28D30092445A /* CustomAccelerometerData.swift */; };
 		EFE06C421F4A67CD00740875 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE06C411F4A67CD00740875 /* NetworkService.swift */; };
 		EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */; };
+		EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */; };
 		EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */; };
 		F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */; };
 /* End PBXBuildFile section */
@@ -57,6 +58,7 @@
 		EFD919E2201E28D30092445A /* CustomAccelerometerData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccelerometerData.swift; sourceTree = "<group>"; };
 		EFE06C411F4A67CD00740875 /* NetworkService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
 		EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBump.swift; sourceTree = "<group>"; };
+		EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternetConnection.swift; sourceTree = "<group>"; };
 		EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccelData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -122,7 +124,7 @@
 				EFD919E1201D4BCD0092445A /* BumpAlgorithms */,
 				EFCB24881F49E8D400AAEA14 /* Bump.swift */,
 				EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */,
-				EFE06C411F4A67CD00740875 /* NetworkService.swift */,
+				EFF6DA892057BC780093C2E6 /* Networking */,
 				EFD53E561F7D2B5800B5C4A1 /* LocationManager.swift */,
 				EFA59F331FA2193C004A9939 /* FileUtils.swift */,
 				EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */,
@@ -150,6 +152,15 @@
 				EF3F0F74204735A500301E19 /* DataForExport.swift */,
 			);
 			path = BumpAlgorithms;
+			sourceTree = "<group>";
+		};
+		EFF6DA892057BC780093C2E6 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				EFE06C411F4A67CD00740875 /* NetworkService.swift */,
+				EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */,
+			);
+			path = Networking;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -333,6 +344,7 @@
 				EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */,
 				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
 				EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */,
+				EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */,
 				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,
 				EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */,
 				EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */,

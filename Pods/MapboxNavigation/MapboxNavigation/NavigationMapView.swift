@@ -428,7 +428,7 @@ open class NavigationMapView: MGLMapView {
     public func removeWaypoints() {
         guard let style = style else { return }
         
-        removeAnnotations(annotations ?? [])
+        //removeAnnotations(annotations ?? [])
         
         if let circleLayer = style.layer(withIdentifier: waypointCircleIdentifier) {
             style.removeLayer(circleLayer)

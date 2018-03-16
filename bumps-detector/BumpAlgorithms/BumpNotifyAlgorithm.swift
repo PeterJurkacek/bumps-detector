@@ -196,7 +196,7 @@ class BumpNotifyAlgorithm {
                 
                 var findedBumps = [BumpFromServer]()
                 //findedBumps.append(contentsOf: self.findBumpsForChunk(0, routeCoordinate.count, routeCoordinate))
-                self.findBumpsForChunk(0, routeCoordinate.count, routeCoordinate)
+                findedBumps = self.findBumpsForChunk(0, routeCoordinate.count, routeCoordinate)
                 print("routeCoordinate.count: \(routeCoordinate.count)")
                 print("findedBumps: \(findedBumps.count)")
                 

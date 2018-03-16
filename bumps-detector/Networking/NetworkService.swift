@@ -19,6 +19,7 @@ struct ServerServices {
 
 protocol NetworkServiceDelegate: class {
     func itemsDownloaded()
+    func itemsUploaded()
 }
 
 class NetworkService: NSObject {
@@ -26,6 +27,11 @@ class NetworkService: NSObject {
     //properties
     
     weak var delegate: NetworkServiceDelegate!
+    
+    init(delegate: NetworkServiceDelegate) {
+        super.init()
+        self.delegate = delegate
+    }
     
     func param(name: String, value: String){
         

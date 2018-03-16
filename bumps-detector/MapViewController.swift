@@ -47,7 +47,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-    
+        
         view.addSubview(mapView)
         
         locationManager.delegate = self
@@ -106,8 +106,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     }
     
     @IBAction func showBumpsFromServer() {
-        let networkService = NetworkService()
-        networkService.delegate = self
+        let networkService = NetworkService(delegate: self)
         
         if let userLocation = mapView.userLocation {
             networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 1 )
@@ -132,7 +131,7 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     @IBAction func sendBumpToServer(_ sender: UIButton) {
         
         DispatchQueue.global().async {
-            let networkService = NetworkService()
+            let networkService = NetworkService(delegate: self)
             networkService.delegate = self
             networkService.sendAllBumpsToServer()
         }
@@ -156,6 +155,8 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     // Present the navigation view controller
     func presentNavigation(along route: Route) {
         let viewController = NavigationViewController(for: route)
+        print("INFO: Pridavam anotacie do navigation mapView")
+        viewController.mapView?.addAnnotations(self.mapAnnotations)
         self.present(viewController, animated: true, completion: nil)
     }
     
@@ -178,11 +179,10 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     }
 }
 
-extension MapViewController: BumpAlgorithmDelegate{
+extension MapViewController: BumpAlgorithmDelegate {
     func saveExportData(data: DataForExport) {
         
     }
-    
     
     func saveBump(data: CustomAccelerometerData) {
         let requiredAccuracy = 100.0
@@ -220,6 +220,17 @@ extension MapViewController: MGLMapViewDelegate{
         // Allow the map to display the user's location
         mapView.showsUserLocation = true
         mapView.setUserTrackingMode(.followWithHeading, animated: true)
+        
+        if Reachability.isConnectedToNetwork(){
+            print("Internet Connection Available!")
+            let networkService = NetworkService(delegate: self)
+            networkService.sendAllBumpsToServer()
+            if let userLocation = mapView.userLocation {
+                networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 1 )
+            } else { print("Nemam userLocation") }
+        }else{
+            print("Internet Connection not Available!")
+        }
     }
     
 //    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
@@ -272,9 +283,11 @@ extension MapViewController: MGLMapViewDelegate{
         self.navigationViewController = NavigationViewController(for: currentRoute!)
         if let navigationViewController = self.navigationViewController {
             navigationViewController.navigationDelegate = self
+            _ = BumpNotifyAlgorithm(route: currentRoute!, delegate: navigationViewController)
             self.present(navigationViewController, animated: true, completion: nil)
             print("AFTER NAVIGATION VIEW")
         }
+        
     }
     
     // Calculate route to be used for navigation
@@ -337,23 +350,27 @@ extension MapViewController: NetworkServiceDelegate{
         }
         
     }
+    
+    func itemsUploaded() {
+        print("INFO: výtlky boli odoslané na server")
+    }
 }
 
 extension MapViewController: BumpNotifyAlgorithmDelegate {
     func notify(annotations: [MGLAnnotation]) {
-        self.mapView.addAnnotations(annotations)
+        //self.mapView.removeAnnotations(self.mapAnnotations)
+        //self.mapAnnotations.removeAll()
+        self.mapAnnotations = annotations
+        self.mapView.addAnnotations(self.mapAnnotations)
     }
-    
-    
 }
 
 //MARK: - NavigationMapViewDelegate
 extension MapViewController: NavigationMapViewDelegate {
     
-    func navigationMapView(_ mapView: NavigationMapView, didSelect route: Route) {
-        currentRoute = route
-    }
-    
+//    func navigationMapView(_ mapView: NavigationMapView, didSelect route: Route) {
+//        currentRoute = route
+//    }
     // To use these delegate methods, set the `VoiceControllerDelegate` on your `VoiceController`.
     //
     // Called when there is an error with speaking a voice instruction.
@@ -377,4 +394,17 @@ extension MapViewController: NavigationViewControllerDelegate {
         self.mapView.removeRoute()
         navigationViewController.dismiss(animated: true, completion: nil)
     }
+    
+    func navigationViewController(_ navigationViewController: NavigationViewController, didRerouteAlong route: Route){
+        print("INFO: IDEM KALKULOVAT VYTLKY na turn by turn")
+        self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: navigationViewController)
+    }
 }
+
+extension NavigationViewController: BumpNotifyAlgorithmDelegate {
+    func notify(annotations: [MGLAnnotation]) {
+        self.mapView?.addAnnotations(annotations)
+    }
+}
+
+
