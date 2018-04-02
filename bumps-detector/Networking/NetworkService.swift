@@ -38,10 +38,7 @@ class NetworkService: NSObject {
     }
     
     func downloadBumpsFromServer( coordinate: CLLocationCoordinate2D, net: Int ){
-        // 1
-        let queue = DispatchQueue.global()
-        // 2
-        queue.async {
+        
             var request = URLRequest(url: URL(string: ServerServices.sync_bump)!)
             request.httpMethod = "POST"
             
@@ -90,6 +87,7 @@ class NetworkService: NSObject {
                     BumpFromServer.addOrUpdate(bumpsForUpdate)
                     //BumpsFromServer.updateAll(objects: bumpsForUpdate)
                     
+                    //Inform main UI
                     DispatchQueue.main.async {
                         self.delegate.itemsDownloaded()
                     }
@@ -98,7 +96,6 @@ class NetworkService: NSObject {
                 }
             }
             task.resume()
-        }
     }
     
     func sendAllBumpsToServer(){

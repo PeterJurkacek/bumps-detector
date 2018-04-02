@@ -95,15 +95,27 @@ extension BumpFromServer {
         }
     }
     
-    static func findNearby(origin center: CLLocationCoordinate2D, radius: Double, sortAscending sort: Bool?, latitudeKey: String = "latitude", longitudeKey: String = "longitude") -> [BumpFromServer] {
+    static func findNearby(origin center: CLLocationCoordinate2D, radius: Double, sortAscending sort: Bool?) -> [BumpFromServer] {
         let realm = try! Realm()
         do {
-            let result = try realm.findNearby(type: BumpFromServer.self, origin: center, radius: radius, sortAscending: nil)
+            let result = try realm.findNearby(type: BumpFromServer.self, origin: center, radius: radius, sortAscending: nil, latitudeKey: "latitude", longitudeKey: "longitude")
             return result
         } catch {
             print("ERROR: Class RealmService, call findNearby()\(error)")
             return []
         }
     }
+    
+    static func findByRating(rating: String?) -> Results<BumpFromServer> {
+        let realm = try! Realm()
+        if rating != nil {
+            let predicate = NSPredicate(format: "rating == %@", rating!)
+            return realm.objects(BumpFromServer.self).filter(predicate)
+        }
+        return realm.objects(BumpFromServer.self)
+        
+    }
+    
+    
 }
 

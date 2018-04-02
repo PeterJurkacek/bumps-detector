@@ -160,8 +160,10 @@ static const NSString *kTSKKeychainPublicKeyTag = @"TSKKeychainPublicKeyTag"; //
     // Have we seen this certificate before? Look for the SPKI in the cache
     NSData *certificateData = (__bridge_transfer NSData *)(SecCertificateCopyData(certificate));
     
+    __weak __typeof__(self) weakSelf = self;
     dispatch_sync(_lockQueue, ^{
-        cachedSubjectPublicKeyInfo = _subjectPublicKeyInfoHashesCache[algorithmKey][certificateData];
+        __strong __typeof__(weakSelf) strongSelf = weakSelf;
+        cachedSubjectPublicKeyInfo = strongSelf.subjectPublicKeyInfoHashesCache[algorithmKey][certificateData];
     });
     
     if (cachedSubjectPublicKeyInfo)
@@ -197,7 +199,8 @@ static const NSString *kTSKKeychainPublicKeyTag = @"TSKKeychainPublicKeyTag"; //
     
     // Store the hash in our memory cache
     dispatch_barrier_sync(_lockQueue, ^{
-        _subjectPublicKeyInfoHashesCache[algorithmKey][certificateData] = subjectPublicKeyInfoHash;
+        __strong __typeof__(weakSelf) strongSelf = weakSelf;
+        strongSelf.subjectPublicKeyInfoHashesCache[algorithmKey][certificateData] = subjectPublicKeyInfoHash;
     });
     
     // Update the cache on the filesystem
@@ -306,7 +309,13 @@ static const NSString *kTSKKeychainPublicKeyTag = @"TSKKeychainPublicKeyTag"; //
     CFRelease(trust);
     
     // Obtain the public key bytes from the key reference
+    // Silencing the warning since there is no way to reach here unless we are on iOS 10.0+
+    // (this would otherwise warn if compiled for an app supporting < 10.0)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     CFDataRef publicKeyData = SecKeyCopyExternalRepresentation(publicKey, NULL);
+#pragma clang diagnostic pop
+    
     CFRelease(publicKey);
     
     return (__bridge_transfer NSData *)publicKeyData;
