@@ -32,6 +32,8 @@
 		EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */; };
 		EFF80969207180FB00C1FCCD /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF80968207180FB00C1FCCD /* Geocoding.swift */; };
 		EFF8096B2072AEA500C1FCCD /* OptionsLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */; };
+		EFF8096D20739C0D00C1FCCD /* AnnotationsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096C20739C0D00C1FCCD /* AnnotationsController.swift */; };
+		EFF8096F20740BC700C1FCCD /* AnnotationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */; };
 		EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */; };
 		F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */; };
 /* End PBXBuildFile section */
@@ -67,6 +69,8 @@
 		EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternetConnection.swift; sourceTree = "<group>"; };
 		EFF80968207180FB00C1FCCD /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsLauncher.swift; sourceTree = "<group>"; };
+		EFF8096C20739C0D00C1FCCD /* AnnotationsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsController.swift; sourceTree = "<group>"; };
+		EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsViewController.swift; sourceTree = "<group>"; };
 		EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccelData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -140,6 +144,8 @@
 				EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */,
 				EF7BEB82206A842E00C67F1F /* FilterPopOverViewController.swift */,
 				EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */,
+				EFF8096C20739C0D00C1FCCD /* AnnotationsController.swift */,
+				EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -363,8 +369,10 @@
 				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
 				EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */,
 				EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */,
+				EFF8096F20740BC700C1FCCD /* AnnotationsViewController.swift in Sources */,
 				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,
 				EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */,
+				EFF8096D20739C0D00C1FCCD /* AnnotationsController.swift in Sources */,
 				EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */,
 				EFE06C421F4A67CD00740875 /* NetworkService.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,

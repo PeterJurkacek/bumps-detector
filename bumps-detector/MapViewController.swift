@@ -24,29 +24,26 @@ import Turf
 
 //Navigacia je inspirovana tutorialom https://www.mapbox.com/help/ios-navigation-sdk/
 class MapViewController: UIViewController, CLLocationManagerDelegate {
-   
-    var updatingLocation = false
-    var placemark : CLPlacemark?
-    var performingReverseGeocoding = false
-    var lastGeocodingError: Error?
     var destinationAnnotation = MGLPointAnnotation()
     var navigationViewController: NavigationViewController?
     var sendDetectedBumpToServerTimer: Timer?
+    var notificationToken: NotificationToken? = nil
     
     var currentRoute: Route?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
     var bumpNotifyAlgorithm: BumpNotifyAlgorithm?
-    var locationManager = CLLocationManager()
-     var alertController: UIAlertController!
+    //var locationManager = CLLocationManager()
+
     
-    var bumpsFromServer : Results<BumpFromServer>!
-    var bumpsForServer  : Results<BumpForServer>!
+    var bumpsFromServerAnnotations = [MGLPointAnnotation]()
+    var bumpsForServerAnnotations = [MGLPointAnnotation]()
     
     var downloadedItems : [Bump] = [Bump]()
     var mapAnnotations  = [MGLAnnotation]()
     //var selectedLocation : Bump = Bump()
     var geocodingDataTask: URLSessionDataTask?
     var geocoder: GeocodingService!
+    var mapStyles = Dictionary<String, MGLStyle>()
     
     let blackView = UIView()
     @IBOutlet weak var mapView: NavigationMapView!
@@ -59,6 +56,41 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     @IBAction func recenter(_ sender: AnyObject) {
         mapView.setUserTrackingMode(.followWithHeading, animated: true)
         isInOverviewMode = false
+    }
+    
+    @IBAction func handleMapViewStyle(_ sender: Any) {
+    
+        let alertController = UIAlertController(title: "Zobrazenie máp", message: "Môžete si z viacerých zobrazení pre mapu.", preferredStyle: .actionSheet)
+        
+        let sateliteStyleAction = UIAlertAction(title: "Satelitné", style: .default) { (action) in
+            self.showMapViewStyle(style: "1")
+        }
+        
+        
+        let streetStyleAction = UIAlertAction(title: "Obyčajné", style: .default) { (action) in
+            self.showMapViewStyle(style: "2")
+        }
+        
+        let cancelAction = UIAlertAction(title: "Zrušiť", style: .cancel) { (action) in
+        }
+        
+        alertController.addAction(sateliteStyleAction)
+        alertController.addAction(streetStyleAction)
+        alertController.addAction(cancelAction)
+        
+        present(alertController, animated: true)
+        
+    }
+    
+    func showMapViewStyle(style: String?){
+        if let styleIndetifier = style {
+            switch(styleIndetifier){
+                case "1": self.mapView.styleURL = MGLStyle.satelliteStreetsStyleURL()
+                case "2": self.mapView.styleURL = MGLStyle.streetsStyleURL()
+                default: self.mapView.styleURL = MGLStyle.streetsStyleURL()
+            }
+        }
+        
     }
     
     //Odiali pohlad na mapu tak aby bola vidiet cela cesta
@@ -127,8 +159,8 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
             animated: false)
         view.addSubview(mapView)
 
-        locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
+        //locationManager.delegate = self
+        //locationManager.requestWhenInUseAuthorization()
 
         automaticallyAdjustsScrollViewInsets = false
         mapView.delegate = self
@@ -532,6 +564,27 @@ extension MapViewController: FilterPopOverViewDelegate {
         }
     }
     
+    
+}
+
+// MARK: - NavigationMapViewCourseTrackingDelegate
+extension MapViewController: AnnotationsViewControllerDelegate {
+    
+    func updateBumpsFromServerAnnotations(annotations: [MGLPointAnnotation]) {
+        
+        mapView.removeAnnotations(bumpsFromServerAnnotations)
+        bumpsFromServerAnnotations.removeAll()
+        bumpsFromServerAnnotations.append(contentsOf: annotations)
+        mapView.addAnnotations(bumpsFromServerAnnotations)
+    }
+    
+    func updateBumpsForServerAnnotations(annotations: [MGLPointAnnotation]) {
+
+        mapView.removeAnnotations(bumpsForServerAnnotations)
+        bumpsForServerAnnotations.removeAll()
+        bumpsForServerAnnotations.append(contentsOf: annotations)
+        mapView.addAnnotations(bumpsForServerAnnotations)
+    }
     
 }
 

@@ -38,7 +38,7 @@
                                         </connections>
                                     </button>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="V5V-Z3-jts" userLabel="MapActionButtons">
-                                        <rect key="frame" x="17" y="28" width="50" height="150"/>
+                                        <rect key="frame" x="17" y="28" width="50" height="200"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="C1w-ZX-lfm" userLabel="SearchButton" customClass="MBStylableButton">
                                                 <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
@@ -74,6 +74,18 @@
                                                 <state key="normal" image="overview"/>
                                                 <connections>
                                                     <action selector="toggleOverview:" destination="BYZ-38-t0r" eventType="touchUpInside" id="RMI-8S-NFY"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6pU-uw-nFx" userLabel="StylesButton" customClass="MBStylableButton">
+                                                <rect key="frame" x="0.0" y="150" width="50" height="50"/>
+                                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" constant="50" id="Sjn-se-e4S"/>
+                                                    <constraint firstAttribute="height" constant="50" id="s9D-Fn-zh6"/>
+                                                </constraints>
+                                                <state key="normal" image="Image"/>
+                                                <connections>
+                                                    <action selector="handleMapViewStyle:" destination="BYZ-38-t0r" eventType="touchUpInside" id="v4b-j2-L9H"/>
                                                 </connections>
                                             </button>
                                         </subviews>
