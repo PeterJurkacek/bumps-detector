@@ -13,7 +13,7 @@ import simd
 import CoreLocation
 
 protocol BumpAlgorithmDelegate {
-    func saveBump(data: CustomAccelerometerData)
+    func bumpDetectedNotification(data: CustomAccelerometerData)
     func saveExportData(data: DataForExport)
 }
 
@@ -26,15 +26,19 @@ enum DistanceAlgorithm {
 class BumpDetectionAlgorithm {
     
     var userLocation: CLLocation?
-    var bumpAlgorithmDelegate: BumpAlgorithmDelegate?
+    var delegate: BumpAlgorithmDelegate?
     var motionManager: CMMotionManager?
+    var motionActivityManager: CMMotionActivityManager?
     var gyroItems = [CMRotationRate]()
+    var countOfDetectedBumps = 0
     var isCalibrated = false
     let THRESHOLD = 4.5
     let THRESHOLD_USER_MOVEMENTS = 1.0
     let lastFewItemsCount = 60
     let ItemsFreqiency = 60.0
     var prevAttitude: CMAttitude?
+    
+    var isDriving = true
     
     var queue: OperationQueue
     var date: Date?
@@ -46,6 +50,7 @@ class BumpDetectionAlgorithm {
     //MARK: Initializers
     init(){
         motionManager = CMMotionManager()
+        motionActivityManager = CMMotionActivityManager()
         queue = OperationQueue()
         queue.qualityOfService = .background
         queue.name = "DeviceMotionQueue"
@@ -55,7 +60,8 @@ class BumpDetectionAlgorithm {
     //MARK: Bump detection algorithms
     
     func startAlgorithm() {
-        startDeviceMotionSensor()
+        //startMotionActivity()
+        start()
     }
     
     func recognizeBump(for customData: CustomAccelerometerData){
@@ -65,9 +71,9 @@ class BumpDetectionAlgorithm {
         let average_weigth_delta = window.getDeltaFromWeigthAverage(for: customData)
         window.add(element: customData)
 
-        if average_delta > THRESHOLD && self.bumpAlgorithmDelegate != nil{
+        if average_delta > THRESHOLD && self.delegate != nil{
             print("INFO: Class BumpDetectionAlgorithm, call recognizeBump() - Bump detected")
-            let requiredLocationAccuracy = 6.0 //hodnota v metroch
+            let requiredLocationAccuracy = 200.0//6.0 //hodnota v metroch
             if let location = self.userLocation {
                 if (location.horizontalAccuracy.isLess(than: requiredLocationAccuracy)){
                     
@@ -81,6 +87,10 @@ class BumpDetectionAlgorithm {
                     do {
                         print(bump.rating)
                         try bump.saveMeToInternDb()
+                        DispatchQueue.main.async {
+                            self.countOfDetectedBumps += 1
+                            self.delegate!.bumpDetectedNotification(data: customData)
+                        }
                         //let networkService = NetworkService()
                         //networkService.sendBumpToServer(bump: bump)
                     } catch {
@@ -95,8 +105,10 @@ class BumpDetectionAlgorithm {
         if let motionManager = self.motionManager {
             if motionManager.isDeviceMotionAvailable {
                 motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+                
                 motionManager.startDeviceMotionUpdates(to: queue){(deviceMotion, error) in
-                    if let data = deviceMotion {
+                    guard let data = deviceMotion else { return }
+                    if self.isDriving {
                         if (self.isDeviceStateChanging(state: data.attitude)) {
                             self.isCalibrated = false
                             NSLog("WARNING: POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
@@ -115,8 +127,16 @@ class BumpDetectionAlgorithm {
                         }
                     }
                 }
-            }else { print("WARNING: Na zariadeni nie je dostupny deviceMotion.") }
+            }
         } else { print("WARNING: Nebol vytvorený objekt MotionManager.") }
+    }
+    func startMotionActivity(){
+        if let motionActivityManager = self.motionActivityManager {
+                motionActivityManager.startActivityUpdates(to: queue) {(deviceActivity) in
+                    guard let data = deviceActivity else { return }
+                    self.isDriving = data.automotive
+                }
+        } else { print("WARNING: Nebol vytvorený objekt MotionAcitivityManager.") }
     }
     
     func isDeviceStateChanging(state attitude :CMAttitude) -> Bool {
@@ -148,4 +168,50 @@ class BumpDetectionAlgorithm {
         return sqrt(pow(attitude.roll, 2) + pow(attitude.yaw, 2) + pow(attitude.pitch, 2))
     }
     
+    private var shouldRestartMotionUpdates = false
+    
+    func start() {
+        self.shouldRestartMotionUpdates = true
+        self.restartMotionUpdates()
+    }
+    
+    func stop() {
+        self.shouldRestartMotionUpdates = false
+        self.motionManager?.stopDeviceMotionUpdates()
+    }
+    
+    @objc private func appDidEnterBackground() {
+        self.restartMotionUpdates()
+    }
+    
+    @objc private func appDidBecomeActive() {
+        self.restartMotionUpdates()
+    }
+    
+    private func restartMotionUpdates() {
+        guard self.shouldRestartMotionUpdates else { return }
+        
+        self.motionManager?.stopDeviceMotionUpdates()
+        self.startDeviceMotionSensor()
+    }
+    var sum = 0.0
+    var count = 0.0
+//    func startDeviceNewMotionSensor(){
+//        if let motionManager = self.motionManager {
+//            if motionManager.isDeviceMotionAvailable {
+//                motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
+//                motionManager.startDeviceMotionUpdates(to: queue){(deviceMotion, error) in
+//                    guard let deviceMotion = deviceMotion else { return }
+//
+//                    let gravity = deviceMotion.gravity
+//                    let userAcceleration = deviceMotion.userAcceleration
+//
+//                    let userAccelerationAlongGravity = userAcceleration.x * gravity.x + userAcceleration.y * gravity.y + userAcceleration.z * gravity.z
+//                    self.count += 1
+//                    self.sum += userAccelerationAlongGravity
+//                    print(self.sum/self.count)
+//                }
+//            }
+//        } else { print("WARNING: Nebol vytvorený objekt MotionManager.") }
+//    }
 }

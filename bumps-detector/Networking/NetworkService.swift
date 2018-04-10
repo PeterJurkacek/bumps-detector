@@ -101,7 +101,7 @@ class NetworkService: NSObject {
     func sendAllBumpsToServer(){
         let bumps = BumpForServer.all()
         for bump in bumps {
-            self.sendBumpToServer(bump: bump)
+            //self.sendBumpToServer(bump: bump)
         }
     }
     

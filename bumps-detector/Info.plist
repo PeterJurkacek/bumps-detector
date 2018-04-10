@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDocumentTypes</key>
+	<array/>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,11 +27,15 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app lets you keep track of interesting places. It needs access to the GPS coordinates for your location.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app lets you detect location of potholes thanks to GPS</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app lets you detect potholes thanks to GPS</string>
+	<key>NSMotionUsageDescription</key>
+	<string>This app needs access to the motion sensors to recognize potholes.</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>audio</string>
+		<string>external-accessory</string>
 		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
@@ -38,6 +44,8 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
+		<string>gps</string>
+		<string>location-services</string>
 		<string>accelerometer</string>
 		<string>gyroscope</string>
 	</array>

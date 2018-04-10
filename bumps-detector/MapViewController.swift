@@ -23,8 +23,9 @@ import MapKit
 import Turf
 
 //Navigacia je inspirovana tutorialom https://www.mapbox.com/help/ios-navigation-sdk/
-class MapViewController: UIViewController, CLLocationManagerDelegate {
-    var destinationAnnotation = MGLPointAnnotation()
+class MapViewController: UIViewController {
+    
+    var destinationAnnotation: MGLPointAnnotation?
     var navigationViewController: NavigationViewController?
     var sendDetectedBumpToServerTimer: Timer?
     var notificationToken: NotificationToken? = nil
@@ -32,28 +33,122 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
     var currentRoute: Route?
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
     var bumpNotifyAlgorithm: BumpNotifyAlgorithm?
-    //var locationManager = CLLocationManager()
-
+    var annotationViewController: AnnotationsViewController?
     
     var bumpsFromServerAnnotations = [MGLPointAnnotation]()
     var bumpsForServerAnnotations = [MGLPointAnnotation]()
+    var routeAnnotations = [MGLPointAnnotation]()
     
-    var downloadedItems : [Bump] = [Bump]()
     var mapAnnotations  = [MGLAnnotation]()
     //var selectedLocation : Bump = Bump()
     var geocodingDataTask: URLSessionDataTask?
     var geocoder: GeocodingService!
-    var mapStyles = Dictionary<String, MGLStyle>()
     
-    let blackView = UIView()
+    //MARK: - IBOutlet
     @IBOutlet weak var mapView: NavigationMapView!
     @IBOutlet weak var overviewButton: Button!
     @IBOutlet weak var reportButton: Button!
     @IBOutlet weak var recenterButton: ResumeButton!
     
+    @IBOutlet weak var searchButton: Button!
+    
+    @IBOutlet weak var filterButton: Button!
+    
+    @IBOutlet weak var mapStyleButton: Button!
+    
+    var isInUserTrackingMode = false
+    var updatingLocation = false
     var isInOverviewMode = false
-
+    {
+        didSet {
+            if isInOverviewMode {
+                overviewButton.isHidden = true
+                recenterButton.isHidden = false
+                //wayNameView.isHidden = true
+                mapView.logoView.isHidden = true
+            } else {
+                isInUserTrackingMode = true
+                overviewButton.isHidden = false
+                recenterButton.isHidden = true
+                mapView.logoView.isHidden = false
+            }
+        }
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        overviewButton.applyDefaultCornerRadiusShadow(cornerRadius: overviewButton.bounds.midX)
+        reportButton.applyDefaultCornerRadiusShadow(cornerRadius: reportButton.bounds.midX)
+        recenterButton.applyDefaultCornerRadiusShadow(cornerRadius: recenterButton.bounds.midX)
+        searchButton.applyDefaultCornerRadiusShadow(cornerRadius: searchButton.bounds.midX)
+        filterButton.applyDefaultCornerRadiusShadow(cornerRadius: filterButton.bounds.midX)
+        mapStyleButton.applyDefaultCornerRadiusShadow(cornerRadius: mapStyleButton.bounds.midX)
+        
+        
+        mapView.showsUserLocation = true
+        mapView.delegate = self
+        mapView.navigationMapDelegate = self
+        
+        bumpDetectionAlgorithm = BumpDetectionAlgorithm()
+        bumpDetectionAlgorithm?.delegate = self
+        bumpDetectionAlgorithm?.startAlgorithm()
+        
+        annotationViewController = AnnotationsViewController(delegate: self)
+        
+        sendDetectedBumpToServerTimer = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: #selector(sendAllBumpsToServer), userInfo: nil, repeats: true)
+        
+        // Add a gesture recognizer to the map view
+        let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
+        mapView.addGestureRecognizer(tap)
+        geocoder = AppleMapSearch()
+        
+    }
+    
+    //MARK: - IBAction
+    @IBAction func showBumpsFromServer() {
+        self.downloadAllBumpsFromServer()
+    }
+    
+    @IBAction func showBumpsForServer(_ sender: Any) {
+        showAnnotations(annotations: self.bumpsForServerAnnotations)
+    }
+    
+    @IBAction func sendAllBumpsToServer() {
+        print("INFO: sendAllBumpsToServer()")
+        DispatchQueue.global().async {
+            let networkService = NetworkService(delegate: self)
+            networkService.delegate = self
+            networkService.sendAllBumpsToServer()
+        }
+    }
+    
+    func downloadAllBumpsFromServer(){
+        if let userLocation = self.mapView.userLocation {
+            DispatchQueue.global().async {
+                let networkService = NetworkService(delegate: self)
+                networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 1 )
+            }
+        } else { print("Nemam userLocation") }
+    }
+    
+    func showAnnotations(annotations: [MGLPointAnnotation]){
+        
+        if let currentAnnotations = self.mapView.annotations {
+            self.mapView.removeAnnotations(currentAnnotations)
+        }
+        
+        if !annotations.isEmpty {
+            self.mapView.addAnnotations(annotations)
+        }
+    }
+    
     @IBAction func recenter(_ sender: AnyObject) {
+        let authStatus = CLLocationManager.authorizationStatus()
+        if authStatus == .denied || authStatus == .restricted {
+            showLocationServicesDeniedAlert()
+            return
+        }
         mapView.setUserTrackingMode(.followWithHeading, animated: true)
         isInOverviewMode = false
     }
@@ -120,9 +215,9 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
         mapView.setVisibleCoordinateBounds(line.overlayBounds, edgePadding: overviewContentInset, animated: true)
     }
     
-    @IBAction func report(_ sender: Any) {
-//        guard let parent = parent else { return }
-//
+    @IBAction func reportAction(_ sender: Any) {
+        guard let parent = parent else { return }
+        
 //        let controller = FeedbackViewController.loadFromStoryboard()
 //        let feedbackId = routeController.recordFeedback()
 //
@@ -141,43 +236,9 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
 //            strongSelf.routeController.cancelFeedback(feedbackId: feedbackId)
 //            strongSelf.dismiss(animated: true, completion: nil)
 //        }
-//
+//        
 //        parent.present(controller, animated: true, completion: nil)
 //        delegate?.mapViewControllerDidOpenFeedback(self)
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        mapView.styleURL = MGLStyle.lightStyleURL()
-        mapView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        mapView.tintColor = .darkGray
-
-        mapView.setCenter(
-            CLLocationCoordinate2D(latitude: 37.753574, longitude: -122.447303),
-            zoomLevel: 10,
-            animated: false)
-        view.addSubview(mapView)
-
-        //locationManager.delegate = self
-        //locationManager.requestWhenInUseAuthorization()
-
-        automaticallyAdjustsScrollViewInsets = false
-        mapView.delegate = self
-        mapView.navigationMapDelegate = self
-        isInOverviewMode = false
-
-        bumpDetectionAlgorithm = BumpDetectionAlgorithm()
-        bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        bumpDetectionAlgorithm!.startDeviceMotionSensor()
-
-        sendDetectedBumpToServerTimer = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: #selector(sendAllBumpsToServer), userInfo: nil, repeats: true)
-
-        // Add a gesture recognizer to the map view
-        let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
-        mapView.addGestureRecognizer(tap)
-        geocoder = AppleMapSearch()
-
     }
     
     @IBAction func filterOptions() {
@@ -225,16 +286,27 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
         
         // Create a basic point annotation and add it to the map
-        let annotation = self.destinationAnnotation
-            annotation.coordinate = coordinate
-            annotation.title = "Start navigation"
-            mapView.addAnnotation(annotation)
-            calculateRoute(from: (mapView.userLocation!.coordinate), to: annotation.coordinate) { [unowned self] (route, error) in
-                if error != nil {
-                    // Print an error message
-                    print("Error calculating route")
-                }
+        let annotation = MGLPointAnnotation()
+        annotation.coordinate = coordinate
+        annotation.title = "Start navigation"
+        mapView.addAnnotation(annotation)
+        
+        self.destinationAnnotation = annotation
+        
+        calculateRoute(from: (mapView.userLocation!.coordinate), to: annotation.coordinate) { [unowned self] (route, error) in
+            if error != nil {
+                // Print an error message
+                print("Error calculating route")
             }
+        }
+    }
+    
+    // Present the navigation view controller
+    func presentNavigation(along route: Route) {
+        let viewController = NavigationViewController(for: route)
+        print("INFO: Pridavam anotacie do navigation mapView")
+        viewController.mapView?.addAnnotations(self.routeAnnotations)
+        self.present(viewController, animated: true, completion: nil)
     }
     
     // MARK: - UIAlertActions
@@ -249,83 +321,18 @@ class MapViewController: UIViewController, CLLocationManagerDelegate {
         present(alert, animated: true, completion: nil)
     }
     
-    @IBAction func showBumpsFromServer() {
-        self.downloadAllBumpsFromServer()
-    }
-    
-    @IBAction func showBumpsForServer(_ sender: Any) {
-        DispatchQueue.global().async {
-            let results = BumpForServer.all()
-            let annotations = self.getAnnotations(results: results)
-            DispatchQueue.main.async {
-                if let currentAnnotations = self.mapView.annotations {
-                    self.mapView.removeAnnotations(currentAnnotations)
-                }
-                if (annotations.count > 0) {
-                    self.mapView.addAnnotations(annotations)
-                }
-            }
-        }
-    }
-    
-    @IBAction func sendAllBumpsToServer() {
-        print("INFO: sendAllBumpsToServer()")
-        DispatchQueue.global().async {
-            let networkService = NetworkService(delegate: self)
-            networkService.delegate = self
-            networkService.sendAllBumpsToServer()
-        }
-    }
-    
-    func downloadAllBumpsFromServer(){
-        if let userLocation = self.mapView.userLocation {
-            DispatchQueue.global().async {
-                let networkService = NetworkService(delegate: self)
-                networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 1 )
-            }
-        } else { print("Nemam userLocation") }
-    }
-    
-    func getAnnotations<T: Object>(results: Results<T>) -> [MGLAnnotation] {
-            var newAnnotations = [MGLAnnotation]()
-            for bump in results {
-                let annotation = MGLPointAnnotation()
-                annotation.coordinate = CLLocationCoordinate2D(
-                    latitude:  (bump.value(forKey: "latitude") as! NSString).doubleValue,
-                    longitude: (bump.value(forKey: "longitude") as! NSString).doubleValue)
-                annotation.title = String(describing: bump.value(forKey: "type"))
-                annotation.subtitle = "hello"
-                newAnnotations.append(annotation)
-            }
-            return newAnnotations
-    }
-    
-    
-    // Present the navigation view controller
-    func presentNavigation(along route: Route) {
-        let viewController = NavigationViewController(for: route)
-        print("INFO: Pridavam anotacie do navigation mapView")
-        viewController.mapView?.addAnnotations(self.mapAnnotations)
-        self.present(viewController, animated: true, completion: nil)
-    }
-    
-    func addDetectedBumpToInternDB(intensity: String, location: CLLocationCoordinate2D, manual: String, text: String, type: String){
+    func showIosToast(message: String = "Some message..."){
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        self.present(alert, animated: true)
         
-        if let location = mapView.userLocation {
-            let newBump = BumpForServer(intensity: 0.description,
-                                        latitude: location.coordinate.latitude.description,
-                                        longitude: location.coordinate.longitude.description,
-                                        manual: 0.description,
-                                        text: "novy bump",
-                                        type: "detectionAlgorithm")
-            do {
-                try newBump.saveMeToInternDb()
-            }
-            catch {
-                print("ERROR: class MapViewController, call addDetectedBumpToInternDB - Nepodarilo sa mi uloz \(newBump) do inernej DB")
-            }
+        // duration in seconds
+        let duration: Double = 1
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + duration) {
+            alert.dismiss(animated: true)
         }
     }
+    
 }
 
 //MARK: - BumpAlgorithmDelegate
@@ -334,23 +341,11 @@ extension MapViewController: BumpAlgorithmDelegate {
         
     }
     
-    func saveBump(data: CustomAccelerometerData) {
-        let requiredAccuracy = 100.0
-        print("BUMP DETECTED!!!")
-        if let userLocation = mapView.userLocation {
-            if let location = userLocation.location {
-                if (location.horizontalAccuracy.isLess(than: requiredAccuracy)){
-                    let annotation = MGLPointAnnotation()
-                    annotation.coordinate = CLLocationCoordinate2D(
-                        latitude:  location.coordinate.latitude,
-                        longitude: location.coordinate.longitude)
-                    annotation.title = "Bump"
-                    annotation.subtitle = "Bude sa odosielat na server"
-                    addDetectedBumpToInternDB(intensity: "-1", location: location.coordinate, manual: "0", text: "Hello New Bump", type: "0")
-                    self.mapView.addAnnotation(annotation)
-                } else { print("Presnost location: \(location.horizontalAccuracy) nie je dostacujuca: \(requiredAccuracy)") }
-            } else { print("Neexistuje location") }
-        } else { print("Neexistuje userLocation") }
+    func bumpDetectedNotification(data: CustomAccelerometerData) {
+        //TODO: vyhodit upozornenie ze vytlk bol zaznamenany
+        guard let bumpDetectionAlgorithm = self.bumpDetectionAlgorithm else { return }
+        //showIosToast(message: bumpDetectionAlgorithm.countOfDetectedBumps.description)
+        print("INFO: BUMP DETECTED!!!")
     }
     
 }
@@ -358,28 +353,28 @@ extension MapViewController: BumpAlgorithmDelegate {
 //MARK: - NetworkServiceDelegate
 extension MapViewController: NetworkServiceDelegate{
     func itemsDownloaded() {
-        
-        DispatchQueue.global().async {
-            
-            if let annotations = self.mapView.annotations {
-                self.mapView.removeAnnotations(annotations)
-            }
-            self.mapAnnotations.removeAll()
-            
-            let results = BumpFromServer.all()
-            for bump in results {
-                let annotation = MGLPointAnnotation()
-                annotation.coordinate = CLLocationCoordinate2D(
-                    latitude: bump.value(forKey: "latitude") as! Double,
-                    longitude: bump.value(forKey: "longitude") as! Double)
-                annotation.title = String(describing: bump.value(forKey: "type"))
-                annotation.subtitle = "hello"
-                self.mapAnnotations.append(annotation)
-            }
-            DispatchQueue.main.async {
-                self.mapView.addAnnotations(self.mapAnnotations)
-            }
-        }
+        print("INFO: Items downloaded from server")
+//        DispatchQueue.global().async {
+//
+//            if let annotations = self.mapView.annotations {
+//                self.mapView.removeAnnotations(annotations)
+//            }
+//            self.mapAnnotations.removeAll()
+//
+//            let results = BumpFromServer.all()
+//            for bump in results {
+//                let annotation = MGLPointAnnotation()
+//                annotation.coordinate = CLLocationCoordinate2D(
+//                    latitude: bump.value(forKey: "latitude") as! Double,
+//                    longitude: bump.value(forKey: "longitude") as! Double)
+//                annotation.title = String(describing: bump.value(forKey: "type"))
+//                annotation.subtitle = "hello"
+//                self.mapAnnotations.append(annotation)
+//            }
+//            DispatchQueue.main.async {
+//                self.mapView.addAnnotations(self.mapAnnotations)
+//            }
+//        }
         
     }
     
@@ -390,11 +385,9 @@ extension MapViewController: NetworkServiceDelegate{
 
 //MARK: - BumpNotifyAlgorithmDelegate
 extension MapViewController: BumpNotifyAlgorithmDelegate {
-    func notify(annotations: [MGLAnnotation]) {
-        //self.mapView.removeAnnotations(self.mapAnnotations)
-        //self.mapAnnotations.removeAll()
-        self.mapAnnotations = annotations
-        self.mapView.addAnnotations(self.mapAnnotations)
+    func notify(annotations: [MGLPointAnnotation]) {
+        self.routeAnnotations.append(contentsOf: annotations)
+        self.mapView.addAnnotations(self.routeAnnotations)
     }
 }
 //MARK: - MGLMapViewDelegate
@@ -405,58 +398,79 @@ extension MapViewController: MGLMapViewDelegate {
         return true
     }
     
+    // Zoom to the annotation when it is selected
+    func mapView(_ mapView: MGLMapView, didSelect annotation: MGLAnnotation) {
+        let camera = MGLMapCamera(lookingAtCenter: annotation.coordinate, fromDistance: 4000, pitch: 0, heading: 0)
+        mapView.fly(to: camera, completionHandler: nil)
+    }
+    
+    func mapViewWillStartLocatingUser(_ mapView: MGLMapView) {
+        self.updatingLocation = true
+    }
+    
+    func mapViewDidStopLocatingUser(_ mapView: MGLMapView) {
+        self.updatingLocation = false
+    }
+    
+    //Metóda nie je volaná ked je aplikácia v background mode
     func mapView(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation?) {
+        guard let location = userLocation?.location else {
+            print("ERROR: didUpdate userLocationn nil")
+            return
+        }
+        
+//        if location.horizontalAccuracy < 100 && !self.isInUserTrackingMode && !self.isInOverviewMode {
+//            mapView.setUserTrackingMode(.follow, animated: false)
+//            isInUserTrackingMode = true
+//        }
         self.bumpDetectionAlgorithm?.userLocation = userLocation?.location
+    }
+    
+    func mapView(_ mapView: MGLMapView, didFailToLocateUserWithError error: Error) {
+        if (error as NSError).code == CLError.denied.rawValue {
+            print("ERROR: didFailToLocateUserWithError denied: \(error)")
+        }
+        
+        if (error as NSError).code == CLError.locationUnknown.rawValue {
+            print("ERROR: didFailToLocateUserWithError locationUnknown: \(error)")
+        }
+        
+        if (error as NSError).code == CLError.network.rawValue {
+            print("ERROR: didFailToLocateUserWithError network: \(error)")
+        }
+        
+        return
     }
     
     func mapViewDidFinishLoadingMap(_ mapView: MGLMapView) {
         // Allow the map to display the user's location
-        mapView.showsUserLocation = true
-        mapView.setUserTrackingMode(.followWithHeading, animated: true)
-        
-        if Reachability.isConnectedToNetwork(){
-            print("Internet Connection Available!")
-            self.sendAllBumpsToServer()
-            self.downloadAllBumpsFromServer()
-        }else{
-            print("No Internet Connection!")
-        }
+        //Spusti zistovanie aktualnej polohy
+        mapView.setUserTrackingMode(.follow, animated: false)
     }
     
     func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
-        
-        if let annotations = self.mapView.annotations {
-            self.mapView.removeAnnotations(annotations)
-        }
-        if let currentRoute = self.currentRoute {
-            self.navigationViewController = NavigationViewController(for: currentRoute)
-            if let navigationViewController = self.navigationViewController {
-                navigationViewController.navigationDelegate = self
-                _ = BumpNotifyAlgorithm(route: currentRoute, delegate: navigationViewController)
-                self.present(navigationViewController, animated: true, completion: nil)
-                print("AFTER NAVIGATION VIEW")
+        if annotation.isEqual(self.destinationAnnotation) {
+            if let annotations = self.mapView.annotations {
+                self.mapView.removeAnnotations(annotations)
+            }
+            if let currentRoute = self.currentRoute {
+                self.navigationViewController = NavigationViewController(for: currentRoute)
+                if let navigationViewController = self.navigationViewController {
+                    navigationViewController.navigationDelegate = self
+                    _ = BumpNotifyAlgorithm(route: currentRoute, delegate: navigationViewController)
+                    self.present(navigationViewController, animated: true, completion: nil)
+                    print("AFTER NAVIGATION VIEW")
+                }
             }
         }
         
     }
     
     func mapView(_ mapView: MGLMapView, regionWillChangeAnimated animated: Bool) {
-        
-        //geocoder.reverseGeocoding(latitude: (mapView.userLocation?.coordinate.latitude)!, longitude: (mapView.userLocation?.coordinate.longitude)!)
+
     }
     
     func mapView(_ mapView: MGLMapView, regionDidChangeAnimated animated: Bool) {
-//        geocodingDataTask?.cancel()
-//        let options = ReverseGeocodeOptions(coordinate: mapView.centerCoordinate)
-//        geocodingDataTask = geocoder.geocode(options) { [unowned self] (placemarks, attribution, error) in
-//            if let error = error {
-//                NSLog("%@", error)
-//            } else if let placemarks = placemarks, !placemarks.isEmpty {
-//                //self.resultsLabel.text = placemarks[0].qualifiedName
-//            } else {
-//                //self.resultsLabel.text = "No results"
-//            }
-//        }
     }
 }
 
@@ -501,9 +515,11 @@ extension MapViewController: NavigationMapViewDelegate {
                 return
             }
             self.currentRoute = route
-            //self.drawRoute(route: self.directionsRoute!)
-            self.mapView.showRoute(route)
+            self.routeAnnotations.removeAll()
             self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: self)
+            self.updateVisibleBounds()
+            self.isInOverviewMode = true
+            self.mapView.showRoute(route)
         }
     }
 }
@@ -521,6 +537,8 @@ extension MapViewController: NavigationViewControllerDelegate {
     func navigationViewControllerDidCancelNavigation(_ navigationViewController: NavigationViewController) {
         print("The user has exited")
         self.mapView.removeRoute()
+        self.mapView.setUserTrackingMode(.followWithHeading, animated: true)
+        self.showAnnotations(annotations: self.bumpsForServerAnnotations)
         navigationViewController.dismiss(animated: true, completion: nil)
     }
     
@@ -532,14 +550,14 @@ extension MapViewController: NavigationViewControllerDelegate {
 
 //MARK: - BumpNotifyAlgorithmDelegate
 extension NavigationViewController: BumpNotifyAlgorithmDelegate {
-    func notify(annotations: [MGLAnnotation]) {
+    func notify(annotations: [MGLPointAnnotation]) {
         self.mapView?.addAnnotations(annotations)
     }
 }
 
 //MARK: - FilterPopOverViewDelegate
 extension MapViewController: FilterPopOverViewDelegate {
-    
+
     func filterBumps(rating: String?) {
         DispatchQueue.global().async {
             let results = BumpFromServer.findByRating(rating: rating)
@@ -554,20 +572,15 @@ extension MapViewController: FilterPopOverViewDelegate {
                 annotations.append(annotation)
             }
             DispatchQueue.main.async {
-                if let currentAnnotations = self.mapView.annotations {
-                    self.mapView.removeAnnotations(currentAnnotations)
-                }
-                if (annotations.count > 0) {
-                    self.mapView.addAnnotations(annotations)
-                }
+                self.showAnnotations(annotations: annotations)
             }
         }
     }
-    
-    
+
+
 }
 
-// MARK: - NavigationMapViewCourseTrackingDelegate
+// MARK: - AnnotationsViewControllerDelegate
 extension MapViewController: AnnotationsViewControllerDelegate {
     
     func updateBumpsFromServerAnnotations(annotations: [MGLPointAnnotation]) {
@@ -587,19 +600,6 @@ extension MapViewController: AnnotationsViewControllerDelegate {
     }
     
 }
-
-// MARK: - NavigationMapViewCourseTrackingDelegate
-//extension MapViewController: NavigationMapViewCourseTrackingDelegate {
-//    func navigationMapViewDidStartTrackingCourse(_ mapView: NavigationMapView) {
-//        .isHidden = true
-//        mapView.logoView.isHidden = false
-//    }
-//    
-//    func navigationMapViewDidStopTrackingCourse(_ mapView: NavigationMapView) {
-//        recenterButton.isHidden = false
-//        mapView.logoView.isHidden = true
-//    }
-//}
 
 //Vytvorene podla - http://theswiftguy.com/index.php/2017/07/03/mapviewsearch/
 //MARK: - UISearchControllerDelegate
@@ -682,5 +682,14 @@ extension MapViewController: UISearchBarDelegate {
     
     
     
+}
+
+extension UIView {
+    func applyDefaultCornerRadiusShadow(cornerRadius: CGFloat? = 4, shadowOpacity: CGFloat? = 0.1) {
+        layer.cornerRadius = cornerRadius!
+        layer.shadowOffset = CGSize(width: 0, height: 0)
+        layer.shadowRadius = 4
+        layer.shadowOpacity = Float(shadowOpacity!)
+    }
 }
 

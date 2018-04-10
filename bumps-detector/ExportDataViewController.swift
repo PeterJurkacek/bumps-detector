@@ -106,8 +106,8 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
     
         
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
-        bumpDetectionAlgorithm?.bumpAlgorithmDelegate = self
-        bumpDetectionAlgorithm!.startDeviceMotionSensor()
+        bumpDetectionAlgorithm?.delegate = self
+        bumpDetectionAlgorithm!.startAlgorithm()
         runTimer()
     }
     
@@ -143,7 +143,7 @@ extension ExportDataViewController: BumpAlgorithmDelegate{
         }
     }
     
-    func saveBump(data: CustomAccelerometerData) {
+    func bumpDetectedNotification(data: CustomAccelerometerData) {
     }
     
     

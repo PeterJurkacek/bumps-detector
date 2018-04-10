@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EF0DB0DA2076714E00484800 /* RingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0DB0D92076714E00484800 /* RingBuffer.swift */; };
 		EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3F0F74204735A500301E19 /* DataForExport.swift */; };
 		EF43639620380EBC00B8CAC2 /* CustomNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */; };
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
@@ -17,7 +18,6 @@
 		EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */; };
 		EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */; };
 		EFCB24781F49AC6A00AAEA14 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB24761F49AC6A00AAEA14 /* Main.storyboard */; };
-		EFCB247A1F49AC6A00AAEA14 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */; };
 		EFCB247D1F49AC6A00AAEA14 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */; };
 		EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB24881F49E8D400AAEA14 /* Bump.swift */; };
 		EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCB248A1F49EF2F00AAEA14 /* DataManager.swift */; };
@@ -32,8 +32,9 @@
 		EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */; };
 		EFF80969207180FB00C1FCCD /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF80968207180FB00C1FCCD /* Geocoding.swift */; };
 		EFF8096B2072AEA500C1FCCD /* OptionsLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */; };
-		EFF8096D20739C0D00C1FCCD /* AnnotationsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096C20739C0D00C1FCCD /* AnnotationsController.swift */; };
+		EFF8096D20739C0D00C1FCCD /* CustomFeedbackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */; };
 		EFF8096F20740BC700C1FCCD /* AnnotationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */; };
+		EFFCFA81207D349C005C4E57 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFFCFA80207D349C005C4E57 /* Assets.xcassets */; };
 		EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */; };
 		F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */; };
 /* End PBXBuildFile section */
@@ -42,6 +43,7 @@
 		02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_bumps_detector.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
+		EF0DB0D92076714E00484800 /* RingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
 		EF3F0F74204735A500301E19 /* DataForExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataForExport.swift; sourceTree = "<group>"; };
 		EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationViewController.swift; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
@@ -53,7 +55,6 @@
 		EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
 		EFCB24771F49AC6A00AAEA14 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EFCB247C1F49AC6A00AAEA14 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		EFCB247E1F49AC6A00AAEA14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EFCB24881F49E8D400AAEA14 /* Bump.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bump.swift; sourceTree = "<group>"; };
@@ -69,8 +70,9 @@
 		EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternetConnection.swift; sourceTree = "<group>"; };
 		EFF80968207180FB00C1FCCD /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsLauncher.swift; sourceTree = "<group>"; };
-		EFF8096C20739C0D00C1FCCD /* AnnotationsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsController.swift; sourceTree = "<group>"; };
+		EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFeedbackViewController.swift; sourceTree = "<group>"; };
 		EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsViewController.swift; sourceTree = "<group>"; };
+		EFFCFA80207D349C005C4E57 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccelData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -126,12 +128,12 @@
 		EFCB24711F49AC6A00AAEA14 /* bumps-detector */ = {
 			isa = PBXGroup;
 			children = (
+				EFFCFA80207D349C005C4E57 /* Assets.xcassets */,
 				EFCB24721F49AC6A00AAEA14 /* AppDelegate.swift */,
 				EFCB24741F49AC6A00AAEA14 /* MapViewController.swift */,
 				EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */,
 				EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */,
 				EFCB24761F49AC6A00AAEA14 /* Main.storyboard */,
-				EFCB24791F49AC6A00AAEA14 /* Assets.xcassets */,
 				EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */,
 				EFCB247E1F49AC6A00AAEA14 /* Info.plist */,
 				EFD919E0201D4B690092445A /* AppDatabase */,
@@ -144,7 +146,7 @@
 				EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */,
 				EF7BEB82206A842E00C67F1F /* FilterPopOverViewController.swift */,
 				EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */,
-				EFF8096C20739C0D00C1FCCD /* AnnotationsController.swift */,
+				EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */,
 				EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */,
 			);
 			path = "bumps-detector";
@@ -163,6 +165,7 @@
 		EFD919E1201D4BCD0092445A /* BumpAlgorithms */ = {
 			isa = PBXGroup;
 			children = (
+				EF0DB0D92076714E00484800 /* RingBuffer.swift */,
 				EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */,
 				EFA8038F1FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift */,
 				EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */,
@@ -254,7 +257,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EFCB247D1F49AC6A00AAEA14 /* LaunchScreen.storyboard in Resources */,
-				EFCB247A1F49AC6A00AAEA14 /* Assets.xcassets in Resources */,
+				EFFCFA81207D349C005C4E57 /* Assets.xcassets in Resources */,
 				EFCB24781F49AC6A00AAEA14 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -355,6 +358,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */,
+				EF0DB0DA2076714E00484800 /* RingBuffer.swift in Sources */,
 				EFD919DE201D46C50092445A /* BumpForServer.swift in Sources */,
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
 				EFD919DA201CC5520092445A /* BumpFromServer.swift in Sources */,
@@ -372,7 +376,7 @@
 				EFF8096F20740BC700C1FCCD /* AnnotationsViewController.swift in Sources */,
 				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,
 				EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */,
-				EFF8096D20739C0D00C1FCCD /* AnnotationsController.swift in Sources */,
+				EFF8096D20739C0D00C1FCCD /* CustomFeedbackViewController.swift in Sources */,
 				EFCB24751F49AC6A00AAEA14 /* MapViewController.swift in Sources */,
 				EFE06C421F4A67CD00740875 /* NetworkService.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,

@@ -13,7 +13,7 @@ import MapboxDirections
 import Mapbox
 
 protocol BumpNotifyAlgorithmDelegate {
-    func notify(annotations: [MGLAnnotation])
+    func notify(annotations: [MGLPointAnnotation])
 }
 
 class BumpNotifyAlgorithm {
@@ -124,16 +124,18 @@ class BumpNotifyAlgorithm {
     }
     
     func updateMainUI(bumps: Set<BumpFromServer>){
-        var annotations = [MGLAnnotation]()
+        var annotations = [MGLPointAnnotation]()
+        
         for bump in bumps {
             let annotation = MGLPointAnnotation()
             annotation.coordinate = CLLocationCoordinate2D(
-                latitude: bump.value(forKey: "latitude") as! Double,
-                longitude: bump.value(forKey: "longitude") as! Double)
-            annotation.title = String(describing: bump.value(forKey: "type"))
-            annotation.subtitle = "hello"
+                latitude: bump.latitude,
+                longitude: bump.longitude)
+            annotation.title = bump.info
+            annotation.subtitle = bump.last_modified.description
             annotations.append(annotation)
         }
+        
         DispatchQueue.main.async {
             self.delegate.notify(annotations: annotations)
         }
