@@ -18,7 +18,7 @@ struct ServerServices {
 }
 
 protocol NetworkServiceDelegate: class {
-    func itemsDownloaded()
+    func synchronizationWithServerResult(userMessage: String)
     func itemsUploaded()
 }
 
@@ -27,6 +27,7 @@ class NetworkService: NSObject {
     //properties
     
     weak var delegate: NetworkServiceDelegate!
+    var userMessage: String?
     
     init(delegate: NetworkServiceDelegate) {
         super.init()
@@ -66,30 +67,39 @@ class NetworkService: NSObject {
                 //SWIFT 4.0 JSONparsing
                 do {
                     let syncBump = try JSONDecoder().decode(SyncBump.self, from: data)
-                    print(syncBump.bumps)
+                    print(syncBump)
                     print("POCET: \(syncBump.bumps.count)")
-                    
-                    var bumpsForUpdate = [BumpFromServer]()
-                    for item in syncBump.bumps {
-                        let newBump = BumpFromServer(latitude: (item.latitude as NSString).doubleValue,
-                                                     longitude: (item.longitude as NSString).doubleValue,
-                                                     count: (item.count as NSString).integerValue,
-                                                     b_id: item.b_id,
-                                                     rating: item.rating,
-                                                     manual: item.manual,
-                                                     type: item.type,
-                                                     fix: item.fix,
-                                                     admin_fix: item.admin_fix,
-                                                     info: item.info,
-                                                     last_modified: item.last_modified)
-                        bumpsForUpdate.append(newBump)
+                    switch(syncBump.success){
+                    case 0:
+                        // updatuj internú db
+                        let realmService = RealmService()
+                        realmService.updateBumpsFromServer(bumps: syncBump.bumps)
+                        self.userMessage = "Aktualizoval som databázu"
+                        break
+                    case 1:
+                        // notifikuj pouzivatela, ze je potrebné updatovat internú db
+                        self.userMessage = "Je potrebné aktualizovať dáta"
+                        self.downloadBumpsFromServer(coordinate: coordinate, net: 1)
+                        break
+                    case 2:
+                        // netreba nic updatovat
+                        self.userMessage = "Máte aktuálne dáta"
+                        break
+                    case 4:
+                        // pre tvoju aktualnu polohu v okruhu 11.1km sa nenachadzaju v databaze ziadne nove zaznamy
+                        self.userMessage = "Máte aktuálne dáta"
+                        break
+                    default:
+                        //Neznámy succes kód
+                        self.userMessage = "Neznámy SUCCESS kód: \(syncBump.success)"
+                        break
                     }
-                    BumpFromServer.addOrUpdate(bumpsForUpdate)
-                    //BumpsFromServer.updateAll(objects: bumpsForUpdate)
                     
                     //Inform main UI
                     DispatchQueue.main.async {
-                        self.delegate.itemsDownloaded()
+                        if let userMessage = self.userMessage {
+                            self.delegate.synchronizationWithServerResult(userMessage: userMessage)
+                        }
                     }
                 }catch{
                     print("Chyba pri JSon parsingu: Skontroluj ci parametre struktur zodpovedaju json datam")
@@ -101,7 +111,7 @@ class NetworkService: NSObject {
     func sendAllBumpsToServer(){
         let bumps = BumpForServer.all()
         for bump in bumps {
-            //self.sendBumpToServer(bump: bump)
+            self.sendBumpToServer(bump: bump)
         }
     }
     
@@ -130,8 +140,9 @@ class NetworkService: NSObject {
             do {
                 let response = try JSONDecoder().decode(BumpForServerResponse.self, from: data)
                 if( response.success == 1 ) {
+                    let realmService = RealmService()
                     do {
-                        try bump_object.deleteSelf()
+                        try realmService.delete(bumpObject: bump_object)
                     } catch {
                         print("ERROR: Class BumpDetectionAlgorithm, call sendBumpToServer() - Nepodarilo sa vymazat bump z databazy")
                     }
@@ -143,12 +154,16 @@ class NetworkService: NSObject {
         task.resume()
     }
     
+    func sendPhotoToServer(){
+        
+    }
+    
     func createParams(bump: BumpForServer) -> String {
         
         //Nasetujeme format datumu
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        
+        dateFormatter.timeZone = TimeZone.current
         var deviceId = "unknown device ID"
         //Zistujeme device ID
         if let id = UIDevice.current.identifierForVendor?.uuidString {
@@ -189,6 +204,7 @@ class NetworkService: NSObject {
         //Nasetujeme format datumu
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormatter.timeZone = TimeZone.current
         
         //Nasetujeme si dátum synchronizacie so serverom a aktuálnu geograficku polohu
         let actualDate = dateFormatter.string(from: Date())
@@ -241,7 +257,7 @@ class NetworkService: NSObject {
         parameters.append("\(outerSeparator)")
         parameters.append("net=\(net.description)")
         
-        print(parameters)
+        //print(parameters)
         
         return parameters
     }

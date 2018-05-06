@@ -25,19 +25,36 @@ import Turf
 //Navigacia je inspirovana tutorialom https://www.mapbox.com/help/ios-navigation-sdk/
 class MapViewController: UIViewController {
     
+    var longTapAnnotation: MGLPointAnnotation?
     var destinationAnnotation: MGLPointAnnotation?
     var navigationViewController: NavigationViewController?
     var sendDetectedBumpToServerTimer: Timer?
+    var downloadBumpFromServerTimer: Timer?
+    var simulateLocationUpdate: Timer?
+    //Activity Indicator
+    let activityIndicator = UIActivityIndicatorView()
     var notificationToken: NotificationToken? = nil
+    let simulationIsEnabled = false
     
-    var currentRoute: Route?
+    var currentRoute: Route? {
+        didSet {
+            if currentRoute != nil {
+                overviewButton.isHidden = false
+            }
+            else {
+                overviewButton.isHidden = true
+            }
+        }
+    }
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
     var bumpNotifyAlgorithm: BumpNotifyAlgorithm?
-    var annotationViewController: AnnotationsViewController?
+    var annotationViewController: RealmNotification?
     
     var bumpsFromServerAnnotations = [MGLPointAnnotation]()
     var bumpsForServerAnnotations = [MGLPointAnnotation]()
     var routeAnnotations = [MGLPointAnnotation]()
+    
+    var routes = [Route]()
     
     var mapAnnotations  = [MGLAnnotation]()
     //var selectedLocation : Bump = Bump()
@@ -45,17 +62,20 @@ class MapViewController: UIViewController {
     var geocoder: GeocodingService!
     
     //MARK: - IBOutlet
+    @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var mapView: NavigationMapView!
     @IBOutlet weak var overviewButton: Button!
     @IBOutlet weak var reportButton: Button!
     @IBOutlet weak var recenterButton: ResumeButton!
     
+    @IBOutlet weak var navigationBar: UINavigationItem!
     @IBOutlet weak var searchButton: Button!
     
     @IBOutlet weak var filterButton: Button!
     
     @IBOutlet weak var mapStyleButton: Button!
     
+    @IBOutlet weak var detectionCount: UILabel!
     var isInUserTrackingMode = false
     var updatingLocation = false
     var isInOverviewMode = false
@@ -75,46 +95,66 @@ class MapViewController: UIViewController {
         }
     }
     
+    //MARK: viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         
         overviewButton.applyDefaultCornerRadiusShadow(cornerRadius: overviewButton.bounds.midX)
+        overviewButton.isHidden = true
         reportButton.applyDefaultCornerRadiusShadow(cornerRadius: reportButton.bounds.midX)
+        reportButton.isHidden = true
         recenterButton.applyDefaultCornerRadiusShadow(cornerRadius: recenterButton.bounds.midX)
         searchButton.applyDefaultCornerRadiusShadow(cornerRadius: searchButton.bounds.midX)
+        searchButton.isHidden = true
         filterButton.applyDefaultCornerRadiusShadow(cornerRadius: filterButton.bounds.midX)
         mapStyleButton.applyDefaultCornerRadiusShadow(cornerRadius: mapStyleButton.bounds.midX)
-        
-        
+
+
         mapView.showsUserLocation = true
         mapView.delegate = self
         mapView.navigationMapDelegate = self
-        
+
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
         bumpDetectionAlgorithm?.delegate = self
         bumpDetectionAlgorithm?.startAlgorithm()
-        
-        annotationViewController = AnnotationsViewController(delegate: self)
-        
-        sendDetectedBumpToServerTimer = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: #selector(sendAllBumpsToServer), userInfo: nil, repeats: true)
-        
+
+        annotationViewController = RealmNotification(delegate: self)
+
+        //Setup activit Indicator
+        activityIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
+        activityIndicator.center = self.view.center
+        activityIndicator.hidesWhenStopped = true
+        mapView.addSubview(activityIndicator)
+
+        sendDetectedBumpToServerTimer = Timer.scheduledTimer(timeInterval: 1*60.0, target: self, selector: #selector(sendAllBumpsToServer), userInfo: nil, repeats: true)
+        downloadBumpFromServerTimer = Timer.scheduledTimer(timeInterval: 5*60.0, target: self, selector: #selector(synchronizeWithServer), userInfo: nil, repeats: true)
+
         // Add a gesture recognizer to the map view
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
         geocoder = AppleMapSearch()
         
+
     }
     
     //MARK: - IBAction
+    @IBAction func enableBumpDetection(_ sender: UISwitch) {
+        if sender.isOn {
+            self.bumpDetectionAlgorithm?.start()
+        } else {
+            self.bumpDetectionAlgorithm?.stop()
+        }
+    }
+
     @IBAction func showBumpsFromServer() {
-        self.downloadAllBumpsFromServer()
+        self.synchronizeWithServer()
     }
     
     @IBAction func showBumpsForServer(_ sender: Any) {
         showAnnotations(annotations: self.bumpsForServerAnnotations)
     }
     
-    @IBAction func sendAllBumpsToServer() {
+    @objc func sendAllBumpsToServer() {
         print("INFO: sendAllBumpsToServer()")
         DispatchQueue.global().async {
             let networkService = NetworkService(delegate: self)
@@ -123,19 +163,22 @@ class MapViewController: UIViewController {
         }
     }
     
-    func downloadAllBumpsFromServer(){
+    @objc func synchronizeWithServer(){
+        print("INFO: downloadAllBumpsFromServer()")
         if let userLocation = self.mapView.userLocation {
             DispatchQueue.global().async {
                 let networkService = NetworkService(delegate: self)
-                networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 1 )
+                networkService.downloadBumpsFromServer( coordinate: userLocation.coordinate, net: 0 )
             }
         } else { print("Nemam userLocation") }
     }
     
     func showAnnotations(annotations: [MGLPointAnnotation]){
         
-        if let currentAnnotations = self.mapView.annotations {
-            self.mapView.removeAnnotations(currentAnnotations)
+        self.mapView.removeAnnotations(self.mapView.annotations ?? [])
+        
+        if let destination = self.destinationAnnotation {
+            self.mapView.addAnnotation(destination)
         }
         
         if !annotations.isEmpty {
@@ -149,6 +192,7 @@ class MapViewController: UIViewController {
             showLocationServicesDeniedAlert()
             return
         }
+        //mapView.tracksUserCourse = true
         mapView.setUserTrackingMode(.followWithHeading, animated: true)
         isInOverviewMode = false
     }
@@ -190,15 +234,14 @@ class MapViewController: UIViewController {
     
     //Odiali pohlad na mapu tak aby bola vidiet cela cesta
     @IBAction func toggleOverview(_ sender: Any) {
-        updateVisibleBounds()
+        updateVisibleBounds(along: self.currentRoute!)
         isInOverviewMode = true
     }
 
-    func updateVisibleBounds() {
+    func updateVisibleBounds(along route: Route) {
         guard let userLocation = mapView.userLocation?.coordinate else { return }
 
-        let overviewContentInset = UIEdgeInsets(top: 65, left: 20, bottom: 55, right: 20)
-        guard let route = self.currentRoute else { return }
+        let overviewContentInset = UIEdgeInsets(top: 55, left: 85, bottom: 55, right: 30)
         
         let slicedLine = Polyline(route.coordinates!).sliced(from: userLocation, to: route.coordinates!.last).coordinates
         
@@ -216,7 +259,7 @@ class MapViewController: UIViewController {
     }
     
     @IBAction func reportAction(_ sender: Any) {
-        guard let parent = parent else { return }
+        guard parent != nil else { return }
         
 //        let controller = FeedbackViewController.loadFromStoryboard()
 //        let feedbackId = routeController.recordFeedback()
@@ -236,7 +279,7 @@ class MapViewController: UIViewController {
 //            strongSelf.routeController.cancelFeedback(feedbackId: feedbackId)
 //            strongSelf.dismiss(animated: true, completion: nil)
 //        }
-//        
+//
 //        parent.present(controller, animated: true, completion: nil)
 //        delegate?.mapViewControllerDidOpenFeedback(self)
     }
@@ -247,7 +290,6 @@ class MapViewController: UIViewController {
         let maleAction = UIAlertAction(title: "Malé", style: .default) { (action) in
             self.filterBumps(rating: "1")
         }
-        
         
         let stredneAction = UIAlertAction(title: "Stredné", style: .default) { (action) in
             self.filterBumps(rating: "2")
@@ -261,6 +303,10 @@ class MapViewController: UIViewController {
             self.filterBumps(rating: nil)
         }
         
+        let ziadneAction = UIAlertAction(title: "Žiadne", style: .default) { (action) in
+            self.showAnnotations(annotations: [])
+        }
+        
         let cancelAction = UIAlertAction(title: "Zrušiť", style: .cancel) { (action) in
         }
         
@@ -268,51 +314,179 @@ class MapViewController: UIViewController {
         alertController.addAction(stredneAction)
         alertController.addAction(velkeAction)
         alertController.addAction(vsetkyAction)
+        alertController.addAction(ziadneAction)
         alertController.addAction(cancelAction)
         
         present(alertController, animated: true)
     }
     
+    func annotationActionMenu(for annotation: MGLAnnotation!) {
+        let alertController = UIAlertController(title: "Vybratá poloha", message: "S touto polohou môžem vykonať nasledovné akcie.", preferredStyle: .actionSheet)
+        
+        let navigationAction = UIAlertAction(title: "Navigovať", style: .default) { (action) in
+            if self.currentRoute != nil && self.destinationAnnotation != nil && self.destinationAnnotation!.isEqual(annotation){
+                self.presentNavigation(along: self.currentRoute!)
+            }
+            else {
+                if !Reachability.isConnectedToNetwork(){
+                    self.showNoInternetAlert()
+                }
+                //Zistime si trasu
+                self.calculateRoute(from: (self.mapView.userLocation!.coordinate), to: annotation.coordinate) { (routes, error) in
+                    if error != nil {
+                        print("Error calculating route")
+                    }
+                    guard let route = routes?.first else { return }
+                    self.currentRoute = route
+                    self.presentNavigation(along: route)
+                }
+            }
+        }
+        let routeOptionsAction = UIAlertAction(title: "Zobraziť trasu", style: .default) { (action) in
+            //TODO: Implementovať výber z vrátených trás
+            if self.currentRoute != nil && self.destinationAnnotation != nil && self.destinationAnnotation!.isEqual(annotation){
+                self.updateVisibleBounds(along: self.currentRoute!)
+                self.isInOverviewMode = true
+            }
+            else {
+                if !Reachability.isConnectedToNetwork(){
+                    self.showNoInternetAlert()
+                    
+                }
+                //Zistime si trasu
+                self.calculateRoute(from: (self.mapView.userLocation!.coordinate), to: annotation.coordinate){ (routes, error) in
+                    if error != nil {
+                        print("Error calculating route")
+                    }
+                    guard let cesty = routes else { return }
+//                    if !self.routeAnnotations.isEmpty {
+//                        self.mapView.removeAnnotations(self.routeAnnotations)
+//                        self.routeAnnotations.removeAll()
+//                    }
+                    for route in cesty {
+                        _ = BumpNotifyAlgorithm(route: route, delegate: self)
+                    }
+                    self.currentRoute = cesty.first!
+                    self.mapView.showRoutes(cesty)
+                    self.updateVisibleBounds(along: self.currentRoute!)
+                    self.isInOverviewMode = true
+                }
+            }
+        }
+        
+        let toggleBumpAction = UIAlertAction(title: "Manuálne označiť výtlk", style: .default) { (action) in
+            //TODO: Implementovať funkcionalitu pre manuálne pridávanie výtlku
+            if let bumpDetectionAlgoritm = self.bumpDetectionAlgorithm {
+                bumpDetectionAlgoritm.processBump(delta: 0, location: CLLocation(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude), manual: "1", type: "0", text: "IOS-manual-bump")
+            }
+            else {
+                self.showErrorAlert(message: "Hlásenie sa nepodarilo zaznamenať.")
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Zrušiť", style: .cancel) { (action) in
+        }
+        
+        alertController.addAction(navigationAction)
+        alertController.addAction(routeOptionsAction)
+        alertController.addAction(toggleBumpAction)
+        alertController.addAction(cancelAction)
+        
+        present(alertController, animated: true)
+    }
+    
+    @IBAction func searchButtonClick(_ sender: StylableButton) {
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchBar.delegate = self
+        present(searchController, animated: true, completion: nil)
+    }
     
     @objc func didLongPress(_ sender: UILongPressGestureRecognizer) {
         guard sender.state == .began else { return }
         
-        if let annotations = self.mapView.annotations {
-            self.mapView.removeAnnotations(annotations)
-        }
-        
         // Converts point where user did a long press to map coordinates
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+        setLongTapAnnotation(for: coordinate)
+    }
+    
+    func setLongTapAnnotation(for coordinate:CLLocationCoordinate2D){
+        if let annotation = self.longTapAnnotation {
+            self.mapView.removeAnnotation(annotation)
+        }
         
-        // Create a basic point annotation and add it to the map
         let annotation = MGLPointAnnotation()
         annotation.coordinate = coordinate
-        annotation.title = "Start navigation"
+        annotation.title = "Možnosti?"
+        self.longTapAnnotation = annotation
         mapView.addAnnotation(annotation)
-        
-        self.destinationAnnotation = annotation
-        
-        calculateRoute(from: (mapView.userLocation!.coordinate), to: annotation.coordinate) { [unowned self] (route, error) in
-            if error != nil {
-                // Print an error message
-                print("Error calculating route")
-            }
-        }
+        mapView.selectAnnotation(annotation, animated: false)
+
     }
     
     // Present the navigation view controller
-    func presentNavigation(along route: Route) {
-        let viewController = NavigationViewController(for: route)
-        print("INFO: Pridavam anotacie do navigation mapView")
-        viewController.mapView?.addAnnotations(self.routeAnnotations)
-        self.present(viewController, animated: true, completion: nil)
+    func presentNavigation(along route: Route!) {
+        //navigationViewController.mapView?.addAnnotations(self.routeAnnotations)
+        startEmbeddedNavigation(along: route)
+    }
+    
+    func startEmbeddedNavigation(along route: Route!) {
+        let navigationViewController = NavigationViewController(for: route)
+        navigationViewController.showsReportFeedback = false
+        navigationViewController.delegate = self
+        _ = BumpNotifyAlgorithm(route: route, delegate: navigationViewController)
+        
+        if simulationIsEnabled {
+            simulateLocationUpdate = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(simulateUpdate), userInfo: nil, repeats: true)
+            navigationViewController.routeController.locationManager = SimulatedLocationManager(route: route!)
+        }
+        
+        addChildViewController(navigationViewController)
+        containerView.addSubview(navigationViewController.view)
+        navigationViewController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            navigationViewController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
+            navigationViewController.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
+            navigationViewController.view.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 0),
+            navigationViewController.view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 0)
+            ])
+        self.navigationViewController = navigationViewController
+        self.didMove(toParentViewController: self)
+    }
+    
+    @objc func simulateUpdate(){
+        if let location = navigationViewController?.routeController.locationManager.location {
+            self.bumpDetectionAlgorithm?.userLocation = location
+            print(location)
+        }
+    }
+    
+    func endEmbeddedNavigation(navigationViewController: NavigationViewController!) {
+        
+        navigationViewController.willMove(toParentViewController: nil)
+        navigationViewController.view.removeFromSuperview()
+        navigationViewController.view.removeConstraints([
+            navigationViewController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
+            navigationViewController.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
+            navigationViewController.view.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 0),
+            navigationViewController.view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 0)
+            ])
+        navigationViewController.removeFromParentViewController()
+        
+        navigationViewController.dismiss(animated: true, completion: nil)
+        
+        if simulationIsEnabled {
+
+            simulateLocationUpdate?.invalidate()
+            simulateLocationUpdate = nil
+        }
+
     }
     
     // MARK: - UIAlertActions
-    func showLocationServicesDeniedAlert() {
-        let alert = UIAlertController(title: "Location Services Disabled",
-                                      message: "Please enable location services for this app in Settings.",
+    func showErrorAlert(message: String = "Niekde nastala chyba. Pokúste sa prosím akciu zopakovať neskôr.") {
+        let alert = UIAlertController(title: "Chyba",
+                                      message: message,
                                       preferredStyle: .alert)
         let okAction = UIAlertAction(title: "OK", style: .default,
                                      handler: nil)
@@ -321,13 +495,48 @@ class MapViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    func showIosToast(message: String = "Some message..."){
-        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        self.present(alert, animated: true)
+    func showLocationServicesDeniedAlert() {
+        let alert = UIAlertController(title: "Neznáma poloha",
+                                      message: "Prosím, v nastaveniach povoľte aplikácií pristupovať k vašej polohe.",
+                                      preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default,
+                                     handler: nil)
+        alert.addAction(okAction)
         
+        present(alert, animated: true, completion: nil)
+    }
+    
+    func showNoInternetAlert() {
+        let alert = UIAlertController(title: "Nemám Internetové pripojenie",
+                                      message: "Prosím, skontrolujte si Internetové pripojenie",
+                                      preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default,
+                                     handler: nil)
+        alert.addAction(okAction)
+        
+        present(alert, animated: true, completion: nil)
+    }
+    
+    func showOkAlert(title: String? = nil, message: String = "Some message..."){
+        let alert = UIAlertController(title: title,
+                                      message: message,
+                                      preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default,
+                                     handler: nil)
+        alert.addAction(okAction)
+        
+        present(alert, animated: true, completion: nil)
+    }
+    
+    func showQuickAlert(title: String? = nil, message: String = "Some message..."){
+        let alert = UIAlertController(title: title,
+                                      message: message,
+                                      preferredStyle: .alert)
+        
+        present(alert, animated: true, completion: nil)
         // duration in seconds
         let duration: Double = 1
-        
+
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + duration) {
             alert.dismiss(animated: true)
         }
@@ -337,23 +546,34 @@ class MapViewController: UIViewController {
 
 //MARK: - BumpAlgorithmDelegate
 extension MapViewController: BumpAlgorithmDelegate {
+    
+    func notifyUser(manual: String, type: String) {
+        if manual == "1" {
+            self.showOkAlert(title: "Manuálne nahlásený výtlk", message: "Vaše hlásenie bolo zaznamenané. Ďakujeme, že pomáhate zlepšovať kvality ciest na Slovensku :)")
+        }
+        else {
+            self.showQuickAlert(title: "Automaticky detegovaný výtlk", message: "Vaše hlásenie bolo zaznamenané. Ďakujeme, že pomáhate zlepšovať kvality ciest na Slovensku :)")
+        }
+    }
+    
+    func bumpDetectedNotification(data: MGLPointAnnotation) {
+        print("INFO: BUMP DETECTED!!!")
+        //self.mapView.addAnnotation(data)
+    }
+    
     func saveExportData(data: DataForExport) {
         
     }
     
-    func bumpDetectedNotification(data: CustomAccelerometerData) {
-        //TODO: vyhodit upozornenie ze vytlk bol zaznamenany
-        guard let bumpDetectionAlgorithm = self.bumpDetectionAlgorithm else { return }
-        //showIosToast(message: bumpDetectionAlgorithm.countOfDetectedBumps.description)
-        print("INFO: BUMP DETECTED!!!")
-    }
+    
     
 }
 
 //MARK: - NetworkServiceDelegate
 extension MapViewController: NetworkServiceDelegate{
-    func itemsDownloaded() {
-        print("INFO: Items downloaded from server")
+    
+    func synchronizationWithServerResult(userMessage usserMessage: String) {
+        print("INFO: synchronizationWithServerResult: \(usserMessage)")
 //        DispatchQueue.global().async {
 //
 //            if let annotations = self.mapView.annotations {
@@ -387,9 +607,28 @@ extension MapViewController: NetworkServiceDelegate{
 extension MapViewController: BumpNotifyAlgorithmDelegate {
     func notify(annotations: [MGLPointAnnotation]) {
         self.routeAnnotations.append(contentsOf: annotations)
-        self.mapView.addAnnotations(self.routeAnnotations)
+        if self.navigationViewController != nil {
+            guard let mapView = self.navigationViewController!.mapView else {
+                print("ERROR: - BumpNotifyAlgorithmDelegate func notify")
+                return
+            }
+            mapView.addAnnotations(self.routeAnnotations)
+        }
+        else {
+            self.mapView.addAnnotations(self.routeAnnotations)
+        }
     }
 }
+
+//Mark: - CLLocationManagerDelegate
+//extension MapViewController: CLLocationManagerDelegate {
+//    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+//        if let location = locations.last {
+//            print(location)
+//        }
+//    }
+//}
+
 //MARK: - MGLMapViewDelegate
 extension MapViewController: MGLMapViewDelegate {
     
@@ -400,7 +639,9 @@ extension MapViewController: MGLMapViewDelegate {
     
     // Zoom to the annotation when it is selected
     func mapView(_ mapView: MGLMapView, didSelect annotation: MGLAnnotation) {
+        
         let camera = MGLMapCamera(lookingAtCenter: annotation.coordinate, fromDistance: 4000, pitch: 0, heading: 0)
+        mapView.userTrackingMode = .none
         mapView.fly(to: camera, completionHandler: nil)
     }
     
@@ -418,12 +659,7 @@ extension MapViewController: MGLMapViewDelegate {
             print("ERROR: didUpdate userLocationn nil")
             return
         }
-        
-//        if location.horizontalAccuracy < 100 && !self.isInUserTrackingMode && !self.isInOverviewMode {
-//            mapView.setUserTrackingMode(.follow, animated: false)
-//            isInUserTrackingMode = true
-//        }
-        self.bumpDetectionAlgorithm?.userLocation = userLocation?.location
+        self.bumpDetectionAlgorithm?.userLocation = location
     }
     
     func mapView(_ mapView: MGLMapView, didFailToLocateUserWithError error: Error) {
@@ -438,39 +674,46 @@ extension MapViewController: MGLMapViewDelegate {
         if (error as NSError).code == CLError.network.rawValue {
             print("ERROR: didFailToLocateUserWithError network: \(error)")
         }
-        
         return
     }
     
     func mapViewDidFinishLoadingMap(_ mapView: MGLMapView) {
         // Allow the map to display the user's location
         //Spusti zistovanie aktualnej polohy
-        mapView.setUserTrackingMode(.follow, animated: false)
+        if let route = self.currentRoute {
+            self.mapView.showRoutes([route])
+        }
+        if !isInOverviewMode {
+            mapView.setUserTrackingMode(.followWithHeading, animated: false)
+        }
     }
     
     func mapView(_ mapView: MGLMapView, tapOnCalloutFor annotation: MGLAnnotation) {
-        if annotation.isEqual(self.destinationAnnotation) {
-            if let annotations = self.mapView.annotations {
-                self.mapView.removeAnnotations(annotations)
-            }
-            if let currentRoute = self.currentRoute {
-                self.navigationViewController = NavigationViewController(for: currentRoute)
-                if let navigationViewController = self.navigationViewController {
-                    navigationViewController.navigationDelegate = self
-                    _ = BumpNotifyAlgorithm(route: currentRoute, delegate: navigationViewController)
-                    self.present(navigationViewController, animated: true, completion: nil)
-                    print("AFTER NAVIGATION VIEW")
-                }
-            }
+        
+        if ((self.destinationAnnotation != nil && annotation.isEqual(destinationAnnotation)) ||  (self.longTapAnnotation != nil && annotation.isEqual(longTapAnnotation))) {
+            annotationActionMenu(for: annotation)
         }
+//            if let annotations = self.mapView.annotations {
+//                self.mapView.removeAnnotations(annotations)
+//            }
+//            if let currentRoute = self.currentRoute {
+//                self.navigationViewController = NavigationViewController(for: currentRoute)
+//                if let navigationViewController = self.navigationViewController {
+//                    navigationViewController.delegate = self
+//                    navigationViewController.showsReportFeedback = false
+//                    let deadlineTime = DispatchTime.now() + .seconds(2)
+//                    DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+//                        _ = BumpNotifyAlgorithm(route: currentRoute, delegate: self)
+//                    }
+//                    self.present(navigationViewController, animated: true, completion: nil)
+//                    print("AFTER NAVIGATION VIEW")
+//                }
+//            }
         
     }
     
-    func mapView(_ mapView: MGLMapView, regionWillChangeAnimated animated: Bool) {
-
-    }
-    
     func mapView(_ mapView: MGLMapView, regionDidChangeAnimated animated: Bool) {
+        recenterButton.isHidden = false
     }
 }
 
@@ -487,15 +730,33 @@ extension MapViewController: NavigationMapViewDelegate {
         print(error.localizedDescription)
     }
     
+    func mapViewDidFinishLoadingMap(_ mapView: NavigationMapView) {
+        // Allow the map to display the user's location
+        //Spusti zistovanie aktualnej polohy
+        print("Hello world")
+        //mapView.setUserTrackingMode(.followWithCourse, animated: false)
+    }
     
     // Calculate route to be used for navigation
     func calculateRoute(from origin: CLLocationCoordinate2D,
                         to destination: CLLocationCoordinate2D,
-                        completion: @escaping (Route?, Error?) -> ()) {
+                        completion: @escaping ([Route]?, Error?) -> ()) {
+        if let annotations = self.mapView.annotations {
+            self.mapView.removeAnnotations(annotations)
+        }
+        if let annotation = self.destinationAnnotation {
+            self.mapView.removeAnnotation(annotation)
+        }
+        
+        let annotation = MGLPointAnnotation()
+        annotation.coordinate = destination
+        annotation.title = "Možnosti?"
+        mapView.addAnnotation(annotation)
         
         // Coordinate accuracy is the maximum distance away from the waypoint that the route may still be considered viable, measured in meters. Negative values indicate that a indefinite number of meters away from the route and still be considered viable.
         let origin = Waypoint(coordinate: origin, coordinateAccuracy: -1, name: "Start")
         let destination = Waypoint(coordinate: destination, coordinateAccuracy: -1, name: "Finish")
+        
         
         // Specify that the route is intended for automobiles avoiding traffic
         let options = NavigationRouteOptions(waypoints: [origin, destination], profileIdentifier: .automobileAvoidingTraffic)
@@ -509,17 +770,25 @@ extension MapViewController: NavigationMapViewDelegate {
         
         options.attributeOptions = .speed
         // Generate the route object and draw it on the map
-        Directions.shared.calculate(options) { [unowned self] (waypoints, routes, error) in
-            guard let route = routes?.first, error == nil else {
-                print(error!.localizedDescription)
-                return
+        UIApplication.shared.endIgnoringInteractionEvents()
+        self.activityIndicator.startAnimating()
+        _ = Directions.shared.calculate(options) { [unowned self] (waypoints, routes, error) in
+            self.activityIndicator.stopAnimating()
+            UIApplication.shared.endIgnoringInteractionEvents()
+            if let routes = routes {
+                return completion(routes, error)
             }
-            self.currentRoute = route
-            self.routeAnnotations.removeAll()
-            self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: self)
-            self.updateVisibleBounds()
-            self.isInOverviewMode = true
-            self.mapView.showRoute(route)
+//            guard let route = routes?.first, error == nil else {
+//                print(error!.localizedDescription)
+//                return
+//            }
+            
+//            self.currentRoute = route
+//            self.routeAnnotations.removeAll()
+//            //self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: self)
+//            self.updateVisibleBounds()
+//            self.isInOverviewMode = true
+//            //self.mapView.showRoutes([route])
         }
     }
 }
@@ -536,16 +805,12 @@ extension MapViewController: NavigationViewControllerDelegate {
     // If implemented, you are responsible for also dismissing the UI.
     func navigationViewControllerDidCancelNavigation(_ navigationViewController: NavigationViewController) {
         print("The user has exited")
-        self.mapView.removeRoute()
+        //self.mapView.removeRoutes()
         self.mapView.setUserTrackingMode(.followWithHeading, animated: true)
-        self.showAnnotations(annotations: self.bumpsForServerAnnotations)
-        navigationViewController.dismiss(animated: true, completion: nil)
+        self.endEmbeddedNavigation(navigationViewController: navigationViewController)
+        self.navigationViewController = nil
     }
     
-    func navigationViewController(_ navigationViewController: NavigationViewController, didRerouteAlong route: Route){
-        print("INFO: IDEM KALKULOVAT VYTLKY na turn by turn")
-        self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: navigationViewController)
-    }
 }
 
 //MARK: - BumpNotifyAlgorithmDelegate
@@ -553,6 +818,13 @@ extension NavigationViewController: BumpNotifyAlgorithmDelegate {
     func notify(annotations: [MGLPointAnnotation]) {
         self.mapView?.addAnnotations(annotations)
     }
+    
+    func navigationViewController(_ navigationViewController: NavigationViewController, didRerouteAlong route: Route){
+        print("INFO: IDEM KALKULOVAT VYTLKY na turn by turn")
+        self.mapView?.removeAnnotations(self.mapView?.annotations ?? [])
+        _ = BumpNotifyAlgorithm(route: route, delegate: navigationViewController)
+    }
+    
 }
 
 //MARK: - FilterPopOverViewDelegate
@@ -563,16 +835,11 @@ extension MapViewController: FilterPopOverViewDelegate {
             let results = BumpFromServer.findByRating(rating: rating)
             var annotations = [MGLPointAnnotation]()
             for bump in results {
-                let annotation = MGLPointAnnotation()
-                annotation.coordinate = CLLocationCoordinate2D(
-                    latitude: bump.value(forKey: "latitude") as! Double,
-                    longitude: bump.value(forKey: "longitude") as! Double)
-                annotation.title = String(describing: bump.value(forKey: "type"))
-                annotation.subtitle = "hello"
-                annotations.append(annotation)
+                annotations.append(bump.getAnnotation())
             }
             DispatchQueue.main.async {
                 self.showAnnotations(annotations: annotations)
+                
             }
         }
     }
@@ -581,22 +848,22 @@ extension MapViewController: FilterPopOverViewDelegate {
 }
 
 // MARK: - AnnotationsViewControllerDelegate
-extension MapViewController: AnnotationsViewControllerDelegate {
+extension MapViewController: RealmNotificationDelegate {
     
     func updateBumpsFromServerAnnotations(annotations: [MGLPointAnnotation]) {
         
-        mapView.removeAnnotations(bumpsFromServerAnnotations)
+        //mapView.removeAnnotations(bumpsFromServerAnnotations)
         bumpsFromServerAnnotations.removeAll()
         bumpsFromServerAnnotations.append(contentsOf: annotations)
-        mapView.addAnnotations(bumpsFromServerAnnotations)
+        //mapView.addAnnotations(bumpsFromServerAnnotations)
     }
     
     func updateBumpsForServerAnnotations(annotations: [MGLPointAnnotation]) {
 
-        mapView.removeAnnotations(bumpsForServerAnnotations)
+        //mapView.removeAnnotations(bumpsForServerAnnotations)
         bumpsForServerAnnotations.removeAll()
         bumpsForServerAnnotations.append(contentsOf: annotations)
-        mapView.addAnnotations(bumpsForServerAnnotations)
+        //mapView.addAnnotations(bumpsForServerAnnotations)
     }
     
 }
@@ -605,25 +872,11 @@ extension MapViewController: AnnotationsViewControllerDelegate {
 //MARK: - UISearchControllerDelegate
 extension MapViewController: UISearchBarDelegate {
     
-    @IBAction func searchButtonClick(_ sender: StylableButton) {
-        let searchController = UISearchController(searchResultsController: nil)
-        searchController.searchBar.delegate = self
-        present(searchController, animated: true, completion: nil)
-    }
-    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar)
     {
         //Ignoring user
         UIApplication.shared.beginIgnoringInteractionEvents()
-        
-        //Activity Indicator
-        let activityIndicator = UIActivityIndicatorView()
-        activityIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
-        activityIndicator.center = self.view.center
-        activityIndicator.hidesWhenStopped = true
         activityIndicator.startAnimating()
-        
-        self.view.addSubview(activityIndicator)
         
         //Hide search bar
         searchBar.resignFirstResponder()
@@ -634,62 +887,60 @@ extension MapViewController: UISearchBarDelegate {
 
         let activeSearch = MKLocalSearch(request: searchRequest)
 
+//        activeSearch.start { (response, error) in
+//            UIApplication.shared.endIgnoringInteractionEvents()
+//            activityIndicator.stopAnimating()
+//            guard let response = response else {
+//                print(error.debugDescription)
+//                return
+//            }
+//
+//            for item in response.mapItems {
+//                print(item)
+//            }
+//        }
         activeSearch.start { (response, error) in
+
             UIApplication.shared.endIgnoringInteractionEvents()
-            activityIndicator.stopAnimating()
+            self.activityIndicator.stopAnimating()
             guard let response = response else {
-                print("Search error: \(error)")
+                print(error.debugDescription)
                 return
             }
-            
-            for item in response.mapItems {
-                print(item)
-            }
+
+            //Getting data
+            let latitude = response.boundingRegion.center.latitude
+            let longitude = response.boundingRegion.center.longitude
+
+            //Create annotation
+            let coordinate = CLLocationCoordinate2DMake(latitude, longitude)
+            self.setLongTapAnnotation(for: coordinate)
+
         }
-//        activeSearch.start { (response, error) in
-//
-//            UIApplication.shared.endIgnoringInteractionEvents()
-//
-//            if response == nil
-//            {
-//                print("ERROR")
-//            }
-//            else
-//            {
-//                //Remove annotations
-//                let annotations = self.mapView.annotations
-//                self.mapView.removeAnnotations(annotations!)
-//
-//                //Getting data
-//                let latitude = response?.boundingRegion.center.latitude
-//                let longitude = response?.boundingRegion.center.longitude
-//
-//                //Create annotation
-//                let annotation = MGLPointAnnotation()
-//                annotation.title = searchBar.text
-//                annotation.coordinate = CLLocationCoordinate2DMake(latitude!, longitude!)
-//                self.mapView.addAnnotation(annotation)
-//
-//                //Zooming in on annotation
-//                let coordinate:CLLocationCoordinate2D = CLLocationCoordinate2DMake(latitude!, longitude!)
-//                let span = MKCoordinateSpanMake(0.1, 0.1)
-//                let region = MKCoordinateRegionMake(coordinate, span)
-//
-//            }
-//
-//        }
     }
-    
-    
-    
 }
 
 extension UIView {
+    //Zagulatenie action Buttonov
     func applyDefaultCornerRadiusShadow(cornerRadius: CGFloat? = 4, shadowOpacity: CGFloat? = 0.1) {
         layer.cornerRadius = cornerRadius!
         layer.shadowOffset = CGSize(width: 0, height: 0)
         layer.shadowRadius = 4
         layer.shadowOpacity = Float(shadowOpacity!)
     }
+}
+
+//MARK: NavigationMapView extension
+extension NavigationMapView {
+    func addRouteAnnotations(annotations: [MGLAnnotation]) {
+        guard let style = style else { return }
+        
+        addAnnotations(annotations)
+       
+    }
+}
+
+extension MapViewController: UINavigationControllerDelegate{
+    
 }
 

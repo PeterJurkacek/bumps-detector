@@ -1,20 +1,15 @@
 #import "MBRouteController.h"
 
+const NSNotificationName MBRouteControllerProgressDidChangeNotification             = @"RouteControllerProgressDidChange";
+const NSNotificationName MBRouteControllerDidPassSpokenInstructionPointNotification = @"RouteControllerDidPassSpokenInstructionPoint";
+const NSNotificationName MBRouteControllerWillRerouteNotification                   = @"RouteControllerWillReroute";
+const NSNotificationName MBRouteControllerDidRerouteNotification                    = @"RouteControllerDidReroute";
+const NSNotificationName MBRouteControllerDidFailToRerouteNotification              = @"RouteControllerDidFailToReroute";
 
-NSString *const MBRouteControllerProgressDidChangeNotificationProgressKey               = @"progress";
-NSString *const MBRouteControllerProgressDidChangeNotificationLocationKey               = @"location";
-NSString *const MBRouteControllerProgressDidChangeNotificationSecondsRemainingOnStepKey = @"seconds";
+const MBRouteControllerNotificationUserInfoKey MBRouteControllerRouteProgressKey              = @"progress";
+const MBRouteControllerNotificationUserInfoKey MBRouteControllerLocationKey                   = @"location";
+const MBRouteControllerNotificationUserInfoKey MBRouteControllerRawLocationKey                = @"rawLocation";
+const MBRouteControllerNotificationUserInfoKey MBRouteControllerRoutingErrorKey               = @"error";
+const MBRouteControllerNotificationUserInfoKey MBRouteControllerIsProactiveKey                = @"RouteControllerDidFindFasterRoute";
 
-NSString *const MBRouteControllerAlertLevelDidChangeNotificationRouteProgressKey            = @"progress";
-NSString *const MBRouteControllerAlertLevelDidChangeNotificationDistanceToEndOfManeuverKey  = @"distance";
-
-NSString *const MBRouteControllerNotificationLocationKey    = @"location";
-NSString *const MBRouteControllerNotificationRouteKey       = @"route";
-NSString *const MBRouteControllerNotificationErrorKey       = @"error";
-
-NSString *const MBRouteControllerNotificationProgressDidChange  = @"RouteControllerProgressDidChange";
-NSString *const MBRouteControllerAlertLevelDidChange            = @"RouteControllerAlertLevelDidChange";
-NSString *const MBRouteControllerWillReroute                    = @"RouteControllerWillReroute";
-NSString *const MBRouteControllerDidReroute                     = @"RouteControllerDidReroute";
-NSString *const MBRouteControllerDidFailToReroute               = @"RouteControllerDidFailToReroute";
-NSString *const MBRouteControllerDidFindFasterRouteKey          = @"RouteControllerDidFindFasterRoute";
+NSString *const MBErrorDomain = @"ErrorDomain";

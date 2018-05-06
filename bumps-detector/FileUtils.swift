@@ -65,11 +65,11 @@ class FileUtils {
             catch {/* error handling here */}
             
             //reading
-            do {
-                let text2 = try String(contentsOf: fileURL, encoding: .utf8)
-                //print(text2)
-            }
-            catch {/* error handling here */}
+//            do {
+//                let text2 = try String(contentsOf: fileURL, encoding: .utf8)
+//                print(text2)
+//            }
+//            catch {/* error handling here */}
             print("INFO: All data save to file \(file.description)")
         } else { print("Error: saveToTxtFile")}
     }

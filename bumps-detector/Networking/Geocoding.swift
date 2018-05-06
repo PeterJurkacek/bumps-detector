@@ -8,7 +8,7 @@
 
 import Foundation
 import CoreLocation
-import AddressBookUI
+import Contacts
 
 protocol GeocodingService {
     func forwardGeocoding(address: String)
@@ -20,7 +20,7 @@ class AppleMapSearch : GeocodingService {
     func forwardGeocoding(address: String) {
         CLGeocoder().geocodeAddressString(address, completionHandler: { (placemarks, error) in
             if error != nil {
-                print(error)
+                print(error!.localizedDescription)
                 return
             }
             if (placemarks?.count)! > 0 {
@@ -39,24 +39,25 @@ class AppleMapSearch : GeocodingService {
     }
     
     func reverseGeocoding(latitude: CLLocationDegrees, longitude: CLLocationDegrees) {
-        let location = CLLocation(latitude: latitude, longitude: longitude)
-        CLGeocoder().reverseGeocodeLocation(location, completionHandler: {(placemarks, error) -> Void in
-            if error != nil {
-                print(error)
-                return
-            }
-            else if (placemarks?.count)! > 0 {
-                let pm = placemarks![0]
-                let address = ABCreateStringWithAddressDictionary(pm.addressDictionary!, false)
-                print("\n\(address)")
-                if (pm.areasOfInterest?.count)! > 0 {
-                    let areaOfInterest = pm.areasOfInterest?[0]
-                    print(areaOfInterest!)
-                } else {
-                    print("No area of interest found.")
-                }
-            }
-        })
+//        let location = CLLocation(latitude: latitude, longitude: longitude)
+//        CLGeocoder().reverseGeocodeLocation(location, completionHandler: {(placemarks, error) -> Void in
+//            if error != nil {
+//                print(error.debugDescription)
+//                return
+//            }
+//            else if (placemarks?.count)! > 0 {
+//                let pm = placemarks![0]
+//                CNPostalAddressFormatter(coder: <#T##NSCoder#>)
+//                let address = CNPostalAddressFormatter(pm.addressDictionary!, false)
+//                print("\n\(address)")
+//                if (pm.areasOfInterest?.count)! > 0 {
+//                    let areaOfInterest = pm.areasOfInterest?[0]
+//                    print(areaOfInterest!)
+//                } else {
+//                    print("No area of interest found.")
+//                }
+//            }
+//        })
     }
     
 }

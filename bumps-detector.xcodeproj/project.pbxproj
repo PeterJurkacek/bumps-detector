@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		EF0DB0DA2076714E00484800 /* RingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0DB0D92076714E00484800 /* RingBuffer.swift */; };
+		EF3783B5209DA6AB00A3B1D4 /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3783B4209DA6AB00A3B1D4 /* Filter.swift */; };
 		EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3F0F74204735A500301E19 /* DataForExport.swift */; };
 		EF43639620380EBC00B8CAC2 /* CustomNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */; };
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
@@ -28,12 +29,13 @@
 		EFD919DE201D46C50092445A /* BumpForServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD919DD201D46C50092445A /* BumpForServer.swift */; };
 		EFD919E3201E28D30092445A /* CustomAccelerometerData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD919E2201E28D30092445A /* CustomAccelerometerData.swift */; };
 		EFE06C421F4A67CD00740875 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE06C411F4A67CD00740875 /* NetworkService.swift */; };
+		EFE1992F207FFC2500A11834 /* MyNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE1992E207FFC2500A11834 /* MyNavigationView.swift */; };
 		EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */; };
 		EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */; };
 		EFF80969207180FB00C1FCCD /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF80968207180FB00C1FCCD /* Geocoding.swift */; };
 		EFF8096B2072AEA500C1FCCD /* OptionsLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */; };
 		EFF8096D20739C0D00C1FCCD /* CustomFeedbackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */; };
-		EFF8096F20740BC700C1FCCD /* AnnotationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */; };
+		EFF8096F20740BC700C1FCCD /* RealmNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF8096E20740BC700C1FCCD /* RealmNotification.swift */; };
 		EFFCFA81207D349C005C4E57 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFFCFA80207D349C005C4E57 /* Assets.xcassets */; };
 		EFFD58C92000240C00FA1BA9 /* WindowAccelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */; };
 		F677E59CBBFA24B7242188B8 /* Pods_bumps_detector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F8DF683F842E1012DA028B /* Pods_bumps_detector.framework */; };
@@ -44,6 +46,7 @@
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
 		EF0DB0D92076714E00484800 /* RingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
+		EF3783B4209DA6AB00A3B1D4 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
 		EF3F0F74204735A500301E19 /* DataForExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataForExport.swift; sourceTree = "<group>"; };
 		EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationViewController.swift; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
@@ -66,12 +69,13 @@
 		EFD919DD201D46C50092445A /* BumpForServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpForServer.swift; sourceTree = "<group>"; };
 		EFD919E2201E28D30092445A /* CustomAccelerometerData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccelerometerData.swift; sourceTree = "<group>"; };
 		EFE06C411F4A67CD00740875 /* NetworkService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
+		EFE1992E207FFC2500A11834 /* MyNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyNavigationView.swift; sourceTree = "<group>"; };
 		EFE34CD41FB76BBC004F10B0 /* SyncBump.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBump.swift; sourceTree = "<group>"; };
 		EFF6DA8A2057BCA10093C2E6 /* InternetConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternetConnection.swift; sourceTree = "<group>"; };
 		EFF80968207180FB00C1FCCD /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsLauncher.swift; sourceTree = "<group>"; };
 		EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFeedbackViewController.swift; sourceTree = "<group>"; };
-		EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsViewController.swift; sourceTree = "<group>"; };
+		EFF8096E20740BC700C1FCCD /* RealmNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmNotification.swift; sourceTree = "<group>"; };
 		EFFCFA80207D349C005C4E57 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccelData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -147,7 +151,9 @@
 				EF7BEB82206A842E00C67F1F /* FilterPopOverViewController.swift */,
 				EFF8096A2072AEA500C1FCCD /* OptionsLauncher.swift */,
 				EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */,
-				EFF8096E20740BC700C1FCCD /* AnnotationsViewController.swift */,
+				EFF8096E20740BC700C1FCCD /* RealmNotification.swift */,
+				EFE1992E207FFC2500A11834 /* MyNavigationView.swift */,
+				EF3783B4209DA6AB00A3B1D4 /* Filter.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -197,7 +203,6 @@
 				EFCB246C1F49AC6A00AAEA14 /* Frameworks */,
 				EFCB246D1F49AC6A00AAEA14 /* Resources */,
 				EE26819537B51096DF53DFFE /* [CP] Embed Pods Frameworks */,
-				5D8E954ED6CF4C58633423F4 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -215,7 +220,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0830;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Peter Jurkacek";
 				TargetAttributes = {
 					EFCB246E1F49AC6A00AAEA14 = {
@@ -265,21 +270,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		5D8E954ED6CF4C58633423F4 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		741750AB2D4389CB16A007CF /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -305,8 +295,6 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AWSCore/AWSCore.framework",
-				"${BUILT_PRODUCTS_DIR}/AWSPolly/AWSPolly.framework",
 				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework",
 				"${PODS_ROOT}/Mapbox-iOS-SDK/dynamic/Mapbox.framework.dSYM",
 				"${BUILT_PRODUCTS_DIR}/MapboxCoreNavigation/MapboxCoreNavigation.framework",
@@ -314,20 +302,16 @@
 				"${BUILT_PRODUCTS_DIR}/MapboxGeocoder.swift/MapboxGeocoder.framework",
 				"${BUILT_PRODUCTS_DIR}/MapboxMobileEvents/MapboxMobileEvents.framework",
 				"${BUILT_PRODUCTS_DIR}/MapboxNavigation/MapboxNavigation.framework",
-				"${BUILT_PRODUCTS_DIR}/OSRMTextInstructions/OSRMTextInstructions.framework",
+				"${BUILT_PRODUCTS_DIR}/MapboxSpeech/MapboxSpeech.framework",
 				"${BUILT_PRODUCTS_DIR}/Polyline/Polyline.framework",
-				"${BUILT_PRODUCTS_DIR}/Pulley/Pulley.framework",
 				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmGeoQueries/GeoQueries.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
 				"${BUILT_PRODUCTS_DIR}/Solar/Solar.framework",
 				"${BUILT_PRODUCTS_DIR}/Turf/Turf.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AWSCore.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AWSPolly.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Mapbox.framework",
 				"${DWARF_DSYM_FOLDER_PATH}/Mapbox.framework.dSYM",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxCoreNavigation.framework",
@@ -335,13 +319,11 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxGeocoder.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxMobileEvents.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxNavigation.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OSRMTextInstructions.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MapboxSpeech.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Polyline.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Pulley.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GeoQueries.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Solar.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Turf.framework",
 			);
@@ -371,9 +353,10 @@
 				EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */,
 				EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */,
 				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
+				EFE1992F207FFC2500A11834 /* MyNavigationView.swift in Sources */,
 				EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */,
 				EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */,
-				EFF8096F20740BC700C1FCCD /* AnnotationsViewController.swift in Sources */,
+				EFF8096F20740BC700C1FCCD /* RealmNotification.swift in Sources */,
 				EFCB248B1F49EF2F00AAEA14 /* DataManager.swift in Sources */,
 				EFD53E571F7D2B5800B5C4A1 /* LocationManager.swift in Sources */,
 				EFF8096D20739C0D00C1FCCD /* CustomFeedbackViewController.swift in Sources */,
@@ -381,6 +364,7 @@
 				EFE06C421F4A67CD00740875 /* NetworkService.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,
 				EFF80969207180FB00C1FCCD /* Geocoding.swift in Sources */,
+				EF3783B5209DA6AB00A3B1D4 /* Filter.swift in Sources */,
 				EFD919DC201CC5960092445A /* RealmService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -421,6 +405,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -428,6 +413,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -477,6 +463,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -484,6 +471,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;

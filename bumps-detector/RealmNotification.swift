@@ -10,25 +10,29 @@ import UIKit
 import RealmSwift
 import Mapbox
 
-protocol AnnotationsViewControllerDelegate {
+protocol RealmNotificationDelegate {
     func updateBumpsFromServerAnnotations(annotations: [MGLPointAnnotation])
     func updateBumpsForServerAnnotations(annotations: [MGLPointAnnotation])
 }
 
 //This class handle annotations on map
-class AnnotationsViewController: NSObject {
+class RealmNotification: NSObject {
 
     //Ream token - https://realm.io/docs/swift/latest#notifications
     var bumpsFromServerNotificationToken: NotificationToken? = nil
     var bumpsForServerNotificationToken: NotificationToken? = nil
-    var delegate: AnnotationsViewControllerDelegate?
+    var detectedBumpToken: NotificationToken? = nil
+    var delegate: RealmNotificationDelegate?
     var bumpsFromServerResult: Results<BumpFromServer>?
     var bumpsForServerResult: Results<BumpForServer>?
     
-    init(delegate: AnnotationsViewControllerDelegate) {
+    init(delegate: RealmNotificationDelegate) {
         super.init()
         let realm = try! Realm()
         self.delegate = delegate
+            
+        // Observe Results Notifications
+        
         bumpsFromServerResult = realm.objects(BumpFromServer.self)
         // Observe Results Notifications
         bumpsFromServerNotificationToken = bumpsFromServerResult?.observe({ [weak self] (changes: RealmCollectionChange<Results<BumpFromServer>>) in

@@ -5,28 +5,58 @@ import Mapbox
 let PuckSize: CGFloat = 45
 let ArrowSize = PuckSize * 0.6
 
-// TODO: Remove when toRadians() is exposed in Turf
-extension CLLocationDegrees {
-    func toRadians() -> LocationRadians {
-        return self * .pi / 180.0
-    }
-}
-
 /**
  A view that represents the user’s location and course on a `NavigationMapView`.
  */
 @objc(MBUserCourseView)
-public protocol UserCourseView {
+public protocol UserCourseView where Self: UIView {
+    @objc optional var location: CLLocation { get set }
+    @objc optional var direction: CLLocationDegrees { get set }
+    @objc optional var pitch: CLLocationDegrees { get set }
+    
     /**
      Updates the view to reflect the given location and other camera properties.
      */
-    func update(location: CLLocation, pitch: CGFloat, direction: CLLocationDegrees, animated: Bool, tracksUserCourse: Bool)
+    @objc optional func update(location: CLLocation, pitch: CGFloat, direction: CLLocationDegrees, animated: Bool, tracksUserCourse: Bool)
+}
+
+extension UIView {
+    func applyDefaultUserPuckTransformation(location: CLLocation, pitch: CGFloat, direction: CLLocationDegrees, animated: Bool, tracksUserCourse: Bool) {
+        let duration: TimeInterval = animated ? 1 : 0
+        UIView.animate(withDuration: duration, delay: 0, options: [.beginFromCurrentState, .curveLinear], animations: {
+            let angle = tracksUserCourse ? 0 : CLLocationDegrees(direction - location.course)
+            self.layer.setAffineTransform(CGAffineTransform.identity.rotated(by: -CGFloat(angle.toRadians())))
+            var transform = CATransform3DRotate(CATransform3DIdentity, CGFloat(CLLocationDegrees(pitch).toRadians()), 1.0, 0, 0)
+            transform = CATransform3DScale(transform, tracksUserCourse ? 1 : 0.5, tracksUserCourse ? 1 : 0.5, 1)
+            transform.m34 = -1.0 / 1000 // (-1 / distance to projection plane)
+            self.layer.sublayerTransform = transform
+        }, completion: nil)
+    }
 }
 
 /**
  A view representing the user’s location on screen.
  */
+@objc(MBUserPuckCourseView)
 public class UserPuckCourseView: UIView, UserCourseView {
+    
+    /**
+     Transforms the location of the user puck.
+     */
+    public func update(location: CLLocation, pitch: CGFloat, direction: CLLocationDegrees, animated: Bool, tracksUserCourse: Bool) {
+        let duration: TimeInterval = animated ? 1 : 0
+        UIView.animate(withDuration: duration, delay: 0, options: [.beginFromCurrentState, .curveLinear], animations: {
+            
+            let angle = tracksUserCourse ? 0 : CLLocationDegrees(direction - location.course)
+            self.puckView.layer.setAffineTransform(CGAffineTransform.identity.rotated(by: -CGFloat(angle.toRadians())))
+            
+            var transform = CATransform3DRotate(CATransform3DIdentity, CGFloat(CLLocationDegrees(pitch).toRadians()), 1.0, 0, 0)
+            transform = CATransform3DScale(transform, tracksUserCourse ? 1 : 0.5, tracksUserCourse ? 1 : 0.5, 1)
+            transform.m34 = -1.0 / 1000 // (-1 / distance to projection plane)
+            self.layer.sublayerTransform = transform
+            
+        }, completion: nil)
+    }
     
     // Sets the color on the user puck
     @objc public dynamic var puckColor: UIColor = #colorLiteral(red: 0.149, green: 0.239, blue: 0.341, alpha: 1) {
@@ -35,7 +65,7 @@ public class UserPuckCourseView: UIView, UserCourseView {
         }
     }
     
-    // Sets the fill color on the circle around the user puc@objc k
+    // Sets the fill color on the circle around the user puck
     @objc public dynamic var fillColor: UIColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1) {
         didSet {
             puckView.fillColor = fillColor
@@ -66,30 +96,6 @@ public class UserPuckCourseView: UIView, UserCourseView {
         backgroundColor = .clear
         puckView.backgroundColor = .clear
         addSubview(puckView)
-    }
-    
-    var location: CLLocation?
-    
-    var pitch: CLLocationDegrees = 0
-    
-    var direction: CLLocationDirection = 0
-    
-    public func update(location: CLLocation, pitch: CGFloat, direction: CLLocationDegrees, animated: Bool, tracksUserCourse: Bool) {
-        self.location = location
-        self.direction = direction
-        self.pitch = CLLocationDegrees(pitch)
-        let duration: TimeInterval = animated ? 1 : 0
-        UIView.animate(withDuration: duration, delay: 0, options: [.beginFromCurrentState, .curveLinear], animations: {
-            
-            let angle = tracksUserCourse ? 0 : CLLocationDegrees(direction - location.course)
-            self.puckView.layer.setAffineTransform(CGAffineTransform.identity.rotated(by: -CGFloat(angle.toRadians())))
-            
-            var transform = CATransform3DRotate(CATransform3DIdentity, CGFloat(self.pitch.toRadians()), 1.0, 0, 0)
-            transform = CATransform3DScale(transform, tracksUserCourse ? 1 : 0.5, tracksUserCourse ? 1 : 0.5, 1)
-            transform.m34 = -1.0 / 1000 // (-1 / distance to projection plane)
-            self.layer.sublayerTransform = transform
-            
-        }, completion: nil)
     }
 }
 
@@ -128,7 +134,6 @@ class UserPuckStyleKitView: UIView {
         fillColor.setFill()
         path0_fillPath.fill()
         
-        
         //// Group 4
         //// path1_stroke_2x Drawing
         let path1_stroke_2xPath = UIBezierPath()
@@ -159,16 +164,10 @@ class UserPuckStyleKitView: UIView {
         shadowColor.setFill()
         path1_stroke_2xPath.fill()
         
-        
-        
-        
         //// path0_fill 2 Drawing
         let path0_fill2Path = UIBezierPath(ovalIn: CGRect(x: 9, y: 9, width: 57, height: 57))
         circleColor.setFill()
         path0_fill2Path.fill()
-        
-        
-        
         
         //// Page 1
         //// Fill 1

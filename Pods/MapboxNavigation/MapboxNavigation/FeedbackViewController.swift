@@ -1,73 +1,106 @@
 import UIKit
 import MapboxCoreNavigation
+import AVFoundation
 
-struct FeedbackItem {
-    var title: String
-    var image: UIImage
-    var feedbackType: FeedbackType
-    var backgroundColor: UIColor
+extension FeedbackViewController: UIViewControllerTransitioningDelegate {
+    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        abortAutodismiss()
+        return DismissAnimator()
+    }
+    
+    func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return PresentAnimator()
+    }
+    
+    func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        return interactor.hasStarted ? interactor : nil
+    }
 }
 
-class FeedbackViewController: UIViewController {
+typealias FeedbackSection = [FeedbackItem]
+
+class FeedbackViewController: UIViewController, DismissDraggable, UIGestureRecognizerDelegate {
     
-    typealias FeedbackSection = [FeedbackItem]
-    
-    var sections = [FeedbackSection]()
-    let cellReuseIdentifier = "collectionViewCellId"
-    
-    typealias SendFeedbackHandler = (FeedbackItem) -> ()
+    typealias SendFeedbackHandler = (FeedbackItem) -> Void
     
     var sendFeedbackHandler: SendFeedbackHandler?
-    var dismissFeedbackHandler: (() -> ())?
+    var dismissFeedbackHandler: (() -> Void)?
+    var sections = [FeedbackSection]()
+    var activeFeedbackItem: FeedbackItem?
     
-    @IBOutlet weak var containerView: UIView!
-    @IBOutlet weak var collectionView: UICollectionView!
+    static let sceneTitle = NSLocalizedString("FEEDBACK_TITLE", value: "Report Problem", comment: "Title of view controller for sending feedback")
+    static let cellReuseIdentifier = "collectionViewCellId"
+    static let autoDismissInterval: TimeInterval = 10
+    static let verticalCellPadding: CGFloat = 20.0
     
-    class func loadFromStoryboard() -> FeedbackViewController {
-        let storyboard = UIStoryboard(name: "Navigation", bundle: .mapboxNavigation)
-        return storyboard.instantiateViewController(withIdentifier: "FeedbackViewController") as! FeedbackViewController
+    let interactor = Interactor()
+    
+    lazy var collectionView: UICollectionView = {
+        let view: UICollectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .clear
+        view.delegate = self
+        view.dataSource = self
+        view.register(FeedbackCollectionViewCell.self, forCellWithReuseIdentifier: FeedbackCollectionViewCell.defaultIdentifier)
+        return view
+    }()
+    
+    lazy var reportIssueLabel: UILabel = {
+        let label: UILabel = .forAutoLayout()
+        label.textAlignment = .center
+        label.text = FeedbackViewController.sceneTitle
+        return label
+    }()
+    
+    lazy var flowLayout: UICollectionViewFlowLayout = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 0.0
+        layout.minimumLineSpacing = 0.0
+        return layout
+    }()
+    
+    lazy var progressBar: ProgressBar = .forAutoLayout()
+    
+    var draggableHeight: CGFloat {
+        // V:|-0-recordingAudioLabel.height-collectionView.height-progressBar.height-0-|
+        let padding = (flowLayout.sectionInset.top + flowLayout.sectionInset.bottom) * CGFloat(collectionView.numberOfRows)
+        let collectionViewHeight = flowLayout.itemSize.height * CGFloat(collectionView.numberOfRows) + padding + view.safeArea.bottom
+        let fullHeight = reportIssueLabel.bounds.height+collectionViewHeight+progressBar.bounds.height
+        return fullHeight
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = .clear
-        containerView.applyDefaultCornerRadiusShadow(cornerRadius: 16)
-        
-        let accidentImage       = Bundle.mapboxNavigation.image(named: "feedback_car_crash")!.withRenderingMode(.alwaysTemplate)
-        let hazardImage         = Bundle.mapboxNavigation.image(named: "feedback_hazard")!.withRenderingMode(.alwaysTemplate)
-        let roadClosedImage     = Bundle.mapboxNavigation.image(named: "feedback_road_closed")!.withRenderingMode(.alwaysTemplate)
-        let unallowedTurnImage  = Bundle.mapboxNavigation.image(named: "feedback_turn_not_allowed")!.withRenderingMode(.alwaysTemplate)
-        let routingImage        = Bundle.mapboxNavigation.image(named: "feedback_routing")!.withRenderingMode(.alwaysTemplate)
-        let otherImage          = Bundle.mapboxNavigation.image(named: "feedback_other")!.withRenderingMode(.alwaysTemplate)
-        
-        let accidentTitle       = NSLocalizedString("FEEDBACK_ACCIDENT", bundle: .mapboxNavigation, value: "Accident", comment: "Feedback type for Accident")
-        let hazardTitle         = NSLocalizedString("FEEDBACK_HAZARD", bundle: .mapboxNavigation, value: "Hazard", comment: "Feedback type for Hazard")
-        let closureTitle        = NSLocalizedString("FEEDBACK_CLOSURE", bundle: .mapboxNavigation, value: "Closure", comment: "Feedback type for Closure")
-        let unallowedTurnTitle  = NSLocalizedString("FEEDBACK_UNALLOWED_TURN", bundle: .mapboxNavigation, value: "Not Allowed", comment: "Feedback type for Unallowed Turn")
-        let confusingTitle      = NSLocalizedString("FEEDBACK_CONFUSING", bundle: .mapboxNavigation, value: "Confusing", comment: "Feedback type for Confusing")
-        let otherIssueTitle     = NSLocalizedString("FEEDBACK_OTHER", bundle: .mapboxNavigation, value: "Other Issue", comment: "Feedback type for Other Issue")
-        
-        let accident        = FeedbackItem(title: accidentTitle,        image: accidentImage,       feedbackType: .accident,        backgroundColor: #colorLiteral(red: 0.9347146749, green: 0.5047877431, blue: 0.1419634521, alpha: 1))
-        let hazard          = FeedbackItem(title: hazardTitle,          image: hazardImage,         feedbackType: .hazard,          backgroundColor: #colorLiteral(red: 0.9347146749, green: 0.5047877431, blue: 0.1419634521, alpha: 1))
-        let roadClosed      = FeedbackItem(title: closureTitle,         image: roadClosedImage,     feedbackType: .roadClosed,      backgroundColor: #colorLiteral(red: 0.9823123813, green: 0.6965931058, blue: 0.1658670604, alpha: 1))
-        let unallowedTurn   = FeedbackItem(title: unallowedTurnTitle,   image: unallowedTurnImage,  feedbackType: .unallowedTurn,   backgroundColor: #colorLiteral(red: 0.9823123813, green: 0.6965931058, blue: 0.1658670604, alpha: 1))
-        let routingError    = FeedbackItem(title: confusingTitle,       image: routingImage,        feedbackType: .routingError,    backgroundColor: #colorLiteral(red: 0.9823123813, green: 0.6965931058, blue: 0.1658670604, alpha: 1))
-        let other           = FeedbackItem(title: otherIssueTitle,      image: otherImage,          feedbackType: .general,         backgroundColor: #colorLiteral(red: 0.9823123813, green: 0.6965931058, blue: 0.1658670604, alpha: 1))
-        
-        sections = [
-            [accident, hazard],
-            [roadClosed, unallowedTurn],
-            [routingError, other]
-        ]
+        setupViews()
+        setupConstraints()
+        view.layoutIfNeeded()
+        //FIXME: This is a workaround to ensure that the FVC looks good on non 375pt width screens, as the dynamic sizing logic isn't currently working properly.
+        flowLayout.itemSize = collectionView(collectionView, layout: flowLayout, sizeForItemAt: IndexPath(item: 0, section: 0))
+        transitioningDelegate = self
+        view.backgroundColor = .white
+        progressBar.barColor = #colorLiteral(red: 0.9347146749, green: 0.5047877431, blue: 0.1419634521, alpha: 1)
+        enableDraggableDismiss()
+    }
+
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        progressBar.progress = 1
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        perform(#selector(dismissFeedback), with: nil, afterDelay: 5)
+        
+        UIView.animate(withDuration: FeedbackViewController.autoDismissInterval) {
+            self.progressBar.progress = 0
+        }
+        
+        enableAutoDismiss()
     }
     
-    @IBAction func cancel(_ sender: Any) {
-        dismissFeedback()
+    func enableAutoDismiss() {
+        abortAutodismiss()
+        perform(#selector(dismissFeedback), with: nil, afterDelay: FeedbackViewController.autoDismissInterval)
     }
     
     func presentError(_ message: String) {
@@ -81,6 +114,7 @@ class FeedbackViewController: UIViewController {
     }
     
     func abortAutodismiss() {
+        progressBar.progress = 0
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(dismissFeedback), object: nil)
     }
     
@@ -88,17 +122,51 @@ class FeedbackViewController: UIViewController {
         abortAutodismiss()
         dismissFeedbackHandler?()
     }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // Only respond to touches outside/behind the view
+        let isDescendant = touch.view?.isDescendant(of: view) ?? true
+        return !isDescendant
+    }
+    
+    @objc func handleDismissTap(sender: UITapGestureRecognizer) {
+        dismissFeedback()
+    }
+    
+    private func setupViews() {
+        [reportIssueLabel, collectionView, progressBar].forEach(view.addSubview(_:))
+    }
+    
+    private func setupConstraints() {
+        let labelTop = reportIssueLabel.topAnchor.constraint(equalTo: view.topAnchor)
+        let labelHeight = reportIssueLabel.heightAnchor.constraint(equalToConstant: 30.0)
+        let labelLeading = reportIssueLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor)
+        let labelTrailing = reportIssueLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        let collectionLabelSpacing = collectionView.topAnchor.constraint(equalTo: reportIssueLabel.bottomAnchor)
+        let collectionLeading = collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor)
+        let collectionTrailing = collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        let collectionBarSpacing = collectionView.bottomAnchor.constraint(equalTo: progressBar.topAnchor)
+        let barHeight = progressBar.heightAnchor.constraint(equalToConstant: 6.0)
+        let barLeading = progressBar.leadingAnchor.constraint(equalTo: view.leadingAnchor)
+        let barTrailing = progressBar.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        let barBottom = progressBar.bottomAnchor.constraint(equalTo: view.safeBottomAnchor)
+        
+        let constraints = [labelTop, labelHeight, labelLeading, labelTrailing,
+                           collectionLabelSpacing, collectionLeading, collectionTrailing, collectionBarSpacing,
+                           barHeight, barLeading, barTrailing, barBottom]
+      
+        NSLayoutConstraint.activate(constraints)
+    }
 }
 
 extension FeedbackViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellReuseIdentifier, for: indexPath) as! FeedbackCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedbackCollectionViewCell.defaultIdentifier, for: indexPath) as! FeedbackCollectionViewCell
         let item = sections[indexPath.section][indexPath.row]
         
         cell.titleLabel.text = item.title
-        cell.imageView.tintColor = .white
+        cell.imageView.tintColor = .clear
         cell.imageView.image = item.image
-        cell.circleView.backgroundColor = item.backgroundColor
         
         return cell
     }
@@ -125,28 +193,8 @@ extension FeedbackViewController: UICollectionViewDelegate {
 }
 
 extension FeedbackViewController: UICollectionViewDelegateFlowLayout {
-    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = collectionView.bounds.midX
-        return CGSize(width: width, height: 134)
+        let width = floor(collectionView.bounds.width / 3)
+        return CGSize(width: width, height: width + FeedbackViewController.verticalCellPadding)
     }
 }
-
-class FeedbackCollectionViewCell: UICollectionViewCell {
-    @IBOutlet weak var imageView: UIImageView!
-    @IBOutlet weak var titleLabel: UILabel!
-    @IBOutlet weak var circleView: UIView!
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        circleView.layer.cornerRadius = circleView.bounds.midY
-    }
-    
-    override var isHighlighted: Bool {
-        didSet {
-            backgroundColor = isHighlighted ? #colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 0.6015074824) : .clear
-            imageView.tintColor = isHighlighted ? .lightGray : .white
-        }
-    }
-}
-

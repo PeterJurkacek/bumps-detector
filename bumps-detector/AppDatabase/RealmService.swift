@@ -55,14 +55,24 @@ class RealmService {
         }
     }
     
-    func delete<T: Object>(_ object: T){
-        do {
+//    func delete<T: Object>(_ object: T){
+//        do {
+//            try realm.write {
+//                realm.delete(object)
+//                print("INFO: Class RealmService, call delete() - succes)")
+//            }
+//        } catch {
+//            print("ERROR: Class RealmService, call delete()\(error)")
+//        }
+//    }
+    
+    func delete(bumpObject: BumpForServer) throws {
+        let realm = try! Realm()
+        if let bump = realm.object(ofType: BumpForServer.self, forPrimaryKey: bumpObject.id) {
             try realm.write {
-                realm.delete(object)
-                print("INFO: Class RealmService, call delete() - succes)")
+                realm.delete(bump)
             }
-        } catch {
-            print("ERROR: Class RealmService, call delete()\(error)")
+            print("INFO: Class BumpDetectionAlgorithm, call deleteSelf() - Deleted bump from realm")
         }
     }
     
@@ -77,5 +87,50 @@ class RealmService {
     
     func objects<T: Object>(type: T.Type) -> Results<T> {
         return realm.objects(type)
+    }
+    
+    func insert(bump :BumpForServer) throws {
+        try realm.write {
+            realm.add(bump, update: false)
+        }
+        print("INFO: Class BumpDetectionAlgorithm, call saveMeToInternDb() - Saved new bump to realm")
+        
+    }
+    
+    func update(oldBump:BumpForServer, newBump:BumpForServer) throws {
+        if oldBump.rating <= newBump.rating {
+            try realm.write {
+                realm.add(newBump, update: true)
+            }
+            print("INFO: Class BumpDetectionAlgorithm, call saveMeToInternDb() - Updated bump to realm")
+        }
+    }
+    
+    func getObject(bump: BumpForServer) -> BumpForServer?{
+        return realm.object(ofType: BumpForServer.self, forPrimaryKey: bump.id)
+    }
+    
+    func updateBumpsFromServer(bumps: [Bump]) {
+        var bumpsForUpdate = [BumpFromServer]()
+        for item in bumps {
+            let newBump = BumpFromServer(latitude: (item.latitude as NSString).doubleValue,
+                                         longitude: (item.longitude as NSString).doubleValue,
+                                         count: (item.count as NSString).integerValue,
+                                         b_id: item.b_id,
+                                         rating: item.rating,
+                                         manual: item.manual,
+                                         type: item.type,
+                                         fix: item.fix,
+                                         admin_fix: item.admin_fix,
+                                         info: item.info,
+                                         last_modified: item.last_modified)
+            bumpsForUpdate.append(newBump)
+        }
+        let realm = try! Realm()
+        try! realm.write {
+            bumpsForUpdate.forEach {bump in
+                realm.add(bump, update: true)
+            }
+        }
     }
 }

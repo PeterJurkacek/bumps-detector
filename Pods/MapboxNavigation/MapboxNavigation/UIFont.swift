@@ -2,7 +2,7 @@ import UIKit
 
 extension UIFont {
     
-    var fontSizeMultiplier : CGFloat {
+    var fontSizeMultiplier: CGFloat {
         get {
             switch UIApplication.shared.preferredContentSizeCategory {
             case UIContentSizeCategory.accessibilityExtraExtraExtraLarge: return 23 / 16
@@ -25,7 +25,7 @@ extension UIFont {
     /**
      Returns an adjusted font for the `preferredContentSizeCategory`.
      */
-    public var adjustedFont: UIFont {
+    @objc public var adjustedFont: UIFont {
         let font = with(multiplier: fontSizeMultiplier)
         return font
     }
@@ -37,14 +37,13 @@ extension UIFont {
     
     func with(fontFamily: String?) -> UIFont {
         guard let fontFamily = fontFamily else { return self }
-        let weight = (fontDescriptor.object(forKey: UIFontDescriptor.AttributeName.traits) as! [UIFontDescriptor.TraitKey:Any])[UIFontDescriptor.TraitKey.weight]
-        let attributes = [UIFontDescriptor.AttributeName.traits: [UIFontDescriptor.TraitKey.weight: weight]]
-        let descriptor = UIFontDescriptor(name: fontName, size: pointSize).withFamily(fontFamily).addingAttributes(attributes)
+        let weight = (fontDescriptor.object(forKey: .traits) as! [String: Any])[UIFontDescriptor.TraitKey.weight.rawValue]
+        let descriptor = UIFontDescriptor(name: fontName, size: pointSize).withFamily(fontFamily).addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
         return UIFont(descriptor: descriptor, size: pointSize)
     }
     
     func with(weight: CGFloat) -> UIFont {
-        let font = UIFont(descriptor: fontDescriptor.addingAttributes([UIFontDescriptor.AttributeName.traits: weight]), size: pointSize)
+        let font = UIFont(descriptor: fontDescriptor.addingAttributes([.traits: weight]), size: pointSize)
         return font
     }
 }

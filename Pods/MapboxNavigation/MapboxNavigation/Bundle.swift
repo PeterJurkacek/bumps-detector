@@ -9,11 +9,12 @@ extension Bundle {
     func image(named: String) -> UIImage? {
         return UIImage(named: named, in: self, compatibleWith: nil)
     }
-}
-
-var ShieldImageNamesByPrefix: [String: String] = {
-    guard let plistPath = Bundle.mapboxNavigation.path(forResource: "Shields", ofType: "plist") else {
-        return [:]
+    
+    var microphoneUsageDescription: String? {
+        get {
+            let para = "NSMicrophoneUsageDescription"
+            let key = "Privacy - Microphone Usage Description"
+            return object(forInfoDictionaryKey: para) as? String ?? object(forInfoDictionaryKey: key) as? String
+        }
     }
-    return NSDictionary(contentsOfFile: plistPath) as! [String: String]
-}()
+}

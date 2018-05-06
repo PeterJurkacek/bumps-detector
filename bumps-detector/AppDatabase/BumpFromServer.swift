@@ -10,6 +10,7 @@ import Foundation
 import RealmSwift
 import CoreLocation
 import GeoQueries
+import Mapbox
 
 @objcMembers class BumpFromServer: Object {
     
@@ -75,6 +76,44 @@ import GeoQueries
     
     override static func ignoredProperties() -> [String] {
         return ["coordinates"]
+    }
+    
+    func getAnnotation() -> MGLPointAnnotation {
+        let annotation = MGLPointAnnotation()
+        annotation.coordinate = CLLocationCoordinate2D(
+            latitude: self.latitude,
+            longitude: self.longitude)
+        annotation.title = self.getStringOfRating() + self.getStringOfType()
+        annotation.subtitle = "Nahlásené: " + self.last_modified.description
+        return annotation
+    }
+    
+    func getStringOfType() -> String{
+        switch type {
+        case "0":
+            return "Výtlk"
+        case "1":
+            return "Plný odpadkový kôš"
+        case "2":
+            return "Chýbajúci poklop"
+        default:
+            return self.info
+        }
+    }
+    
+    func getStringOfRating() -> String{
+        switch rating {
+        case "0":
+            return ""
+        case "1":
+            return ""
+        case "2":
+            return "Stredný "
+        case "3":
+            return "Veľký "
+        default:
+            return ""
+        }
     }
     
 }

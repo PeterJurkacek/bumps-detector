@@ -10,6 +10,7 @@ import UIKit
 import CoreLocation
 import simd
 import CoreMotion
+import Mapbox
 
 class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
     
@@ -127,6 +128,10 @@ class ExportDataViewController: UIViewController, CLLocationManagerDelegate{
 }
 
 extension ExportDataViewController: BumpAlgorithmDelegate{
+    func notifyUser(manual: String, type: String) {
+        
+    }
+    
     func saveExportData(data: DataForExport) {
         dispatchQueue.async{
             //print(tuple)
@@ -143,7 +148,7 @@ extension ExportDataViewController: BumpAlgorithmDelegate{
         }
     }
     
-    func bumpDetectedNotification(data: CustomAccelerometerData) {
+    func bumpDetectedNotification(data: MGLPointAnnotation) {
     }
     
     

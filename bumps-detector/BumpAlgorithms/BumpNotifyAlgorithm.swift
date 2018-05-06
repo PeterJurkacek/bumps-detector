@@ -82,11 +82,13 @@ class BumpNotifyAlgorithm {
     
     func findAllBumpsBetween(start: CLLocationCoordinate2D, end: CLLocationCoordinate2D) -> [BumpFromServer] {
         
+        //Vypočítame konštantu
         let constant = calculateConstant(start: start, end: end)
         
         //Vzdialenost medzi dvoma bodmi na mape
         let distanceBetween = start.distance(to: end)
         
+        //Hladat v internej databaze pre kazdy bod budeme v rozsahu areaInMeters(napr. 4 metrov)
         let areaInMeters = 4.0
         
         var t = areaInMeters
@@ -95,13 +97,10 @@ class BumpNotifyAlgorithm {
         var bumps = Set<BumpFromServer>()
         var newCoordinates = [CLLocationCoordinate2D]()
         var distance = 0.0
+        
+        //Zacneme generovat súradnice na priamke a pre kazdu vygenerovanu sa pozrieme do DB ci sa tam nenachadza vytlk
         while true {
             let findedCoordinate = calculateEquationsOfLines(coordinate: start, constant: constant, t: (t/distanceBetween))
-            if findedCoordinate.distance(to: end) <= areaInMeters {
-                //print("LAST DISTANCE: \(findedCoordinate.distance(to: end)) \(t)/\(distanceBetween)")
-                updateMainUI(bumps: bumps)
-                return Array<BumpFromServer>(bumps)
-            }
             
             let result = BumpFromServer.findNearby(origin: findedCoordinate, radius: areaInMeters/2, sortAscending: nil)
             for bump in result {
@@ -109,6 +108,13 @@ class BumpNotifyAlgorithm {
                 bumps.insert(BumpFromServer(value: bump))
             }
             
+            if findedCoordinate.distance(to: end) <= areaInMeters {
+                //print("LAST DISTANCE: \(findedCoordinate.distance(to: end)) \(t)/\(distanceBetween)")
+                updateMainUI(bumps: bumps)
+                return Array<BumpFromServer>(bumps)
+            }
+            
+            //Kontrola aby sme negenerovali koordinaty donekonecna
             if(counter >= 1000){
                 print("KONSTANTA: \(constant.latitude) \(constant.longitude), DISTANCE: \(distance)")
                 print("COUNTER: JE \(counter)")
@@ -127,13 +133,14 @@ class BumpNotifyAlgorithm {
         var annotations = [MGLPointAnnotation]()
         
         for bump in bumps {
-            let annotation = MGLPointAnnotation()
-            annotation.coordinate = CLLocationCoordinate2D(
-                latitude: bump.latitude,
-                longitude: bump.longitude)
-            annotation.title = bump.info
-            annotation.subtitle = bump.last_modified.description
-            annotations.append(annotation)
+//            let annotation = MGLPointAnnotation()
+//            annotation.coordinate = CLLocationCoordinate2D(
+//                latitude: bump.latitude,
+//                longitude: bump.longitude)
+//            annotation.title = bump.info
+//            annotation.subtitle = bump.last_modified.description
+            
+            annotations.append(bump.getAnnotation())
         }
         
         DispatchQueue.main.async {

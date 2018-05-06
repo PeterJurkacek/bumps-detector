@@ -8,6 +8,7 @@
 
 import Foundation
 import RealmSwift
+import Mapbox
 
 @objcMembers class BumpForServer: Object {
     
@@ -60,6 +61,16 @@ import RealmSwift
             return "-1"}
     }
     
+    func getAnnotation() -> MGLPointAnnotation {
+        let annotation = MGLPointAnnotation()
+        annotation.coordinate = CLLocationCoordinate2D(
+            latitude: (self.value(forKey: "latitude") as! NSString).doubleValue,
+            longitude: (self.value(forKey: "longitude") as! NSString).doubleValue)
+        annotation.title = (self.value(forKey: "text") as! NSString).description
+        annotation.subtitle = (self.value(forKey: "created_at") as! NSDate).description
+        return annotation
+    }
+    
     // MARK: - Model meta information
     
     override static func primaryKey() -> String? {
@@ -75,19 +86,6 @@ extension BumpForServer {
     static func all() -> Results<BumpForServer> {
         let realm = try! Realm()
         return realm.objects(BumpForServer.self)
-    }
-    
-    static func add(_ bumps: [BumpForServer]) {
-        let realm = try! Realm()
-        try! realm.write {
-            bumps.forEach {bump in
-                if realm.object(ofType: BumpForServer.self, forPrimaryKey: bump.id) != nil {
-                    realm.create(BumpForServer.self, value: bump, update: true)
-                } else {
-                    realm.add(bump)
-                }
-            }
-        }
     }
     
     func deleteSelf() throws {

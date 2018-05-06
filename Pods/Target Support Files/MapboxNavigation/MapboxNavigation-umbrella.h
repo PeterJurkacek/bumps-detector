@@ -11,6 +11,7 @@
 #endif
 
 #import "MapboxNavigation.h"
+#import "MBRouteVoiceController.h"
 #import "MGLMapView+MGLNavigationAdditions.h"
 
 FOUNDATION_EXPORT double MapboxNavigationVersionNumber;

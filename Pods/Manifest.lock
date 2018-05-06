@@ -1,29 +1,20 @@
 PODS:
-  - AWSCore (2.6.14)
-  - AWSPolly (2.6.14):
-    - AWSCore (= 2.6.14)
   - Mapbox-iOS-SDK (3.7.6)
-  - MapboxCoreNavigation (0.9.0):
-    - MapboxDirections.swift (~> 0.10.5)
-    - MapboxMobileEvents (~> 0.2)
-    - OSRMTextInstructions (~> 0.3)
-    - Turf (~> 0.0.3)
-  - MapboxDirections.swift (0.10.6):
-    - Polyline (= 4.1.1)
+  - MapboxCoreNavigation (0.16.1):
+    - MapboxDirections.swift (~> 0.19.1)
+    - MapboxMobileEvents (~> 0.4)
+    - Turf (~> 0.1)
+  - MapboxDirections.swift (0.19.1):
+    - Polyline (~> 4.2)
   - MapboxGeocoder.swift (0.8.1)
-  - MapboxMobileEvents (0.3.1)
-  - MapboxNavigation (0.9.0):
-    - AWSPolly (~> 2.6)
+  - MapboxMobileEvents (0.4.0)
+  - MapboxNavigation (0.16.1):
     - Mapbox-iOS-SDK (~> 3.6)
-    - MapboxCoreNavigation (= 0.9.0)
-    - Pulley (= 1.4)
-    - SDWebImage (~> 4.1)
-    - Solar (= 2.0.0)
-    - Turf (~> 0.0.3)
-  - OSRMTextInstructions (0.5.0):
-    - MapboxDirections.swift (~> 0.10)
-  - Polyline (4.1.1)
-  - Pulley (1.4)
+    - MapboxCoreNavigation (= 0.16.1)
+    - MapboxSpeech (~> 0.0.1)
+    - Solar (~> 2.1)
+  - MapboxSpeech (0.0.1)
+  - Polyline (4.2.0)
   - Realm (3.3.1):
     - Realm/Headers (= 3.3.1)
   - Realm/Headers (3.3.1)
@@ -31,38 +22,47 @@ PODS:
     - RealmSwift
   - RealmSwift (3.3.1):
     - Realm (= 3.3.1)
-  - SDWebImage (4.3.3):
-    - SDWebImage/Core (= 4.3.3)
-  - SDWebImage/Core (4.3.3)
-  - Solar (2.0.0)
-  - Turf (0.0.4)
+  - Solar (2.1.0)
+  - Turf (0.1.1)
 
 DEPENDENCIES:
-  - Mapbox-iOS-SDK (~> 3.6)
+  - Mapbox-iOS-SDK (~> 3.7)
   - MapboxGeocoder.swift (~> 0.6)
-  - MapboxNavigation (~> 0.9.0)
+  - MapboxNavigation (~> 0.16)
   - RealmGeoQueries (~> 1.3)
-  - RealmSwift (~> 3.1)
+  - RealmSwift (~> 3.3)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - Mapbox-iOS-SDK
+    - MapboxCoreNavigation
+    - MapboxDirections.swift
+    - MapboxGeocoder.swift
+    - MapboxMobileEvents
+    - MapboxNavigation
+    - MapboxSpeech
+    - Polyline
+    - Realm
+    - RealmGeoQueries
+    - RealmSwift
+    - Solar
+    - Turf
 
 SPEC CHECKSUMS:
-  AWSCore: 8c883c2623d314dd82cca3809527784e1d1a02e5
-  AWSPolly: 731a4898767d664494e26cddc1077cb46c647970
   Mapbox-iOS-SDK: 23ececda1d90c3b436b45e2c88e9677f025303c0
-  MapboxCoreNavigation: 9cd3a9f11230414091acb822158a245137105b97
-  MapboxDirections.swift: fbe95bd11c66339c1ef8b96301464f326394ac0d
+  MapboxCoreNavigation: 516b2114b3a7d6f09ad9175915718cd6fea0c955
+  MapboxDirections.swift: 3d902e3dc35f14cc6a322785e07f2ee6197237dc
   MapboxGeocoder.swift: 354fccd4834bae4c5b792428559eb87d994d2cf5
-  MapboxMobileEvents: 0f11c4ca8fed019926611a9486d414ad12bee2fa
-  MapboxNavigation: d99b6973ec4890ae4109a46dd41fb5cf23ad0a16
-  OSRMTextInstructions: 7bbe5a1ba548991d2a7ffba38262845e7a024390
-  Polyline: 381d1e699fd12508f97cfc468478dfbab67edf1f
-  Pulley: 3d47a5ca819b8f35a63e9a4811d35035d484d1d9
+  MapboxMobileEvents: e71cf788a95fa0c01ad6ce17fd5efd13140af5ff
+  MapboxNavigation: 58f06a66998639cc978d515f8adbc5da5f7d51ef
+  MapboxSpeech: 6cc9b3d53adc2988af3ebc704dd17907b84a3f9f
+  Polyline: 3d69f75bb136357e27291d439d0436c6ebda57a4
   Realm: 63ebf4903b446b0bdf2131244eb1e1549925c724
   RealmGeoQueries: b2a43d13efda168ebbf213689e594099e85b5fc7
   RealmSwift: f28fe8507bdfb8f1c924962401b83e7b9d7abb5c
-  SDWebImage: de4d90b5bff3571eae7bd16202b1f43135409fa5
-  Solar: ea092f7660c1b58d2b754227decb61a1c6710826
-  Turf: 6c169618fa671e3f8a7b764b5b3332053ad6110e
+  Solar: 2dc6e7cc39186cb0c8228fa08df76fb50c7d8f24
+  Turf: 4ace207379c8d58a8e45842755de821dac3fae72
 
-PODFILE CHECKSUM: 07128e31000484bd0ad111b55b095f3c9a1dfd6e
+PODFILE CHECKSUM: 6c927c010836b13ae8ff02db57ca13fb912307fc
 
-COCOAPODS: 1.3.1
+COCOAPODS: 1.5.0

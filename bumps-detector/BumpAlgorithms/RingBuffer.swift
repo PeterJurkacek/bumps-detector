@@ -5,77 +5,37 @@
 //  Created by Peter Jurkacek on 5.4.18.
 //  Copyright © 2018 Peter Jurkacek. All rights reserved.
 //
-// kod podla - https://github.com/raywenderlich/swift-algorithm-club/tree/master/Ring%20Buffer
-public struct RingBuffer<T> {
-    private var array: [T?]
-    private var readIndex = 0
+// kod inspirovany - https://github.com/raywenderlich/swift-algorithm-club/tree/master/Ring%20Buffer
+
+import UIKit
+
+public class RingBuffer {
+    var array: Array<Double>
+    private var sum = 0.0
+    private var count = 0
     private var writeIndex = 0
+    private var size: Int
     
-    public init(count: Int) {
-        array = [T?](repeating: nil, count: count)
+    public init(size: Int) {
+        self.size = size
+        self.array = [Double](repeating: 0.0, count: size)
     }
     
-    /* Returns false if out of space. */
-    @discardableResult
-    public mutating func write(_ element: T) -> Bool {
-        guard !isFull else { return false }
-        defer {
-            writeIndex += 1
+    public func write(element: Double){
+        let index = writeIndex%size
+        self.sum += element
+        if count == size {
+            self.sum -= self.array[index]
         }
-        
-        array[wrapped: writeIndex] = element
-        return true
-    }
-    
-    /* Returns nil if the buffer is empty. */
-    public mutating func read() -> T? {
-        guard !isEmpty else { return nil }
-        defer {
-            array[wrapped: readIndex] = nil
-            readIndex += 1
+        else {
+            count+=1
         }
-        return array[wrapped: readIndex]
+        self.array[index] = element
+        writeIndex+=1
     }
     
-    private var availableSpaceForReading: Int {
-        return writeIndex - readIndex
+    public func mean() -> Double {
+        return self.sum/Double(self.count)
     }
     
-    public var isEmpty: Bool {
-        return availableSpaceForReading == 0
-    }
-    
-    private var availableSpaceForWriting: Int {
-        return array.count - availableSpaceForReading
-    }
-    
-    public var isFull: Bool {
-        return availableSpaceForWriting == 0
-    }
-    
-
-}
-
-extension RingBuffer: Sequence {
-    public func makeIterator() -> AnyIterator<T> {
-        var index = readIndex
-        return AnyIterator {
-            guard index < self.writeIndex else { return nil }
-            defer {
-                index += 1
-            }
-            return self.array[wrapped: index]
-        }
-    }
-}
-
-private extension Array {
-    subscript (wrapped index: Int) -> Element {
-        get {
-            return self[index % count]
-        }
-        set {
-            self[index % count] = newValue
-        }
-    }
 }
