@@ -68,6 +68,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var reportButton: Button!
     @IBOutlet weak var recenterButton: ResumeButton!
     
+    @IBOutlet weak var waitingLabel: UILabel!
     @IBOutlet weak var navigationBar: UINavigationItem!
     @IBOutlet weak var searchButton: Button!
     
@@ -87,8 +88,10 @@ class MapViewController: UIViewController {
                 //wayNameView.isHidden = true
                 mapView.logoView.isHidden = true
             } else {
+                if currentRoute != nil {
+                    overviewButton.isHidden = false
+                }
                 isInUserTrackingMode = true
-                overviewButton.isHidden = false
                 recenterButton.isHidden = true
                 mapView.logoView.isHidden = false
             }
@@ -105,7 +108,6 @@ class MapViewController: UIViewController {
         reportButton.isHidden = true
         recenterButton.applyDefaultCornerRadiusShadow(cornerRadius: recenterButton.bounds.midX)
         searchButton.applyDefaultCornerRadiusShadow(cornerRadius: searchButton.bounds.midX)
-        searchButton.isHidden = true
         filterButton.applyDefaultCornerRadiusShadow(cornerRadius: filterButton.bounds.midX)
         mapStyleButton.applyDefaultCornerRadiusShadow(cornerRadius: mapStyleButton.bounds.midX)
 
@@ -359,10 +361,7 @@ class MapViewController: UIViewController {
                         print("Error calculating route")
                     }
                     guard let cesty = routes else { return }
-//                    if !self.routeAnnotations.isEmpty {
-//                        self.mapView.removeAnnotations(self.routeAnnotations)
-//                        self.routeAnnotations.removeAll()
-//                    }
+                        self.routeAnnotations.removeAll()
                     for route in cesty {
                         _ = BumpNotifyAlgorithm(route: route, delegate: self)
                     }
@@ -741,17 +740,6 @@ extension MapViewController: NavigationMapViewDelegate {
     func calculateRoute(from origin: CLLocationCoordinate2D,
                         to destination: CLLocationCoordinate2D,
                         completion: @escaping ([Route]?, Error?) -> ()) {
-        if let annotations = self.mapView.annotations {
-            self.mapView.removeAnnotations(annotations)
-        }
-        if let annotation = self.destinationAnnotation {
-            self.mapView.removeAnnotation(annotation)
-        }
-        
-        let annotation = MGLPointAnnotation()
-        annotation.coordinate = destination
-        annotation.title = "Možnosti?"
-        mapView.addAnnotation(annotation)
         
         // Coordinate accuracy is the maximum distance away from the waypoint that the route may still be considered viable, measured in meters. Negative values indicate that a indefinite number of meters away from the route and still be considered viable.
         let origin = Waypoint(coordinate: origin, coordinateAccuracy: -1, name: "Start")
@@ -771,11 +759,20 @@ extension MapViewController: NavigationMapViewDelegate {
         options.attributeOptions = .speed
         // Generate the route object and draw it on the map
         UIApplication.shared.endIgnoringInteractionEvents()
-        self.activityIndicator.startAnimating()
+        self.setActivityIndicator(message: "Hľadám trasu")
         _ = Directions.shared.calculate(options) { [unowned self] (waypoints, routes, error) in
-            self.activityIndicator.stopAnimating()
+            self.setActivityIndicator()
             UIApplication.shared.endIgnoringInteractionEvents()
             if let routes = routes {
+                if let annotation = self.destinationAnnotation {
+                    self.mapView.removeAnnotation(annotation)
+                }
+                
+                self.mapView.removeAnnotations(self.mapView.annotations ?? [])
+                let annotation = MGLPointAnnotation()
+                annotation.coordinate = destination.coordinate
+                annotation.title = "Možnosti?"
+                self.mapView.addAnnotation(annotation)
                 return completion(routes, error)
             }
 //            guard let route = routes?.first, error == nil else {
@@ -789,6 +786,17 @@ extension MapViewController: NavigationMapViewDelegate {
 //            self.updateVisibleBounds()
 //            self.isInOverviewMode = true
 //            //self.mapView.showRoutes([route])
+        }
+    }
+    
+    func setActivityIndicator(message:String? = nil){
+        if message != nil {
+            self.waitingLabel.text = message
+            self.activityIndicator.startAnimating()
+        }
+        else {
+            self.waitingLabel.text = ""
+            self.activityIndicator.stopAnimating()
         }
     }
 }
