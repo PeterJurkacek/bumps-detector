@@ -78,7 +78,7 @@ class RealmService {
     
     func findNearby<T: Object>(type: T.Type, origin center: CLLocationCoordinate2D, radius: Double, sortAscending sort: Bool?, latitudeKey: String = "latitude", longitudeKey: String = "longitude") -> [T] {
         do {
-            return try realm.findNearby(type: type, origin: center, radius: radius, sortAscending: nil)
+            return try realm.findNearby(type: type, origin: center, radius: radius, sortAscending: sort, latitudeKey: latitudeKey, longitudeKey: longitudeKey)
         } catch {
             print("ERROR: Class RealmService, call findNearby()\(error)")
             return []

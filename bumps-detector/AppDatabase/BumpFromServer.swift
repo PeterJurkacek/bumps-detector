@@ -125,6 +125,16 @@ extension BumpFromServer {
         return realm.objects(BumpFromServer.self)
     }
     
+    static func filter(by filter :MyFilter) -> Results<BumpFromServer>? {
+        if !filter.predicate.isEmpty {
+            let realm = try! Realm()
+            let predicate = NSPredicate(format: filter.predicate)
+            return realm.objects(BumpFromServer.self).filter(predicate)
+        }
+        return nil
+    }
+    
+    
     static func addOrUpdate(_ bumps: [BumpFromServer]) {
         let realm = try! Realm()
         try! realm.write {
@@ -148,7 +158,7 @@ extension BumpFromServer {
     static func findByRating(rating: String?) -> Results<BumpFromServer> {
         let realm = try! Realm()
         if rating != nil {
-            let predicate = NSPredicate(format: "rating == %@", rating!)
+            let predicate = NSPredicate(format: "rating == %@ AND admin_fix == '0'", rating!)
             return realm.objects(BumpFromServer.self).filter(predicate)
         }
         return realm.objects(BumpFromServer.self)

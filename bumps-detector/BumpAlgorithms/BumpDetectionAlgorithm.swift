@@ -13,36 +13,30 @@ import simd
 import CoreLocation
 import Mapbox
 
-protocol BumpAlgorithmDelegate {
+protocol BumpAlgorithmDelegate: class {
     func bumpDetectedNotification(data: MGLPointAnnotation)
     func saveExportData(data: DataForExport)
     func notifyUser(manual: String, type: String)
 }
 
-enum DistanceAlgorithm {
-    case manhatan
-    case euclidian
-    case minski
-}
-
-class BumpDetectionAlgorithm {
+class BumpDetectionAlgorithm : NSObject{
     
     var userLocation: CLLocation?
-    var delegate: BumpAlgorithmDelegate?
+    weak var delegate: BumpAlgorithmDelegate?
     var motionManager: CMMotionManager?
     var motionActivityManager: CMMotionActivityManager?
     var gyroItems = [CMRotationRate]()
     var countOfDetectedBumps = 0
     var isCalibrated = false
     let THRESHOLD = 4.5
-    let THRESHOLD_USER_MOVEMENTS = 1.0
+    let THRESHOLD_USER_MOVEMENTS = 0.8
     let lastFewItemsCount = 60
     let ItemsFreqiency = 60.0
     var prevAttitude: CMAttitude?
     //FIXME: na 6
     let requiredLocationAccuracy = 6.0
     let ringBufferAccelerationData = RingBuffer(size: 60)
-    let ringBufferMagnitudeData = RingBuffer(size: 60)
+    let ringBufferMagnitudeData = RingBuffer(size: 2)
     
     var isDriving = false {
         didSet {
@@ -61,7 +55,7 @@ class BumpDetectionAlgorithm {
         }
     }
     
-    var queue: OperationQueue
+    var deviceMotionQueue = OperationQueue()
     var date: Date?
     var timer: Timer?
 
@@ -69,13 +63,13 @@ class BumpDetectionAlgorithm {
     var windowAccelData = WindowAccelData(size: 60)
     
     //MARK: Initializers
-    init(){
+    init(_: Int = 0){
+        super.init()
         motionManager = CMMotionManager()
         motionActivityManager = CMMotionActivityManager()
-        queue = OperationQueue()
-        queue.qualityOfService = .background
-        queue.name = "DeviceMotionQueue"
-        queue.maxConcurrentOperationCount = 1
+        deviceMotionQueue.qualityOfService = .background
+        deviceMotionQueue.name = "DeviceMotionQueue"
+        deviceMotionQueue.maxConcurrentOperationCount = 1
     }
 
     //MARK: Bump detection algorithms
@@ -90,10 +84,10 @@ class BumpDetectionAlgorithm {
             if motionManager.isDeviceMotionAvailable {
                 motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
                 
-                motionManager.startDeviceMotionUpdates(to: queue){(deviceMotion, error) in
+                motionManager.startDeviceMotionUpdates(to: deviceMotionQueue){(deviceMotion, error) in
                     guard let data = deviceMotion else { return }
                     if self.isDriving {
-                        if (self.isDeviceStateChanging(state: data.attitude)) {
+                        if (self.isDeviceAttitudeChanging(state: data.attitude)) {
                             self.isCalibrated = false
                             NSLog("WARNING: POHYB ZARIADENIA, NEZAZNAMENAVAM OTRASY...")
                             self.initialDeviceAttitude = data.attitude
@@ -116,7 +110,7 @@ class BumpDetectionAlgorithm {
     }
     func startMotionActivity(){
         if let motionActivityManager = self.motionActivityManager {
-                motionActivityManager.startActivityUpdates(to: queue) {(deviceActivity) in
+                motionActivityManager.startActivityUpdates(to: deviceMotionQueue) {(deviceActivity) in
                     guard let data = deviceActivity else { return }
                     if !self.isDriving && data.automotive {
                         self.isDriving = true
@@ -128,25 +122,34 @@ class BumpDetectionAlgorithm {
         } else { print("WARNING: Nebol vytvorený objekt MotionAcitivityManager.") }
     }
     
-    func isDeviceStateChanging(state attitude :CMAttitude) -> Bool {
+    func isDeviceAttitudeChanging(state attitude :CMAttitude) -> Bool {
         
-        if self.initialDeviceAttitude == nil {
-            self.initialDeviceAttitude = attitude
-            return false
+        guard let previousAttitude = self.initialDeviceAttitude else { return false }
+        
+        //Vypočítaj zmenu uhla naklonenia zariadenia okolo X-osi, tzv. TopToBottom
+        let deltaRoll = abs(previousAttitude.roll-attitude.roll)
+        //print("deltaRoll: \(deltaRoll)")
+        if deltaRoll > THRESHOLD_USER_MOVEMENTS {
+            print("deltaRoll: \(deltaRoll)")
+            return true
         }
-        else {
-            let monitoringAttitude = attitude.copy() as! CMAttitude
-            //print("BEFORE: \(magnitude(from: monitoringAttitude))")
-            monitoringAttitude.multiply(byInverseOf: initialDeviceAttitude!)
-            //print("AFTER: \(magnitude(from: monitoringAttitude))")
-            let deltaMagnitude = calculateMagnitude(for: monitoringAttitude)
-            //let sum = abs(magnitude(from: attitude) - initMagnitude)
-            //NSLog("SUM \(sum)")
-            if deltaMagnitude > THRESHOLD_USER_MOVEMENTS {
-                return true
-            }
-            return false
+        //Vypočítaj zmenu uhla nakolonenia zariadenia okolo Z-osi
+        let deltaYaw = abs(previousAttitude.yaw-attitude.yaw)
+        //print("deltaYaw: \(deltaYaw)")
+        if deltaYaw > THRESHOLD_USER_MOVEMENTS {
+            print("deltaYaw: \(deltaYaw)")
+            return true
         }
+        //Vypočítaj zmenu uhla nakolonenia zariadenia okolo Y-osi, tzv. SideToSide
+        let deltaPitch = abs(previousAttitude.pitch-attitude.pitch)
+        //print("deltaPitch: \(deltaPitch)")
+        if deltaPitch > THRESHOLD_USER_MOVEMENTS {
+            print("deltaPitch: \(deltaPitch)")
+            return true
+        }
+        
+        //Informuj volajúceho, že zariadenie je v pokoji
+        return false
     }
     
     func magnitude(from rotation: CMRotationRate) -> Double {
@@ -184,42 +187,47 @@ class BumpDetectionAlgorithm {
         if let motionManager = self.motionManager {
             if motionManager.isDeviceMotionAvailable {
                 motionManager.deviceMotionUpdateInterval = TimeInterval(1.0/ItemsFreqiency)
-                motionManager.startDeviceMotionUpdates(to: queue){(lastData, error) in
-                    guard let deviceMotion = lastData else { return }
+                motionManager.startDeviceMotionUpdates(to: deviceMotionQueue){(lastData, error) in
                     //Ideme pracovat s posledne vráteným záznamom deviceMotion
-                    
-                    //Zistime si magnitude of vector via Pythagorean theorem
-                    let magnitude = self.calculateMagnitude(for: deviceMotion.attitude)
-                    
-                    //Zistíme si delta(zmenu) posledneho magnitude of vector vzhľadom na priemernú magnitude of vector z ring buffera
-                    let magnitudeDelta = self.ringBufferMagnitudeData.mean() - magnitude
-                    
-                    //Ulozime si novu hodnotu do ring buffera pre upravenie priemeru
-                    self.ringBufferMagnitudeData.write(element: magnitude)
-                    
-                    //Pozorujeme ci pouzivatel hybe s telefonom
-                    if abs(magnitudeDelta) < self.THRESHOLD_USER_MOVEMENTS {
+                    guard let deviceMotion = lastData else { return }
+                    //let data = RawDataSet(data: deviceMotion)
+                    //Kontrolujem ci pouzivatel hybe s telefonom
+                    if self.initialDeviceAttitude != nil && !self.isDeviceAttitudeChanging(state: deviceMotion.attitude){
                         
                         //Zistime si gravitacne zrychlenie telefonu
                         let userAccelerationAlongGravity = self.calculateUserAccelerationAlongGravity(deviceMotion: deviceMotion)
                     
-                        //Zistíme si delta(zmenu) posledného zrýchlenia vzhľadom na priemernú hodnotu zrýchlení z ring buffera
-                        let delta = self.ringBufferAccelerationData.mean() - userAccelerationAlongGravity
+                        //Počítam zmenu zrýchlenia si posledného záznamu vzhľadom na priemernú hodnotu zrýchlení z RingBuffer
+                        let zmenaZrychlenia = self.ringBufferAccelerationData.mean() - userAccelerationAlongGravity
                     
                         //Ulozime si novu hodnotu do ring buffera pre upravnie priemeru
                         self.ringBufferAccelerationData.write(element: userAccelerationAlongGravity)
                         
-                        //Zistíme, či sa jedná o výtlk
-                        if delta >= self.THRESHOLD {
-                            print(delta)
+                        //Ak je zmena zrýchlenia väčšia ako prahová hodnota
+                        if zmenaZrychlenia >= self.THRESHOLD {
+                            
+                            //Ak poznám aktuálnu geografickú polohu zariadenia
                             if let location = self.userLocation {
+                                //Ak je presnosť polohy > požadovaná presnosť
                                 if location.horizontalAccuracy.isLess(than: self.requiredLocationAccuracy){
-                                    //Detekovali sme vytlk tak ho musime spracovat
-                                    self.processBump(delta: delta, location: location)
+                                    //Detekoval som vytlk
+                                    self.processBump(delta: zmenaZrychlenia, location: location)
+                                    //data.isBump = true
                                 } else { print("WARNING: Nedostatocna presnost polohy: \(location.horizontalAccuracy), Required: \(self.requiredLocationAccuracy)") }
                             } else { print("WARNING: Nepoznam polohu") }
-                        } //Sem spadne vzdy ked je otras prílis malý na to aby sme ho povazovali za vytlk
-                    } else { print("WARNING: Rozpoznaný pohyb zariadenia.") }
+                        } //Zmena zrýchlenia je príliš malá na to aby sme ho povazovali za vytlk
+                    } else {
+                        //Nastavenie východzej polohy zariadenia
+                        //data.isUserMovement = true
+                        self.initialDeviceAttitude = deviceMotion.attitude
+                        print("WARNING: Rozpoznaný pohyb zariadenia.")
+                    }
+//                    do {
+//                        try data.saveMeToInternDb()
+//                    }catch {
+//                        print("INSERT ERROR")
+//                    }
+                    
                 }
             }
         } else { print("WARNING: Nebol vytvorený objekt MotionManager.") }
@@ -227,10 +235,10 @@ class BumpDetectionAlgorithm {
     
     func calculateUserAccelerationAlongGravity(deviceMotion: CMDeviceMotion!) -> Double {
         
-        //Prevedieme si namerané zrýchlenie na metre za sekundu
+        //Preved si namerané zrýchlenie na metre za sekundu
         let userAccelerationInMs = convert_g_to_ms2(from: deviceMotion.userAcceleration)
         
-        //Vynásobíme vektorom gravitácie
+        //Vynásob vektorom gravitácie
         let userAccelerationAlongGravity = userAccelerationInMs.x * deviceMotion.gravity.x + userAccelerationInMs.y * deviceMotion.gravity.y + userAccelerationInMs.z * deviceMotion.gravity.z
         
         return userAccelerationAlongGravity

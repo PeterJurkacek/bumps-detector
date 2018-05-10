@@ -10,7 +10,7 @@ import UIKit
 import RealmSwift
 import Mapbox
 
-protocol RealmNotificationDelegate {
+protocol RealmNotificationDelegate : class{
     func updateBumpsFromServerAnnotations(annotations: [MGLPointAnnotation])
     func updateBumpsForServerAnnotations(annotations: [MGLPointAnnotation])
 }
@@ -22,7 +22,7 @@ class RealmNotification: NSObject {
     var bumpsFromServerNotificationToken: NotificationToken? = nil
     var bumpsForServerNotificationToken: NotificationToken? = nil
     var detectedBumpToken: NotificationToken? = nil
-    var delegate: RealmNotificationDelegate?
+    weak var delegate: RealmNotificationDelegate?
     var bumpsFromServerResult: Results<BumpFromServer>?
     var bumpsForServerResult: Results<BumpForServer>?
     

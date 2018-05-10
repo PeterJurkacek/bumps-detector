@@ -42,26 +42,21 @@ class NetworkService: NSObject {
         
             var request = URLRequest(url: URL(string: ServerServices.sync_bump)!)
             request.httpMethod = "POST"
-            
-//            let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&listID=4&listDate=2015-04-19+14%3A30%3A22&listCount=2&net=1"
-//             let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&net=1"
-//            let postString = "date=2017-10-13 14:32:31&latitude=48.1607117&longitude=17.0958196&net=1"
-//
-//            let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&listID=4@5&listDate=2015-04-19+14%3A30%3A22@2015-04-19 14:30:22&listCount=2@2&net=1"
-            
-//            request.httpBody = postString.data(using: .utf8)
+        
             let parameters = self.createParams(coordinate: coordinate, net: net)
             request.httpBody = parameters.data(using: .utf8)
             
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                guard let data = data, error == nil else {                                                 // check for fundamental networking error
-                    print("error=\(String(describing: error))")
+                //Kontrola errorov
+                guard let data = data, error == nil else {
+                    print("ERROR: error=\(String(describing: error))")
                     return
                 }
                 
-                if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {           // check for http errors
-                    print("statusCode should be 200, but is \(httpStatus.statusCode)")
-                    print("response = \(String(describing: response))")
+                //Kontrola http errorov
+                if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {
+                    print("WARNING: statusCode should be 200, but is \(httpStatus.statusCode)")
+                    print("WARNING: response = \(String(describing: response))")
                     
                 }
                 //SWIFT 4.0 JSONparsing
@@ -71,22 +66,22 @@ class NetworkService: NSObject {
                     print("POCET: \(syncBump.bumps.count)")
                     switch(syncBump.success){
                     case 0:
-                        // updatuj internú db
+                        //Updatuj internú db
                         let realmService = RealmService()
                         realmService.updateBumpsFromServer(bumps: syncBump.bumps)
                         self.userMessage = "Aktualizoval som databázu"
                         break
                     case 1:
-                        // notifikuj pouzivatela, ze je potrebné updatovat internú db
+                        //Notifikuj pouzivatela, ze je potrebné updatovat internú db
                         self.userMessage = "Je potrebné aktualizovať dáta"
                         self.downloadBumpsFromServer(coordinate: coordinate, net: 1)
                         break
                     case 2:
-                        // netreba nic updatovat
+                        //Netreba nic updatovat
                         self.userMessage = "Máte aktuálne dáta"
                         break
                     case 4:
-                        // pre tvoju aktualnu polohu v okruhu 11.1km sa nenachadzaju v databaze ziadne nove zaznamy
+                        //Pre tvoju aktualnu polohu v okruhu 11.1km sa nenachadzaju v databaze žiadne nové zaznamy
                         self.userMessage = "Máte aktuálne dáta"
                         break
                     default:
@@ -102,7 +97,7 @@ class NetworkService: NSObject {
                         }
                     }
                 }catch{
-                    print("Chyba pri JSon parsingu: Skontroluj ci parametre struktur zodpovedaju json datam")
+                    print("ERROR: JSON PARSING, Skontroluj ci parametre struktur zodpovedaju json datam")
                 }
             }
             task.resume()
@@ -160,20 +155,22 @@ class NetworkService: NSObject {
     
     func createParams(bump: BumpForServer) -> String {
         
-        //Nasetujeme format datumu
+        //Nasetujem format datumu
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        
+        //Nastavím časovú zónu podla aktuálnej polohy
         dateFormatter.timeZone = TimeZone.current
-        var deviceId = "unknown device ID"
+        
         //Zistujeme device ID
+        var deviceId = "unknown device ID"
         if let id = UIDevice.current.identifierForVendor?.uuidString {
             deviceId = id
-        } else { print("INFO: Nepodarilo sa zistit device_id") }
+        } else { print("WARNING: Nepodarilo sa zistit device_id") }
         
-        //Vytvorime body params pre http POST request na odoslanie jedného výtlku na server
+        //Vytvor body params pre http POST request na odoslanie jedného výtlku na server
         let outerSeparator = "&"
         var parameters = ""
-        
         parameters.append("latitude=\(bump.latitude)")
         parameters.append("\(outerSeparator)")
         parameters.append("longitude=\(bump.longitude)")
@@ -194,40 +191,35 @@ class NetworkService: NSObject {
         parameters.append("\(outerSeparator)")
         parameters.append("info=\(bump.text)")
         
-        print("INFO: \(parameters)")
-        
         return parameters
     }
     
     func createParams(coordinate: CLLocationCoordinate2D, net: Int) -> String {
         
-        //Nasetujeme format datumu
+        //Nastavím format dátumu
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         dateFormatter.timeZone = TimeZone.current
         
-        //Nasetujeme si dátum synchronizacie so serverom a aktuálnu geograficku polohu
+        //Nastavím si dátum synchronizacie so serverom a aktuálnu geograficku polohu
         let actualDate = dateFormatter.string(from: Date())
         let actualLatitude = coordinate.latitude
         let actualLongitude = coordinate.longitude
         
-//        let dateFormatterStringToDate = DateFormatter()
-//        dateFormatterStringToDate.dateFormat = "yyyy-MM-dd"
-//        let postString = "date=2017-10-13+14%3A32%3A31&latitude=48.1607117&longitude=17.0958196&net=1"
-//        let testDate = dateFormatterStringToDate.date(from: "2017-10-13")
-//        let testLocation = CLLocationCoordinate2D(latitude: ("48.1607117" as NSString).doubleValue, longitude: ("17.0958196" as NSString).doubleValue)
-//        let actualDate = dateFormatterStringToDate.string(from: testDate!)
-//        let actualLatitude = testLocation.latitude
-//        let actualLongitude = testLocation.longitude
-        
-        //
         var listID = ""
         var listDate = ""
         var listCount = ""
+        
+        //Oddelovač parametrov
         let innerSeparator = "@"
+        
+        //Oddelovač  záznamov uložených do ListID, ListData, ListCount
         let outerSeparator = "&"
         
-        let result = BumpFromServer.all()
+        //Vykonám dopyt na lokálnu databázu, aby mi vrátil výtlky v okruhu 15km od mojej aktuálnej polohy
+        let result = BumpFromServer.findNearby(origin: coordinate, radius: 15000, sortAscending: nil)
+        
+        //Vytvorím si polia podľa výsledku dopytu
         for bump in result {
             listID          += bump.b_id + innerSeparator
             listDate        += bump.last_modified + innerSeparator
@@ -241,7 +233,8 @@ class NetworkService: NSObject {
             listCount.removeLast()
         }
         
-        //Vytvorime body params pre http POST request na odoslanie výtlkov na server kvoli aktualizacii internej databazy
+        //Vytvorime body params pre http POST request na odoslanie výtlkov na
+        //server kvoli aktualizacii internej databazy
         var parameters = ""
         parameters.append("date=\(actualDate)")
         parameters.append("\(outerSeparator)")
@@ -256,8 +249,6 @@ class NetworkService: NSObject {
         parameters.append("listCount=\(listCount.description)")
         parameters.append("\(outerSeparator)")
         parameters.append("net=\(net.description)")
-        
-        //print(parameters)
         
         return parameters
     }

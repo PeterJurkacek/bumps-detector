@@ -42,7 +42,7 @@ import Mapbox
         self.manual = manual
         self.text = text
         self.type = type
-        self.id = "\(latitude)#\(longitude)"
+        self.id = "\(latitude)#\(longitude)#\(type)"
         
     }
     

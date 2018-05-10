@@ -26,12 +26,13 @@ public class RingBuffer {
         self.sum += element
         if count == size {
             self.sum -= self.array[index]
+            self.writeIndex = 0
         }
         else {
-            count+=1
+            self.count+=1
         }
         self.array[index] = element
-        writeIndex+=1
+        self.writeIndex+=1
     }
     
     public func mean() -> Double {

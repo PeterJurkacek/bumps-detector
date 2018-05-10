@@ -8,9 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		EF0DB0DA2076714E00484800 /* RingBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0DB0D92076714E00484800 /* RingBuffer.swift */; };
-		EF3783B5209DA6AB00A3B1D4 /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3783B4209DA6AB00A3B1D4 /* Filter.swift */; };
 		EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3F0F74204735A500301E19 /* DataForExport.swift */; };
 		EF43639620380EBC00B8CAC2 /* CustomNavigationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */; };
+		EF455F45209FA915006B307C /* RoutePointChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF455F44209FA915006B307C /* RoutePointChecker.swift */; };
+		EF478D2620A1309400934E59 /* FilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF478D2520A1309400934E59 /* FilterViewController.swift */; };
+		EF478D2820A1A44000934E59 /* MyFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF478D2720A1A44000934E59 /* MyFilter.swift */; };
+		EF478D2A20A33C4F00934E59 /* RawDataSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF478D2920A33C4E00934E59 /* RawDataSet.swift */; };
 		EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */; };
 		EF7BEB83206A842E00C67F1F /* FilterPopOverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7BEB82206A842E00C67F1F /* FilterPopOverViewController.swift */; };
 		EF7BEB852070BCEF00C67F1F /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF7BEB842070BCEF00C67F1F /* MapKit.framework */; };
@@ -46,9 +49,12 @@
 		C9737376ACF5EA2BB271ABCD /* Pods-bumps-detector.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.debug.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.debug.xcconfig"; sourceTree = "<group>"; };
 		D3D1DC416878B27BB765C924 /* Pods-bumps-detector.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-bumps-detector.release.xcconfig"; path = "Pods/Target Support Files/Pods-bumps-detector/Pods-bumps-detector.release.xcconfig"; sourceTree = "<group>"; };
 		EF0DB0D92076714E00484800 /* RingBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingBuffer.swift; sourceTree = "<group>"; };
-		EF3783B4209DA6AB00A3B1D4 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
 		EF3F0F74204735A500301E19 /* DataForExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataForExport.swift; sourceTree = "<group>"; };
 		EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavigationViewController.swift; sourceTree = "<group>"; };
+		EF455F44209FA915006B307C /* RoutePointChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePointChecker.swift; sourceTree = "<group>"; };
+		EF478D2520A1309400934E59 /* FilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterViewController.swift; sourceTree = "<group>"; };
+		EF478D2720A1A44000934E59 /* MyFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyFilter.swift; sourceTree = "<group>"; };
+		EF478D2920A33C4E00934E59 /* RawDataSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawDataSet.swift; sourceTree = "<group>"; };
 		EF51F94F1F9F271000D9C32F /* BumpDetectionAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BumpDetectionAlgorithm.swift; sourceTree = "<group>"; };
 		EF7BEB82206A842E00C67F1F /* FilterPopOverViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterPopOverViewController.swift; sourceTree = "<group>"; };
 		EF7BEB842070BCEF00C67F1F /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
@@ -138,6 +144,7 @@
 				EFD53E541F7B8BA700B5C4A1 /* ExportDataViewController.swift */,
 				EF43639520380EBC00B8CAC2 /* CustomNavigationViewController.swift */,
 				EFCB24761F49AC6A00AAEA14 /* Main.storyboard */,
+				EF478D2520A1309400934E59 /* FilterViewController.swift */,
 				EFCB247B1F49AC6A00AAEA14 /* LaunchScreen.storyboard */,
 				EFCB247E1F49AC6A00AAEA14 /* Info.plist */,
 				EFD919E0201D4B690092445A /* AppDatabase */,
@@ -153,7 +160,6 @@
 				EFF8096C20739C0D00C1FCCD /* CustomFeedbackViewController.swift */,
 				EFF8096E20740BC700C1FCCD /* RealmNotification.swift */,
 				EFE1992E207FFC2500A11834 /* MyNavigationView.swift */,
-				EF3783B4209DA6AB00A3B1D4 /* Filter.swift */,
 			);
 			path = "bumps-detector";
 			sourceTree = "<group>";
@@ -164,6 +170,8 @@
 				EFD919D9201CC5520092445A /* BumpFromServer.swift */,
 				EFD919DD201D46C50092445A /* BumpForServer.swift */,
 				EFD919DB201CC5960092445A /* RealmService.swift */,
+				EF478D2720A1A44000934E59 /* MyFilter.swift */,
+				EF478D2920A33C4E00934E59 /* RawDataSet.swift */,
 			);
 			path = AppDatabase;
 			sourceTree = "<group>";
@@ -177,6 +185,7 @@
 				EFFD58C82000240C00FA1BA9 /* WindowAccelData.swift */,
 				EFD919E2201E28D30092445A /* CustomAccelerometerData.swift */,
 				EF3F0F74204735A500301E19 /* DataForExport.swift */,
+				EF455F44209FA915006B307C /* RoutePointChecker.swift */,
 			);
 			path = BumpAlgorithms;
 			sourceTree = "<group>";
@@ -340,6 +349,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				EFA59F341FA2193C004A9939 /* FileUtils.swift in Sources */,
+				EF478D2A20A33C4F00934E59 /* RawDataSet.swift in Sources */,
+				EF478D2820A1A44000934E59 /* MyFilter.swift in Sources */,
 				EF0DB0DA2076714E00484800 /* RingBuffer.swift in Sources */,
 				EFD919DE201D46C50092445A /* BumpForServer.swift in Sources */,
 				EFCB24891F49E8D400AAEA14 /* Bump.swift in Sources */,
@@ -351,9 +362,11 @@
 				EFE34CD51FB76BBC004F10B0 /* SyncBump.swift in Sources */,
 				EFD919E3201E28D30092445A /* CustomAccelerometerData.swift in Sources */,
 				EF51F9501F9F271000D9C32F /* BumpDetectionAlgorithm.swift in Sources */,
+				EF455F45209FA915006B307C /* RoutePointChecker.swift in Sources */,
 				EF3F0F75204735A500301E19 /* DataForExport.swift in Sources */,
 				EFA803901FEE82FB00CDF178 /* BumpNotifyAlgorithm.swift in Sources */,
 				EFE1992F207FFC2500A11834 /* MyNavigationView.swift in Sources */,
+				EF478D2620A1309400934E59 /* FilterViewController.swift in Sources */,
 				EFD53E551F7B8BA700B5C4A1 /* ExportDataViewController.swift in Sources */,
 				EFF6DA8B2057BCA10093C2E6 /* InternetConnection.swift in Sources */,
 				EFF8096F20740BC700C1FCCD /* RealmNotification.swift in Sources */,
@@ -364,7 +377,6 @@
 				EFE06C421F4A67CD00740875 /* NetworkService.swift in Sources */,
 				EFCB24731F49AC6A00AAEA14 /* AppDelegate.swift in Sources */,
 				EFF80969207180FB00C1FCCD /* Geocoding.swift in Sources */,
-				EF3783B5209DA6AB00A3B1D4 /* Filter.swift in Sources */,
 				EFD919DC201CC5960092445A /* RealmService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

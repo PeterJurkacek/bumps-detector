@@ -48,6 +48,7 @@ class MapViewController: UIViewController {
     }
     var bumpDetectionAlgorithm: BumpDetectionAlgorithm?
     var bumpNotifyAlgorithm: BumpNotifyAlgorithm?
+    var routePointChecker: RoutePointChecker?
     var annotationViewController: RealmNotification?
     
     var bumpsFromServerAnnotations = [MGLPointAnnotation]()
@@ -69,14 +70,12 @@ class MapViewController: UIViewController {
     @IBOutlet weak var recenterButton: ResumeButton!
     
     @IBOutlet weak var waitingLabel: UILabel!
-    @IBOutlet weak var navigationBar: UINavigationItem!
     @IBOutlet weak var searchButton: Button!
     
     @IBOutlet weak var filterButton: Button!
     
     @IBOutlet weak var mapStyleButton: Button!
     
-    @IBOutlet weak var detectionCount: UILabel!
     var isInUserTrackingMode = false
     var updatingLocation = false
     var isInOverviewMode = false
@@ -111,9 +110,13 @@ class MapViewController: UIViewController {
         filterButton.applyDefaultCornerRadiusShadow(cornerRadius: filterButton.bounds.midX)
         mapStyleButton.applyDefaultCornerRadiusShadow(cornerRadius: mapStyleButton.bounds.midX)
 
-
+        //MapBox začni zisťovať polohu
         mapView.showsUserLocation = true
+        
+        //O zmene polohy budes informovať objekt triedy MapViewController
         mapView.delegate = self
+        
+        
         mapView.navigationMapDelegate = self
 
         bumpDetectionAlgorithm = BumpDetectionAlgorithm()
@@ -128,18 +131,45 @@ class MapViewController: UIViewController {
         activityIndicator.hidesWhenStopped = true
         mapView.addSubview(activityIndicator)
 
-        sendDetectedBumpToServerTimer = Timer.scheduledTimer(timeInterval: 1*60.0, target: self, selector: #selector(sendAllBumpsToServer), userInfo: nil, repeats: true)
+        //Pravidelne v časovom intervale 5 minúty opakuj odosielanie detekcií na server
+        sendDetectedBumpToServerTimer = Timer.scheduledTimer(timeInterval: 5*60.0, target: self, selector: #selector(sendAllBumpsToServer), userInfo: nil, repeats: true)
+        
+        //Pravidelne v časovom intervale 5 minút si aktualizuj zobrazované dáta s datami na serveri
         downloadBumpFromServerTimer = Timer.scheduledTimer(timeInterval: 5*60.0, target: self, selector: #selector(synchronizeWithServer), userInfo: nil, repeats: true)
 
         // Add a gesture recognizer to the map view
         let tap = UILongPressGestureRecognizer(target: self, action: #selector(self.didLongPress(_:)))
         mapView.addGestureRecognizer(tap)
+        synchronizeWithServer()
         geocoder = AppleMapSearch()
         
 
     }
     
     //MARK: - IBAction
+    @IBAction func creatCSV() -> Void {
+        
+        let fileName = "Tasks.csv"
+        
+        let path = NSURL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
+        var csvText = "isBump#isUserMovement#created_at#x#y#z#xGravity#yGravity# zGravity#roll#pitch#yaw\n"
+        
+        let result = RawDataSet.all()
+        for task in result {
+            let newLine = "\(task.isBump)#\(task.isUserMovement)#\(task.created_at)#\(task.x)#\(task.y)#\(task.z)#\(task.xGravity)#\(task.yGravity)#\(task.zGravity)\n"
+            //\(task.roll), \(task.pitch), \(task.yaw)\n"
+            csvText.append(newLine)
+        }
+        
+        do {
+            try csvText.write(to: path!, atomically: true, encoding: String.Encoding.utf8)
+        } catch {
+            print("Failed to create file")
+            print("\(error)")
+        }
+        print(path ?? "not found")
+    }
+    
     @IBAction func enableBumpDetection(_ sender: UISwitch) {
         if sender.isOn {
             self.bumpDetectionAlgorithm?.start()
@@ -286,40 +316,47 @@ class MapViewController: UIViewController {
 //        delegate?.mapViewControllerDidOpenFeedback(self)
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if (segue.identifier == "filterSegue") {
+            let filterViewController = segue.destination as!  FilterViewController
+            filterViewController.delegate = self
+        }
+    }
     @IBAction func filterOptions() {
-       let alertController = UIAlertController(title: "Filtrovať výtlky na mape?", message: "Výtlky na mape môžete filtrovať podľa ich veľkosti.", preferredStyle: .actionSheet)
-        
-        let maleAction = UIAlertAction(title: "Malé", style: .default) { (action) in
-            self.filterBumps(rating: "1")
-        }
-        
-        let stredneAction = UIAlertAction(title: "Stredné", style: .default) { (action) in
-            self.filterBumps(rating: "2")
-        }
-        
-        let velkeAction = UIAlertAction(title: "Veľké", style: .default) { (action) in
-            self.filterBumps(rating: "3")
-        }
-        
-        let vsetkyAction = UIAlertAction(title: "Všetky", style: .default) { (action) in
-            self.filterBumps(rating: nil)
-        }
-        
-        let ziadneAction = UIAlertAction(title: "Žiadne", style: .default) { (action) in
-            self.showAnnotations(annotations: [])
-        }
-        
-        let cancelAction = UIAlertAction(title: "Zrušiť", style: .cancel) { (action) in
-        }
-        
-        alertController.addAction(maleAction)
-        alertController.addAction(stredneAction)
-        alertController.addAction(velkeAction)
-        alertController.addAction(vsetkyAction)
-        alertController.addAction(ziadneAction)
-        alertController.addAction(cancelAction)
-        
-        present(alertController, animated: true)
+       
+//       let alertController = UIAlertController(title: "Filtrovať výtlky na mape?", message: "Výtlky na mape môžete filtrovať podľa ich veľkosti.", preferredStyle: .actionSheet)
+//
+//        let maleAction = UIAlertAction(title: "Malé", style: .default) { (action) in
+//            self.filterBumps(rating: "1")
+//        }
+//
+//        let stredneAction = UIAlertAction(title: "Stredné", style: .default) { (action) in
+//            self.filterBumps(rating: "2")
+//        }
+//
+//        let velkeAction = UIAlertAction(title: "Veľké", style: .default) { (action) in
+//            self.filterBumps(rating: "3")
+//        }
+//
+//        let vsetkyAction = UIAlertAction(title: "Všetky", style: .default) { (action) in
+//            self.filterBumps(rating: nil)
+//        }
+//
+//        let ziadneAction = UIAlertAction(title: "Žiadne", style: .default) { (action) in
+//            self.showAnnotations(annotations: [])
+//        }
+//
+//        let cancelAction = UIAlertAction(title: "Zrušiť", style: .cancel) { (action) in
+//        }
+//
+//        alertController.addAction(maleAction)
+//        alertController.addAction(stredneAction)
+//        alertController.addAction(velkeAction)
+//        alertController.addAction(vsetkyAction)
+//        alertController.addAction(ziadneAction)
+//        alertController.addAction(cancelAction)
+//
+//        present(alertController, animated: true)
     }
     
     func annotationActionMenu(for annotation: MGLAnnotation!) {
@@ -364,6 +401,7 @@ class MapViewController: UIViewController {
                         self.routeAnnotations.removeAll()
                     for route in cesty {
                         _ = BumpNotifyAlgorithm(route: route, delegate: self)
+
                     }
                     self.currentRoute = cesty.first!
                     self.mapView.showRoutes(cesty)
@@ -573,28 +611,6 @@ extension MapViewController: NetworkServiceDelegate{
     
     func synchronizationWithServerResult(userMessage usserMessage: String) {
         print("INFO: synchronizationWithServerResult: \(usserMessage)")
-//        DispatchQueue.global().async {
-//
-//            if let annotations = self.mapView.annotations {
-//                self.mapView.removeAnnotations(annotations)
-//            }
-//            self.mapAnnotations.removeAll()
-//
-//            let results = BumpFromServer.all()
-//            for bump in results {
-//                let annotation = MGLPointAnnotation()
-//                annotation.coordinate = CLLocationCoordinate2D(
-//                    latitude: bump.value(forKey: "latitude") as! Double,
-//                    longitude: bump.value(forKey: "longitude") as! Double)
-//                annotation.title = String(describing: bump.value(forKey: "type"))
-//                annotation.subtitle = "hello"
-//                self.mapAnnotations.append(annotation)
-//            }
-//            DispatchQueue.main.async {
-//                self.mapView.addAnnotations(self.mapAnnotations)
-//            }
-//        }
-        
     }
     
     func itemsUploaded() {
@@ -606,6 +622,24 @@ extension MapViewController: NetworkServiceDelegate{
 extension MapViewController: BumpNotifyAlgorithmDelegate {
     func notify(annotations: [MGLPointAnnotation]) {
         self.routeAnnotations.append(contentsOf: annotations)
+        if self.navigationViewController != nil {
+            guard let mapView = self.navigationViewController!.mapView else {
+                print("ERROR: - BumpNotifyAlgorithmDelegate func notify")
+                return
+            }
+            mapView.addAnnotations(self.routeAnnotations)
+        }
+        else {
+            self.mapView.addAnnotations(self.routeAnnotations)
+        }
+    }
+}
+
+//MARK: - BumpNotifyAlgorithmDelegate
+extension MapViewController: RoutePointCheckerDelegate {
+    func notifyMain(bumpsOnRouteAnnotations: [MGLPointAnnotation]) {
+        self.routeAnnotations.removeAll()
+        self.routeAnnotations.append(contentsOf: bumpsOnRouteAnnotations)
         if self.navigationViewController != nil {
             guard let mapView = self.navigationViewController!.mapView else {
                 print("ERROR: - BumpNotifyAlgorithmDelegate func notify")
@@ -652,13 +686,25 @@ extension MapViewController: MGLMapViewDelegate {
         self.updatingLocation = false
     }
     
-    //Metóda nie je volaná ked je aplikácia v background mode
     func mapView(_ mapView: MGLMapView, didUpdate userLocation: MGLUserLocation?) {
+        
+        //Ak nepoznám location return
         guard let location = userLocation?.location else {
             print("ERROR: didUpdate userLocationn nil")
             return
         }
-        self.bumpDetectionAlgorithm?.userLocation = location
+        
+        //Ak nie je vytvorený objekt Algoritmu detekcie výtlkov return
+        guard let bumpsDetectionAlgorithm = self.bumpDetectionAlgorithm else {
+            print("ERROR: bumpsDetectionAlgorithm nil")
+            return
+        }
+        
+        //Zaraď sa do fronty a zapís až keď budeš na rade
+        bumpsDetectionAlgorithm.deviceMotionQueue.addOperation {
+            //Nastav pre Algoritmus detekcie výtlkov aktuálnu polohu
+            bumpsDetectionAlgorithm.userLocation = location
+        }
     }
     
     func mapView(_ mapView: MGLMapView, didFailToLocateUserWithError error: Error) {
@@ -737,6 +783,7 @@ extension MapViewController: NavigationMapViewDelegate {
     }
     
     // Calculate route to be used for navigation
+    // Zdroj: https://www.mapbox.com/
     func calculateRoute(from origin: CLLocationCoordinate2D,
                         to destination: CLLocationCoordinate2D,
                         completion: @escaping ([Route]?, Error?) -> ()) {
@@ -757,9 +804,10 @@ extension MapViewController: NavigationMapViewDelegate {
         options.routeShapeResolution = .full
         
         options.attributeOptions = .speed
-        // Generate the route object and draw it on the map
+        
+        // Zisťujem trasu
         UIApplication.shared.endIgnoringInteractionEvents()
-        self.setActivityIndicator(message: "Hľadám trasu")
+        self.setActivityIndicator(message: "Hľadám trasu...")
         _ = Directions.shared.calculate(options) { [unowned self] (waypoints, routes, error) in
             self.setActivityIndicator()
             UIApplication.shared.endIgnoringInteractionEvents()
@@ -775,17 +823,6 @@ extension MapViewController: NavigationMapViewDelegate {
                 self.mapView.addAnnotation(annotation)
                 return completion(routes, error)
             }
-//            guard let route = routes?.first, error == nil else {
-//                print(error!.localizedDescription)
-//                return
-//            }
-            
-//            self.currentRoute = route
-//            self.routeAnnotations.removeAll()
-//            //self.bumpNotifyAlgorithm = BumpNotifyAlgorithm(route: route, delegate: self)
-//            self.updateVisibleBounds()
-//            self.isInOverviewMode = true
-//            //self.mapView.showRoutes([route])
         }
     }
     
@@ -808,7 +845,11 @@ extension MapViewController: NavigationViewControllerDelegate {
     // Return false to remain on the current leg, for example to allow the user to provide input.
     // If you return false, you must manually advance to the next leg. See the example above in `confirmationControllerDidConfirm(_:)`.
     
-    
+    func navigationMapView(_ mapView: NavigationMapView, didTap route: Route) {
+        self.currentRoute = route
+        self.updateVisibleBounds(along: self.currentRoute!)
+        self.isInOverviewMode = true
+    }
     // Called when the user hits the `Cancel` button.
     // If implemented, you are responsible for also dismissing the UI.
     func navigationViewControllerDidCancelNavigation(_ navigationViewController: NavigationViewController) {
@@ -840,6 +881,7 @@ extension MapViewController: FilterPopOverViewDelegate {
 
     func filterBumps(rating: String?) {
         DispatchQueue.global().async {
+            let realmService = RealmService()
             let results = BumpFromServer.findByRating(rating: rating)
             var annotations = [MGLPointAnnotation]()
             for bump in results {
@@ -884,7 +926,7 @@ extension MapViewController: UISearchBarDelegate {
     {
         //Ignoring user
         UIApplication.shared.beginIgnoringInteractionEvents()
-        activityIndicator.startAnimating()
+        self.setActivityIndicator(message: "Hľadám miesto...")
         
         //Hide search bar
         searchBar.resignFirstResponder()
@@ -910,7 +952,7 @@ extension MapViewController: UISearchBarDelegate {
         activeSearch.start { (response, error) in
 
             UIApplication.shared.endIgnoringInteractionEvents()
-            self.activityIndicator.stopAnimating()
+            self.setActivityIndicator()
             guard let response = response else {
                 print(error.debugDescription)
                 return
@@ -948,7 +990,24 @@ extension NavigationMapView {
     }
 }
 
-extension MapViewController: UINavigationControllerDelegate{
+extension MapViewController: FilterViewControllerDelegate {
     
+    func saved(filter: MyFilter) {
+        DispatchQueue.global().async {
+            guard let results = BumpFromServer.filter(by: filter) else { return }
+            var annotations = [MGLPointAnnotation]()
+            for bump in results {
+                let annotation = bump.getAnnotation()
+                annotations.append(annotation)
+            }
+            DispatchQueue.main.async {
+                self.mapView.removeAnnotations(self.bumpsFromServerAnnotations)
+                self.mapView.addAnnotations(annotations)
+                self.bumpsFromServerAnnotations.removeAll()
+                self.bumpsFromServerAnnotations.append(contentsOf: annotations)
+            }
+        }
+
+    }
 }
 
